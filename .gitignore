@@ -8,4 +8,10 @@ node_modules
 
 # Build output
 dist
+server/dist
+
+# Environment variables (never commit secrets)
+.env
+.env.*
+!.env.example
 
