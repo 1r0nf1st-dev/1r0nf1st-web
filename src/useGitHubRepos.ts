@@ -36,15 +36,39 @@ export function useGitHubRepos(username?: string): GitHubReposState {
     }
     searchParams.set('perPage', '6');
 
-    getJson<GitHubRepo[]>(`${env.apiBaseUrl}/api/github/repos?${searchParams.toString()}`)
+    // Construct the API URL - use relative /api in development (Vite proxy) or absolute URL in production
+    let apiBase = '/api';
+    if (env.apiBaseUrl && env.apiBaseUrl.trim()) {
+      const trimmed = env.apiBaseUrl.trim();
+      // If it's an absolute URL (starts with http), ensure it has /api suffix
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        // Remove trailing slash if present
+        const normalized = trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
+        // Append /api only if it doesn't already end with /api
+        apiBase = normalized.endsWith('/api') ? normalized : `${normalized}/api`;
+      } else {
+        // If it's a relative path, use it as-is
+        apiBase = trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
+      }
+    }
+    const url = `${apiBase}/github/repos?${searchParams.toString()}`;
+    console.log('[useGitHubRepos] Fetching from URL:', url);
+    console.log('[useGitHubRepos] env.apiBaseUrl:', env.apiBaseUrl);
+    console.log('[useGitHubRepos] apiBase:', apiBase);
+    getJson<GitHubRepo[]>(url)
       .then((repos) => {
         if (isCancelled) return;
         setState({ repos, isLoading: false, error: null });
       })
       .catch((error: unknown) => {
         if (isCancelled) return;
-        const message =
-          error instanceof Error ? error.message : 'Something went wrong fetching repositories.';
+        let message = 'Something went wrong fetching repositories.';
+        if (error instanceof Error) {
+          message = error.message;
+        } else if (typeof error === 'string') {
+          message = error;
+        }
+        console.error('Error fetching repos:', error, 'URL:', url);
         setState({ repos: null, isLoading: false, error: message });
       });
 

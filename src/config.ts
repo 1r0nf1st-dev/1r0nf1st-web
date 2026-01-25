@@ -3,5 +3,6 @@ export interface EnvConfig {
 }
 
 export const env: EnvConfig = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
+  // Use relative URL in development (Vite proxy handles it) or absolute URL in production
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '',
 };
