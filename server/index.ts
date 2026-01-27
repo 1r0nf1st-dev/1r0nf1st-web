@@ -2,12 +2,42 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { githubRouter } from './routes/github.js';
+import { authRouter } from './routes/auth.js';
 import { config } from './config.js';
+
+// Validate required environment variables in production
+if (config.nodeEnv === 'production') {
+  const requiredVars: string[] = [];
+  if (!config.jwtSecret || config.jwtSecret === 'your-secret-key-change-in-production') {
+    requiredVars.push('JWT_SECRET (must be a strong random string)');
+  }
+  if (!config.supabaseUrl) {
+    requiredVars.push('SUPABASE_URL');
+  }
+  if (!config.supabaseKey) {
+    requiredVars.push('SUPABASE_SERVICE_ROLE_KEY');
+  }
+  if (requiredVars.length > 0) {
+    console.error('❌ Missing required environment variables for production:');
+    requiredVars.forEach((v) => console.error(`   - ${v}`));
+    console.error('\nPlease set all required environment variables before starting the server.');
+    process.exit(1);
+  }
+}
 
 const app = express();
 const PORT = config.port || 3001;
 
-app.use(cors());
+// Configure CORS based on environment
+const corsOptions: cors.CorsOptions = {
+  origin:
+    config.nodeEnv === 'production' && config.allowedOrigins
+      ? config.allowedOrigins
+      : true, // Allow all origins in development
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get('/health', (_req, res) => {
@@ -15,7 +45,10 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api/github', githubRouter);
+app.use('/api/auth', authRouter);
 
 app.listen(PORT, () => {
-  console.log(`🚀 API server running on http://localhost:${PORT}`);
+  if (config.nodeEnv === 'development') {
+    console.log(`🚀 API server running on http://localhost:${PORT}`);
+  }
 });

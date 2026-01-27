@@ -3,4 +3,11 @@ export const config = {
   githubToken: process.env.GITHUB_TOKEN,
   githubUsername: process.env.GITHUB_USERNAME,
   publicApiBase: process.env.PUBLIC_API_BASE,
+  nodeEnv: process.env.NODE_ENV || 'development',
+  allowedOrigins: process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
+    : undefined,
+  jwtSecret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+  supabaseUrl: process.env.SUPABASE_URL || '',
+  supabaseKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
 };

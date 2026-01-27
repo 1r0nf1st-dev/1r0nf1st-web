@@ -14,12 +14,21 @@ export class ApiError extends Error {
 
 export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   try {
+    // Get auth token from localStorage
+    const token = localStorage.getItem('authToken');
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      ...((init?.headers as Record<string, string>) ?? {}),
+    };
+
+    // Add auth token if available and not already set in headers
+    if (token && !headers.Authorization) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const response = await fetch(url, {
-      headers: {
-        Accept: 'application/json',
-        ...(init?.headers ?? {}),
-      },
       ...init,
+      headers,
     });
 
     if (!response.ok) {
@@ -40,7 +49,7 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
     // Wrap network errors with more context
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       throw new ApiError(
-        `Network error: Unable to reach ${url}. Make sure the API server is running.`,
+        'Network error: Unable to connect to the server. Please try again later.',
         0,
         url,
       );

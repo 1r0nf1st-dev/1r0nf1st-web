@@ -52,9 +52,6 @@ export function useGitHubRepos(username?: string): GitHubReposState {
       }
     }
     const url = `${apiBase}/github/repos?${searchParams.toString()}`;
-    console.log('[useGitHubRepos] Fetching from URL:', url);
-    console.log('[useGitHubRepos] env.apiBaseUrl:', env.apiBaseUrl);
-    console.log('[useGitHubRepos] apiBase:', apiBase);
     getJson<GitHubRepo[]>(url)
       .then((repos) => {
         if (isCancelled) return;
@@ -68,7 +65,6 @@ export function useGitHubRepos(username?: string): GitHubReposState {
         } else if (typeof error === 'string') {
           message = error;
         }
-        console.error('Error fetching repos:', error, 'URL:', url);
         setState({ repos: null, isLoading: false, error: message });
       });
 

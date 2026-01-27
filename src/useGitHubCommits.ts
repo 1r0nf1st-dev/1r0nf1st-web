@@ -58,9 +58,6 @@ export function useGitHubCommits(repo: string | null): GitHubCommitsState {
       }
     }
     const url = `${apiBase}/github/commits?${searchParams.toString()}`;
-    console.log('[useGitHubCommits] Fetching from URL:', url);
-    console.log('[useGitHubCommits] env.apiBaseUrl:', env.apiBaseUrl);
-    console.log('[useGitHubCommits] apiBase:', apiBase);
     getJson<GitHubCommit[]>(url)
       .then((commits) => {
         if (isCancelled) return;
@@ -76,7 +73,7 @@ export function useGitHubCommits(repo: string | null): GitHubCommitsState {
         }
         // Provide more helpful error message for network errors
         if (message === 'Failed to fetch' || message.includes('fetch')) {
-          message = 'Unable to connect to the API server. Make sure the server is running on port 3001.';
+          message = 'Unable to connect to the API server. Please check your connection and try again.';
         }
         setState({ commits: null, isLoading: false, error: message });
       });

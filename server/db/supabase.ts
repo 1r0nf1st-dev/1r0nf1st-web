@@ -1,0 +1,31 @@
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { config } from '../config.js';
+
+// Create Supabase client with service role key (for server-side operations)
+// Only create client if credentials are provided
+let supabase: SupabaseClient | null = null;
+
+if (config.supabaseUrl && config.supabaseKey) {
+  supabase = createClient(config.supabaseUrl, config.supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+} else {
+  if (config.nodeEnv === 'development') {
+    console.warn(
+      '⚠️  Supabase credentials are missing. Authentication features will not work. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your .env file.',
+    );
+  }
+}
+
+export { supabase };
+
+// Database types
+export interface User {
+  id: string;
+  username: string;
+  password_hash: string;
+  created_at: string;
+}

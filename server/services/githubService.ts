@@ -43,8 +43,7 @@ export async function fetchUserRepos(
 
   const url = `${GITHUB_API_BASE}/users/${encodeURIComponent(effectiveUsername)}/repos?${searchParams.toString()}`;
 
-  /* global HeadersInit */
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
   };
@@ -78,8 +77,7 @@ export async function fetchRepoCommits(
 
   const url = `${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/commits?${searchParams.toString()}`;
 
-  /* global HeadersInit */
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json',
     'X-GitHub-Api-Version': '2022-11-28',
   };
