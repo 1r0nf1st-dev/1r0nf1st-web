@@ -5,8 +5,8 @@ import { config } from '../config.js';
 // Only create client if credentials are provided
 let supabase: SupabaseClient | null = null;
 
-if (config.supabaseUrl && config.supabaseKey) {
-  supabase = createClient(config.supabaseUrl, config.supabaseKey, {
+if (config.supabaseUrl && config.supabaseServiceRoleKey) {
+  supabase = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -22,10 +22,11 @@ if (config.supabaseUrl && config.supabaseKey) {
 
 export { supabase };
 
-// Database types
+// User type from Supabase Auth
 export interface User {
   id: string;
-  username: string;
-  password_hash: string;
-  created_at: string;
+  email?: string;
+  user_metadata?: {
+    username?: string;
+  };
 }

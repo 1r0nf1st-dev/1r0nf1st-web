@@ -10,8 +10,8 @@ export const Hero = (): JSX.Element => {
   const isLoginPage = location.pathname === '/login';
   const isChangePasswordPage = location.pathname === '/change-password';
 
-  const handleLogout = (): void => {
-    logout();
+  const handleLogout = async (): Promise<void> => {
+    await logout();
     navigate('/');
   };
 
@@ -35,7 +35,7 @@ export const Hero = (): JSX.Element => {
                 color: 'var(--text-muted)',
               }}
             >
-              Logged in as <strong>{user.username}</strong>
+              Logged in as <strong>{user.username || user.email}</strong>
             </span>
           )}
         </div>

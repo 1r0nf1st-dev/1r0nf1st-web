@@ -6,7 +6,6 @@ import { Hero } from '../components/Hero';
 import { Footer } from '../components/Footer';
 
 export const ChangePasswordPage = (): JSX.Element => {
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +20,7 @@ export const ChangePasswordPage = (): JSX.Element => {
     setSuccess('');
 
     // Validation
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if (!newPassword || !confirmPassword) {
       setError('All fields are required');
       return;
     }
@@ -36,18 +35,12 @@ export const ChangePasswordPage = (): JSX.Element => {
       return;
     }
 
-    if (currentPassword === newPassword) {
-      setError('New password must be different from current password');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      await changePassword(currentPassword, newPassword);
+      await changePassword(newPassword);
       setSuccess('Password changed successfully!');
       // Clear form
-      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       // Redirect after 2 seconds
@@ -107,35 +100,6 @@ export const ChangePasswordPage = (): JSX.Element => {
                   {success}
                 </div>
               )}
-              <div style={{ marginBottom: '1rem' }}>
-                <label
-                  htmlFor="currentPassword"
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontSize: '0.9rem',
-                    fontWeight: 500,
-                  }}
-                >
-                  Current Password
-                </label>
-                <input
-                  id="currentPassword"
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    color: 'var(--text-main)',
-                    fontSize: '1rem',
-                  }}
-                />
-              </div>
               <div style={{ marginBottom: '1rem' }}>
                 <label
                   htmlFor="newPassword"
