@@ -259,3 +259,5 @@ See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for detailed setup instru
 ### Creating Your First User
 
 See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for instructions on creating your first user via the Supabase dashboard or your application.
+
+
