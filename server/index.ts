@@ -8,14 +8,14 @@ import { config } from './config.js';
 // Validate required environment variables in production
 if (config.nodeEnv === 'production') {
   const requiredVars: string[] = [];
-  if (!config.jwtSecret || config.jwtSecret === 'your-secret-key-change-in-production') {
-    requiredVars.push('JWT_SECRET (must be a strong random string)');
-  }
   if (!config.supabaseUrl) {
     requiredVars.push('SUPABASE_URL');
   }
-  if (!config.supabaseKey) {
+  if (!config.supabaseServiceRoleKey) {
     requiredVars.push('SUPABASE_SERVICE_ROLE_KEY');
+  }
+  if (!config.supabaseAnonKey) {
+    requiredVars.push('SUPABASE_ANON_KEY');
   }
   if (requiredVars.length > 0) {
     console.error('❌ Missing required environment variables for production:');

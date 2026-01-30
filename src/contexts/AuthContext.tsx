@@ -4,15 +4,16 @@ import { getJson } from '../apiClient.js';
 
 interface User {
   id: string;
-  username: string;
+  email?: string;
+  username?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string) => Promise<void>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, username?: string) => Promise<void>;
+  changePassword: (newPassword: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -53,19 +54,25 @@ export const AuthProvider = ({ children }: { children: JSX.Element }): JSX.Eleme
     }
   };
 
-  const login = async (username: string, password: string): Promise<void> => {
+  const login = async (email: string, password: string): Promise<void> => {
     try {
-      const response = await getJson<{ token: string; user: User }>('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await getJson<{ token: string; refreshToken?: string; user: User }>(
+        '/api/auth/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
         },
-        body: JSON.stringify({ username, password }),
-      });
+      );
 
       setToken(response.token);
       setUser(response.user);
       localStorage.setItem('authToken', response.token);
+      if (response.refreshToken) {
+        localStorage.setItem('refreshToken', response.refreshToken);
+      }
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(error.message);
@@ -74,19 +81,35 @@ export const AuthProvider = ({ children }: { children: JSX.Element }): JSX.Eleme
     }
   };
 
-  const register = async (username: string, password: string): Promise<void> => {
+  const register = async (
+    email: string,
+    password: string,
+    username?: string,
+  ): Promise<void> => {
     try {
-      const response = await getJson<{ token: string; user: User }>('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await getJson<{ token?: string; refreshToken?: string; user: User; message?: string }>(
+        '/api/auth/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password, username }),
         },
-        body: JSON.stringify({ username, password }),
-      });
+      );
 
-      setToken(response.token);
-      setUser(response.user);
-      localStorage.setItem('authToken', response.token);
+      // If email confirmation is required, token might not be present
+      if (response.token) {
+        setToken(response.token);
+        setUser(response.user);
+        localStorage.setItem('authToken', response.token);
+        if (response.refreshToken) {
+          localStorage.setItem('refreshToken', response.refreshToken);
+        }
+      } else if (response.message) {
+        // Email verification required
+        throw new Error(response.message);
+      }
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(error.message);
@@ -95,14 +118,14 @@ export const AuthProvider = ({ children }: { children: JSX.Element }): JSX.Eleme
     }
   };
 
-  const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  const changePassword = async (newPassword: string): Promise<void> => {
     try {
       await getJson<{ message: string }>('/api/auth/change-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ currentPassword, newPassword }),
+        body: JSON.stringify({ newPassword }),
       });
     } catch (error) {
       if (error instanceof Error) {
@@ -112,10 +135,28 @@ export const AuthProvider = ({ children }: { children: JSX.Element }): JSX.Eleme
     }
   };
 
-  const logout = (): void => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('authToken');
+  const logout = async (): Promise<void> => {
+    try {
+      // Call logout endpoint if token exists
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        try {
+          await getJson('/api/auth/logout', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        } catch {
+          // Ignore errors on logout
+        }
+      }
+    } finally {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+    }
   };
 
   return (

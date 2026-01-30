@@ -1,59 +1,8 @@
 import { Router } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { config } from '../config.js';
-import { authenticateToken, type AuthRequest } from '../middleware/auth.js';
 import { supabase } from '../db/supabase.js';
+import { authenticateToken, type AuthRequest } from '../middleware/auth.js';
 
 export const authRouter = Router();
-
-// Initialize default admin user if it doesn't exist (development only)
-const ensureDefaultUser = async (): Promise<void> => {
-  // Skip in production for security
-  if (config.nodeEnv === 'production') {
-    return;
-  }
-
-  if (!supabase) {
-    if (config.nodeEnv === 'development') {
-      console.warn('⚠️  Supabase not configured. Skipping default user creation.');
-    }
-    return;
-  }
-
-  try {
-    // Check if admin user exists
-    const { data: existingAdmin } = await supabase
-      .from('users')
-      .select('id')
-      .eq('username', 'admin')
-      .single();
-
-    if (!existingAdmin && supabase) {
-      // Create default admin user
-      const hashedPassword = await bcrypt.hash('admin123', 10);
-      const { error } = await supabase.from('users').insert({
-        username: 'admin',
-        password_hash: hashedPassword,
-      });
-
-      if (error) {
-        if (config.nodeEnv === 'development') {
-          console.error('Error creating default admin user:', error);
-        }
-      } else if (config.nodeEnv === 'development') {
-        console.log('Default admin user created (username: admin)');
-      }
-    }
-  } catch (error) {
-    if (config.nodeEnv === 'development') {
-      console.error('Error ensuring default user:', error);
-    }
-  }
-};
-
-// Initialize default user on startup
-ensureDefaultUser();
 
 // Register endpoint
 authRouter.post('/register', async (req, res) => {
@@ -63,10 +12,10 @@ authRouter.post('/register', async (req, res) => {
   }
 
   try {
-    const { username, password } = req.body;
+    const { email, password, username } = req.body;
 
-    if (!username || !password) {
-      res.status(400).json({ error: 'Username and password are required' });
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password are required' });
       return;
     }
 
@@ -75,56 +24,49 @@ authRouter.post('/register', async (req, res) => {
       return;
     }
 
-    // Check if user already exists
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('username', username)
-      .single();
-
-    if (existingUser) {
-      res.status(400).json({ error: 'Username already exists' });
-      return;
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user in Supabase
-    const { data: newUser, error } = await supabase!
-      .from('users')
-      .insert({
-        username,
-        password_hash: hashedPassword,
-      })
-      .select('id, username')
-      .single();
+    // Create user with Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username: username || email.split('@')[0], // Use email prefix as username if not provided
+        },
+      },
+    });
 
     if (error) {
-      if (config.nodeEnv === 'development') {
-        console.error('Database error:', error);
-      }
+      res.status(400).json({ error: error.message });
+      return;
+    }
+
+    if (!data.user) {
       res.status(500).json({ error: 'Failed to create user' });
       return;
     }
 
-    if (!newUser) {
-      res.status(500).json({ error: 'Failed to create user' });
+    // Get session token
+    const session = data.session;
+    if (!session) {
+      // User needs to verify email (if email confirmation is enabled)
+      res.status(201).json({
+        message: 'User created. Please check your email to verify your account.',
+        user: {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.user_metadata?.username,
+        },
+      });
       return;
     }
-
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: newUser.id, username: newUser.username },
-      config.jwtSecret,
-      { expiresIn: '7d' },
-    );
 
     res.status(201).json({
-      token,
+      token: session.access_token,
+      refreshToken: session.refresh_token,
       user: {
-        id: newUser.id,
-        username: newUser.username,
+        id: data.user.id,
+        email: data.user.email,
+        username: data.user.user_metadata?.username,
       },
     });
   } catch (error) {
@@ -141,50 +83,40 @@ authRouter.post('/login', async (req, res) => {
   }
 
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
-      res.status(400).json({ error: 'Username and password are required' });
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password are required' });
       return;
     }
 
-    // Find user in Supabase
-    const { data: user, error } = await supabase!
-      .from('users')
-      .select('id, username, password_hash')
-      .eq('username', username)
-      .single();
+    // Sign in with Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (error || !user) {
+    if (error) {
       res.status(401).json({ error: 'Invalid credentials' });
       return;
     }
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    if (!isValidPassword) {
-      res.status(401).json({ error: 'Invalid credentials' });
+    if (!data.session || !data.user) {
+      res.status(401).json({ error: 'Failed to create session' });
       return;
     }
-
-    // Generate JWT
-    const token = jwt.sign(
-      { userId: user.id, username: user.username },
-      config.jwtSecret,
-      { expiresIn: '7d' },
-    );
 
     res.json({
-      token,
+      token: data.session.access_token,
+      refreshToken: data.session.refresh_token,
       user: {
-        id: user.id,
-        username: user.username,
+        id: data.user.id,
+        email: data.user.email,
+        username: data.user.user_metadata?.username,
       },
     });
   } catch (error) {
-    if (config.nodeEnv === 'development') {
-      console.error('Login error:', error);
-    }
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -194,9 +126,44 @@ authRouter.get('/verify', authenticateToken, (req: AuthRequest, res) => {
   res.json({
     user: {
       id: req.userId,
-      username: req.username,
+      email: req.email,
+      username: req.user?.user_metadata?.username,
     },
   });
+});
+
+// Refresh token endpoint
+authRouter.post('/refresh', async (req, res) => {
+  if (!supabase) {
+    res.status(503).json({ error: 'Database not configured. Please set Supabase credentials.' });
+    return;
+  }
+
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      res.status(400).json({ error: 'Refresh token is required' });
+      return;
+    }
+
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: refreshToken,
+    });
+
+    if (error || !data.session) {
+      res.status(403).json({ error: 'Invalid or expired refresh token' });
+      return;
+    }
+
+    res.json({
+      token: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+    });
+  } catch (error) {
+    console.error('Refresh token error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Protected route example
@@ -204,7 +171,8 @@ authRouter.get('/profile', authenticateToken, (req: AuthRequest, res) => {
   res.json({
     user: {
       id: req.userId,
-      username: req.username,
+      email: req.email,
+      username: req.user?.user_metadata?.username,
     },
   });
 });
@@ -217,10 +185,10 @@ authRouter.post('/change-password', authenticateToken, async (req: AuthRequest, 
   }
 
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { newPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      res.status(400).json({ error: 'Current password and new password are required' });
+    if (!newPassword) {
+      res.status(400).json({ error: 'New password is required' });
       return;
     }
 
@@ -234,45 +202,42 @@ authRouter.post('/change-password', authenticateToken, async (req: AuthRequest, 
       return;
     }
 
-    // Get user from database
-    const { data: user, error: fetchError } = await supabase!
-      .from('users')
-      .select('id, username, password_hash')
-      .eq('id', req.userId)
-      .single();
+    // Update password using Supabase Auth
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
 
-    if (fetchError || !user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-
-    // Verify current password
-    const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
-    if (!isValidPassword) {
-      res.status(401).json({ error: 'Current password is incorrect' });
-      return;
-    }
-
-    // Hash new password
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update password in database
-    const { error: updateError } = await supabase!
-      .from('users')
-      .update({ password_hash: hashedNewPassword })
-      .eq('id', req.userId);
-
-    if (updateError) {
-      console.error('Database error updating password:', updateError);
-      res.status(500).json({ error: 'Failed to update password' });
+    if (error) {
+      res.status(400).json({ error: error.message });
       return;
     }
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
-    if (config.nodeEnv === 'development') {
-      console.error('Change password error:', error);
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Logout endpoint (optional - mainly for server-side session cleanup)
+authRouter.post('/logout', authenticateToken, async (req: AuthRequest, res) => {
+  if (!supabase) {
+    res.status(503).json({ error: 'Database not configured. Please set Supabase credentials.' });
+    return;
+  }
+
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token) {
+      // Sign out the user
+      await supabase.auth.signOut();
     }
+
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Logout error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

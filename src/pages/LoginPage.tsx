@@ -6,8 +6,9 @@ import { Hero } from '../components/Hero';
 import { Footer } from '../components/Footer';
 
 export const LoginPage = (): JSX.Element => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,9 +22,9 @@ export const LoginPage = (): JSX.Element => {
 
     try {
       if (isRegister) {
-        await register(username, password);
+        await register(email, password, username || undefined);
       } else {
-        await login(username, password);
+        await login(email, password);
       }
       navigate('/');
     } catch (err) {
@@ -66,7 +67,7 @@ export const LoginPage = (): JSX.Element => {
               )}
               <div style={{ marginBottom: '1rem' }}>
                 <label
-                  htmlFor="username"
+                  htmlFor="email"
                   style={{
                     display: 'block',
                     marginBottom: '0.5rem',
@@ -74,13 +75,13 @@ export const LoginPage = (): JSX.Element => {
                     fontWeight: 500,
                   }}
                 >
-                  Username
+                  Email
                 </label>
                 <input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   style={{
                     width: '100%',
@@ -93,6 +94,39 @@ export const LoginPage = (): JSX.Element => {
                   }}
                 />
               </div>
+              {isRegister && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <label
+                    htmlFor="username"
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      fontSize: '0.9rem',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Username (optional)
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      color: 'var(--text-main)',
+                      fontSize: '1rem',
+                    }}
+                  />
+                  <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', opacity: 0.7 }}>
+                    If not provided, email prefix will be used
+                  </p>
+                </div>
+              )}
               <div style={{ marginBottom: '1.5rem' }}>
                 <label
                   htmlFor="password"
@@ -166,11 +200,7 @@ export const LoginPage = (): JSX.Element => {
                   opacity: 0.8,
                 }}
               >
-                <strong>Demo credentials:</strong>
-                <br />
-                Username: <code>admin</code>
-                <br />
-                Password: <code>admin123</code>
+                <strong>Note:</strong> Use your email address to login. If you haven't created an account yet, click "Register" to create one.
               </div>
             )}
           </article>

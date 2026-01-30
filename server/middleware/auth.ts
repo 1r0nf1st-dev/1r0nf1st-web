@@ -1,17 +1,23 @@
 import type { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { config } from '../config.js';
+import { supabase } from '../db/supabase.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
-  username?: string;
+  email?: string;
+  user?: {
+    id: string;
+    email?: string;
+    user_metadata?: {
+      username?: string;
+    };
+  };
 }
 
-export const authenticateToken = (
+export const authenticateToken = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
-): void => {
+): Promise<void> => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -20,18 +26,29 @@ export const authenticateToken = (
     return;
   }
 
-  jwt.verify(token, config.jwtSecret, (err, decoded) => {
-    if (err) {
+  if (!supabase) {
+    res.status(503).json({ error: 'Database not configured' });
+    return;
+  }
+
+  try {
+    // Verify the JWT token with Supabase
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
       res.status(403).json({ error: 'Invalid or expired token' });
       return;
     }
 
-    if (decoded && typeof decoded === 'object' && 'userId' in decoded) {
-      req.userId = decoded.userId as string;
-      req.username = decoded.username as string;
-      next();
-    } else {
-      res.status(403).json({ error: 'Invalid token: missing required claims' });
-    }
-  });
+    // Attach user info to request
+    req.userId = user.id;
+    req.email = user.email;
+    req.user = user;
+    next();
+  } catch (err) {
+    res.status(403).json({ error: 'Invalid token' });
+  }
 };

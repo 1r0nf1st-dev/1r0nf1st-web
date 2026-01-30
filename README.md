@@ -1,6 +1,6 @@
 ## 1r0nf1st-website
 
-Modern Vite + React + TypeScript portfolio site with a separate Express API server. The frontend calls the local API server, which handles all external API requests (GitHub, etc.), keeping tokens and secrets server-side. Includes user authentication with Supabase database integration.
+Modern Vite + React + TypeScript portfolio site with a separate Express API server. The frontend calls the local API server, which handles all external API requests (GitHub, etc.), keeping tokens and secrets server-side. Includes user authentication powered by Supabase Auth.
 
 ### Prerequisites
 
@@ -75,6 +75,42 @@ pnpm preview
   pnpm format
   ```
 
+### Testing
+
+The project uses **Vitest** for testing with **React Testing Library** for component tests.
+
+- **Run all tests**:
+
+  ```bash
+  pnpm test
+  ```
+
+- **Run tests in watch mode**:
+
+  ```bash
+  pnpm test:watch
+  ```
+
+- **Run tests with UI**:
+
+  ```bash
+  pnpm test:ui
+  ```
+
+- **Generate coverage report**:
+
+  ```bash
+  pnpm test:coverage
+  ```
+
+Tests are located alongside source files with `.test.ts` or `.test.tsx` extensions. The test setup includes:
+
+- **Frontend tests**: React components, hooks, and utilities using React Testing Library
+- **Server tests**: Express routes, middleware, and services
+- **Mocking**: API calls, localStorage, and external dependencies are mocked for isolated testing
+
+Test files follow the naming convention: `*.test.{ts,tsx}` and are automatically discovered by Vitest.
+
 ### Environment and API configuration
 
 1. **Create your env file** (in the project root):
@@ -93,8 +129,8 @@ pnpm preview
    - `PUBLIC_API_BASE` (optional) – base URL for any other public REST API you want to call.
    - `NODE_ENV` (optional) – environment mode: `development` or `production` (defaults to `development`).
    - `ALLOWED_ORIGINS` (optional) – comma-separated list of allowed CORS origins for production (e.g., `https://yoursite.com,https://www.yoursite.com`). Leave unset for development (allows all origins).
-   - `JWT_SECRET` – secret key for JWT token signing. Generate a secure secret: `openssl rand -base64 32`. **IMPORTANT:** Change this to a strong random string in production.
    - `SUPABASE_URL` – your Supabase project URL (get from Supabase dashboard → Settings → API).
+   - `SUPABASE_ANON_KEY` – your Supabase anon/public key (get from Supabase dashboard → Settings → API). Safe for client-side use.
    - `SUPABASE_SERVICE_ROLE_KEY` – your Supabase service role key (get from Supabase dashboard → Settings → API). **IMPORTANT:** Use the `service_role` key, NOT the `anon` key. Keep this secret and never expose it in client-side code.
 
 3. **Frontend configuration**:
@@ -114,48 +150,43 @@ PORT=3001
 # Server - Environment
 NODE_ENV=development
 
-# Server - Authentication
-JWT_SECRET=your-generated-secret-key-here
-
-# Server - Supabase Database
+# Server - Supabase Auth
 SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
 
 After updating `.env`, restart the dev servers (`pnpm dev`) so both Vite and Express pick up the new environment variables.
 
-### Supabase Database Setup
+### Supabase Auth Setup
 
 1. **Create a Supabase project** at https://supabase.com
-2. **Get your credentials** from Supabase dashboard → Settings → API:
+2. **Enable Email/Password Authentication**:
+   - Go to **Authentication** → **Providers** in your Supabase dashboard
+   - Ensure **Email** provider is enabled
+   - For development, disable "Confirm email" (enable for production)
+3. **Get your credentials** from Supabase dashboard → Settings → API:
    - Copy the **Project URL** → `SUPABASE_URL`
+   - Copy the **anon public** key → `SUPABASE_ANON_KEY`
    - Copy the **service_role** key → `SUPABASE_SERVICE_ROLE_KEY`
-3. **Create the users table** in Supabase SQL Editor:
-
-   ```sql
-   CREATE TABLE IF NOT EXISTS users (
-     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-     username VARCHAR(255) UNIQUE NOT NULL,
-     password_hash TEXT NOT NULL,
-     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-   );
-
-   CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-   ```
-
 4. **Add credentials to `.env`** file (see example above)
+5. **Create your first user**:
+   - Option A: Via Supabase Dashboard → Authentication → Users → Add user
+   - Option B: Via your app at `/login` → Register
 
-The default admin user (`admin` / `admin123`) will be automatically created on first server startup if it doesn't exist.
+See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for detailed setup instructions.
 
 ### Features
 
-#### Authentication
+#### Authentication (Powered by Supabase Auth)
 
-- **User Registration** – Create new user accounts with username and password
-- **User Login** – Secure authentication with JWT tokens
-- **Password Change** – Users can change their password (requires current password verification)
+- **User Registration** – Create new user accounts with email and password
+- **User Login** – Secure authentication with Supabase JWT tokens
+- **Password Change** – Users can change their password (when authenticated)
 - **Protected Routes** – Routes that require authentication
 - **Session Management** – JWT tokens stored in localStorage, auto-verification on page load
+- **Email Verification** – Optional email confirmation (configurable in Supabase dashboard)
+- **Token Refresh** – Automatic token refresh handling
 
 #### Routing
 
@@ -168,10 +199,12 @@ The default admin user (`admin` / `admin123`) will be automatically created on f
 
 - `GET /api/github/repos` – Fetch GitHub repositories
 - `GET /api/github/commits` – Fetch commits for a repository
-- `POST /api/auth/register` – Register a new user
-- `POST /api/auth/login` – Login and get JWT token
+- `POST /api/auth/register` – Register a new user (email + password)
+- `POST /api/auth/login` – Login and get Supabase JWT token
 - `GET /api/auth/verify` – Verify JWT token
+- `POST /api/auth/refresh` – Refresh access token
 - `POST /api/auth/change-password` – Change user password (protected)
+- `POST /api/auth/logout` – Logout and invalidate session
 
 ### Project structure
 
@@ -214,18 +247,15 @@ The default admin user (`admin` / `admin123`) will be automatically created on f
 
 ### Security Features
 
-- **Password Hashing** – All passwords are hashed with bcrypt (10 rounds) before storage
-- **JWT Authentication** – Secure token-based authentication
-- **Protected Routes** – Server-side route protection with JWT middleware
+- **Supabase Auth** – Professional-grade authentication with built-in security
+- **Password Hashing** – Automatic secure password hashing (managed by Supabase)
+- **JWT Authentication** – Secure token-based authentication with automatic refresh
+- **Protected Routes** – Server-side route protection with Supabase token verification
 - **CORS Configuration** – Environment-based CORS settings for production
 - **Environment Variables** – Sensitive data stored in `.env` (git-ignored)
 - **No Password Exposure** – Passwords never logged or returned in API responses
+- **Row Level Security** – Can be configured with Supabase RLS policies
 
-### Default Credentials
+### Creating Your First User
 
-For development/testing, a default admin user is automatically created:
-
-- **Username:** `admin`
-- **Password:** `admin123`
-
-**⚠️ Important:** Change the default admin password after first login in production environments.
+See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for instructions on creating your first user via the Supabase dashboard or your application.

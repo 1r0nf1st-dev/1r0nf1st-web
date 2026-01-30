@@ -15,3 +15,8 @@ server/dist
 .env.*
 !.env.example
 
+# Test coverage
+coverage
+*.lcov
+.nyc_output
+
