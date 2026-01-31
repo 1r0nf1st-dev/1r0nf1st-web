@@ -3,10 +3,11 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    { "source": "/api/:path*", "destination": "/api/catchall?x-path=:path*" },
     { "source": "/((?!api).*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/[[...slug]].ts": {
+    "api/catchall.ts": {
       "includeFiles": "server/dist/**"
     }
   }
