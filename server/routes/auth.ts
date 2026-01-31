@@ -97,7 +97,14 @@ authRouter.post('/login', async (req, res) => {
     });
 
     if (error) {
-      res.status(401).json({ error: 'Invalid credentials' });
+      // Surface helpful Supabase messages (e.g. "Email not confirmed") while keeping generic for invalid credentials
+      const message =
+        error.message === 'Email not confirmed'
+          ? 'Please confirm your email address before signing in. Check your inbox for the confirmation link.'
+          : error.message === 'Invalid login credentials'
+            ? 'Invalid credentials'
+            : error.message;
+      res.status(401).json({ error: message });
       return;
     }
 
