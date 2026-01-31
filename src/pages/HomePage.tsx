@@ -2,6 +2,9 @@ import type { JSX } from 'react';
 import { Hero } from '../components/Hero';
 import { InfoCard } from '../components/InfoCard';
 import { GitHubProjects } from '../components/GitHubProjects';
+import { MediumStories } from '../components/MediumStories';
+import { SpotifyListening } from '../components/SpotifyListening';
+import { StravaStats } from '../components/StravaStats';
 import { Footer } from '../components/Footer';
 
 export const HomePage = (): JSX.Element => {
@@ -23,6 +26,9 @@ export const HomePage = (): JSX.Element => {
           </InfoCard>
 
           <GitHubProjects />
+          <MediumStories />
+          <SpotifyListening />
+          <StravaStats />
         </section>
       </main>
 

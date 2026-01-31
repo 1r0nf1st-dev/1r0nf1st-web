@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "type-check": "tsc --noEmit && tsc --noEmit --project server/tsconfig.json",
-    "dev": "pnpm type-check && concurrently \"pnpm:dev:server\" \"pnpm:dev:client\"",
+    "dev": "pnpm type-check && concurrently \"pnpm:dev:server\" \"pnpm:dev:wait\"",
     "dev:client": "vite",
+    "dev:wait": "wait-on http://localhost:3001/health && pnpm dev:client",
     "dev:server": "tsx watch server/index.ts",
     "server": "tsx server/index.ts",
     "build": "pnpm build:client && pnpm build:server",
@@ -30,7 +31,8 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-icons": "^5.5.0",
-    "react-router-dom": "^7.13.0"
+    "react-router-dom": "^7.13.0",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
@@ -63,7 +65,8 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "wait-on": "^8.0.1"
   },
   "packageManager": "pnpm@10.28.1"
 }
