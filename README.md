@@ -61,6 +61,15 @@ pnpm start:server
 pnpm preview
 ```
 
+### Deploy to Vercel
+
+The project is set up for Vercel: the **Vite** frontend is built to `dist/`, and the **Express** API runs as a Vercel serverless function for all `/api/*` routes.
+
+1. **Connect the repo** to Vercel (GitHub/GitLab/Bitbucket) and import this project.
+2. **Framework preset**: leave **Vite** (auto-detected) or set it explicitly. The `vercel.json` build command runs `pnpm build:server && pnpm build:client` so the API is built before the frontend.
+3. **Environment variables**: in the Vercel project **Settings → Environment Variables**, add the same variables you use locally (see `.env.example`). Do **not** set `VITE_API_BASE_URL` in production so the frontend uses relative `/api` on the same origin.
+4. **Deploy**: push to your connected branch; Vercel will build and deploy. The site will serve the Vite app and route `/api/*` to the Express app.
+
 ### Lint and format
 
 - **Lint** (ESLint, TypeScript, React, a11y):
