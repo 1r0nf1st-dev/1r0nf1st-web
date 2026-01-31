@@ -1,5 +1,10 @@
 {
   "buildCommand": "pnpm build:server && pnpm build:client",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "functions": {
+    "api/[[...slug]].ts": {
+      "includeFiles": "server/dist/**"
+    }
+  }
 }
