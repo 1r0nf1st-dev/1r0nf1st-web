@@ -221,6 +221,21 @@ body {
   line-height: 1.7;
 }
 
+.medium-story-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.medium-story-content a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.medium-story-content a:hover {
+  text-decoration: underline;
+}
+
 .footer {
   margin-top: 2rem;
   text-align: center;

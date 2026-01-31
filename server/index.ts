@@ -2,6 +2,9 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { githubRouter } from './routes/github.js';
+import { mediumRouter } from './routes/medium.js';
+import { spotifyRouter } from './routes/spotify.js';
+import { stravaRouter } from './routes/strava.js';
 import { authRouter } from './routes/auth.js';
 import { config } from './config.js';
 
@@ -45,6 +48,9 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api/github', githubRouter);
+app.use('/api/medium', mediumRouter);
+app.use('/api/spotify', spotifyRouter);
+app.use('/api/strava', stravaRouter);
 app.use('/api/auth', authRouter);
 
 app.listen(PORT, () => {
