@@ -2,6 +2,9 @@
   "buildCommand": "pnpm build:server && pnpm build:client",
   "outputDirectory": "dist",
   "framework": "vite",
+  "rewrites": [
+    { "source": "/((?!api).*)", "destination": "/index.html" }
+  ],
   "functions": {
     "api/[[...slug]].ts": {
       "includeFiles": "server/dist/**"
