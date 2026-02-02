@@ -52,4 +52,36 @@ app.use('/api/spotify', spotifyRouter);
 app.use('/api/strava', stravaRouter);
 app.use('/api/auth', authRouter);
 
+// 404 handler for unmatched routes
+app.use((_req, res) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: 'The requested API endpoint does not exist',
+  });
+});
+
+// Global error handler middleware
+app.use(
+  (
+    err: Error,
+    _req: express.Request,
+    res: express.Response,
+    _next: express.NextFunction,
+  ) => {
+    console.error('Unhandled error:', err);
+
+    // Don't leak error details in production
+    const message =
+      config.nodeEnv === 'production'
+        ? 'Internal server error'
+        : err.message || 'An unexpected error occurred';
+
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message,
+      ...(config.nodeEnv === 'development' && { stack: err.stack }),
+    });
+  },
+);
+
 export default app;
