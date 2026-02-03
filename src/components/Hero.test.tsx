@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import { Hero } from './Hero';
 import * as authContextModule from '../contexts/AuthContext';
 
@@ -16,9 +17,11 @@ describe('Hero', () => {
 
   const renderHero = () => {
     return render(
-      <BrowserRouter>
-        <Hero />
-      </BrowserRouter>,
+      <ThemeProvider>
+        <BrowserRouter>
+          <Hero />
+        </BrowserRouter>
+      </ThemeProvider>,
     );
   };
 

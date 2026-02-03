@@ -2,20 +2,21 @@ import { useEffect, useState } from 'react';
 import { env } from './config';
 import { getJson } from './apiClient';
 
-export interface StravaTotalsPeriod {
-  distanceMiles: number;
-  movingTimeSeconds: number;
-  elevationGainM: number;
+export interface WeatherData {
+  location: string;
+  temperature: number;
+  feelsLike: number;
+  description: string;
+  icon: string;
+  humidity: number;
+  windSpeed: number;
+  visibility: number;
+  pressure: number;
+  updatedAt: string;
 }
 
-export interface StravaTotals {
-  recent: StravaTotalsPeriod;
-  ytd: StravaTotalsPeriod;
-  allTime: StravaTotalsPeriod;
-}
-
-interface StravaStatsState {
-  totals: StravaTotals | null;
+interface WeatherState {
+  weather: WeatherData | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -34,9 +35,9 @@ function getApiBase(): string {
   return apiBase;
 }
 
-export function useStravaStats(): StravaStatsState {
-  const [state, setState] = useState<StravaStatsState>({
-    totals: null,
+export function useWeather(city: string = 'London'): WeatherState {
+  const [state, setState] = useState<WeatherState>({
+    weather: null,
     isLoading: true,
     error: null,
   });
@@ -44,28 +45,28 @@ export function useStravaStats(): StravaStatsState {
   useEffect(() => {
     let isCancelled = false;
 
-    const url = `${getApiBase()}/strava/totals`;
+    const url = `${getApiBase()}/weather/current?city=${encodeURIComponent(city)}`;
 
-    getJson<StravaTotals>(url)
-      .then((totals) => {
+    getJson<WeatherData>(url)
+      .then((weather) => {
         if (isCancelled) return;
-        setState({ totals, isLoading: false, error: null });
+        setState({ weather, isLoading: false, error: null });
       })
       .catch((error: unknown) => {
         if (isCancelled) return;
-        let message = 'Something went wrong fetching Strava data.';
+        let message = 'Something went wrong fetching weather data.';
         if (error instanceof Error) {
           message = error.message;
         } else if (typeof error === 'string') {
           message = error;
         }
-        setState({ totals: null, isLoading: false, error: message });
+        setState({ weather: null, isLoading: false, error: message });
       });
 
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [city]);
 
   return state;
 }

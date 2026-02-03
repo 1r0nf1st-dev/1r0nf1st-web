@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import type { SpotifyTrack } from '../useSpotifyRecentlyPlayed';
+import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
 
 export interface SpotifyTrackCardProps {
   track: SpotifyTrack;
@@ -21,25 +22,16 @@ export const SpotifyTrackCard = ({
   id,
 }: SpotifyTrackCardProps): JSX.Element => {
   return (
-    <article className="card" id={id}>
-      <div
-        className="card-body"
-        style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.75rem',
-            marginBottom: '0.5rem',
-          }}
-        >
+    <article className={cardClasses} id={id}>
+      <div className={cardOverlay} aria-hidden />
+      <div className={`${cardBody} flex flex-col h-full`}>
+        <div className="flex items-start gap-3 mb-2">
           {track.albumImageUrl && (
             <a
               href={track.trackUrl}
               target="_blank"
               rel="noreferrer"
-              style={{ flexShrink: 0 }}
+              className="shrink-0"
               aria-hidden
             >
               <img
@@ -47,54 +39,34 @@ export const SpotifyTrackCard = ({
                 alt=""
                 width={80}
                 height={80}
-                style={{
-                  objectFit: 'cover',
-                  borderRadius: '4px',
-                  display: 'block',
-                }}
+                className="object-cover rounded block"
               />
             </a>
           )}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h2 className="card-title" style={{ marginBottom: '0.25rem' }}>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base font-medium mb-1 text-foreground">
               <a
                 href={track.trackUrl}
                 target="_blank"
                 rel="noreferrer"
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                className="no-underline text-inherit"
               >
                 {track.trackName}
               </a>
             </h2>
-            <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem' }}>
-              {track.artistNames}
-            </p>
-            <p style={{ margin: 0, opacity: 0.7, fontSize: '0.8rem' }}>
-              {track.albumName}
-            </p>
+            <p className="m-0 opacity-80 text-sm">{track.artistNames}</p>
+            <p className="m-0 opacity-70 text-xs">{track.albumName}</p>
           </div>
         </div>
-        <p
-          style={{
-            margin: 0,
-            opacity: 0.7,
-            fontSize: '0.8rem',
-            marginTop: 'auto',
-            paddingTop: '0.5rem',
-          }}
-        >
+        <p className="m-0 opacity-70 text-xs mt-auto pt-2">
           {formatPlayedAt(track.playedAt)}
         </p>
-        <div style={{ marginTop: '0.5rem' }}>
+        <div className="mt-2">
           <a
             href={track.trackUrl}
             target="_blank"
             rel="noreferrer"
-            style={{
-              fontSize: '0.85rem',
-              color: 'var(--accent)',
-              textDecoration: 'none',
-            }}
+            className="text-sm text-primary no-underline hover:underline"
           >
             Play on Spotify →
           </a>

@@ -4,7 +4,7 @@ const STRAVA_OAUTH = 'https://www.strava.com/oauth';
 const STRAVA_API = 'https://www.strava.com/api/v3';
 
 export interface StravaTotalsPeriod {
-  distanceKm: number;
+  distanceMiles: number;
   movingTimeSeconds: number;
   elevationGainM: number;
 }
@@ -44,8 +44,12 @@ function sumTotals(
   const u = isActivityTotals(run)
     ? run
     : { distance: 0, moving_time: 0, elevation_gain: 0 };
+  // Convert meters to miles (1 meter = 0.000621371 miles)
+  const distanceMeters = r.distance + u.distance;
+  const distanceMiles = distanceMeters * 0.000621371;
+
   return {
-    distanceKm: (r.distance + u.distance) / 1000,
+    distanceMiles,
     movingTimeSeconds: r.moving_time + u.moving_time,
     elevationGainM: r.elevation_gain + u.elevation_gain,
   };

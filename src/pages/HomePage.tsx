@@ -5,30 +5,39 @@ import { GitHubProjects } from '../components/GitHubProjects';
 import { MediumStories } from '../components/MediumStories';
 import { SpotifyListening } from '../components/SpotifyListening';
 import { StravaStats } from '../components/StravaStats';
+import { Weather } from '../components/Weather';
+import { Quote } from '../components/Quote';
+import { VercelDeployments } from '../components/VercelDeployments';
 import { Footer } from '../components/Footer';
 
 export const HomePage = (): JSX.Element => {
   return (
-    <div className="app-shell">
-      <Hero />
+    <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
+      <div className="w-full max-w-[1080px] mx-auto">
+        <Hero />
+      </div>
 
-      <main className="main">
-        <section className="card-grid" aria-label="Portfolio content">
+      <main className="flex-1 flex items-stretch justify-center pt-7">
+        <section
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-[1080px]"
+          aria-label="Portfolio content"
+        >
           <InfoCard title="About">
-            This site is a lightweight portfolio starter built with Vite, React, and TypeScript. It
-            is configured to call external APIs such as GitHub and any other public REST endpoints
-            you want to integrate.
+            Welcome to my personal portfolio. Here you'll find my latest coding projects, blog posts, music I'm listening to, fitness activities, and more. Everything is powered by live data from various APIs.
           </InfoCard>
 
-          <InfoCard title="API-ready setup">
-            Environment-driven configuration and a small API client make it easy to connect to
-            GitHub and other services without leaking secrets into the front-end codebase.
+          <InfoCard title="Tech Stack">
+            Built with React, TypeScript, Express.js, and Tailwind CSS. Deployed on Vercel with serverless functions. Integrates with GitHub, Medium, Spotify, Strava, OpenWeather, and more.
           </InfoCard>
-
+          <Quote />
+          <Weather />
           <GitHubProjects />
+          <VercelDeployments />
           <MediumStories />
           <SpotifyListening />
           <StravaStats />
+          
+         
         </section>
       </main>
 

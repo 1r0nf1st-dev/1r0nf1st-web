@@ -30,4 +30,7 @@ export const config = {
   supabaseUrl: process.env.SUPABASE_URL || '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+  openWeatherApiKey: process.env.OPENWEATHER_API_KEY?.trim() ?? '',
+  vercelApiToken: process.env.VERCEL_API_TOKEN?.trim() ?? '',
+  vercelProjectId: process.env.VERCEL_PROJECT_ID?.trim() ?? '',
 };

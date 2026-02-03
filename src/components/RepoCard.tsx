@@ -18,21 +18,9 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
   );
 
   return (
-    <div
-      style={{
-        marginBottom: '1.5rem',
-        paddingBottom: '1.5rem',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
-      }}
-    >
+    <div className="mb-6 pb-6 border-b border-border/50">
       <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          cursor: 'pointer',
-          marginBottom: '0.5rem',
-        }}
+        className="flex items-center gap-2 cursor-pointer mb-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded"
         onClick={onToggle}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -44,15 +32,13 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
         tabIndex={0}
         aria-expanded={isExpanded}
       >
-        <span style={{ fontSize: '0.9rem', opacity: 0.7 }}>
-          {isExpanded ? '▼' : '▶'}
-        </span>
-        <h3 style={{ margin: 0, fontSize: '1.1rem', flex: 1 }}>
+        <span className="text-sm opacity-70">{isExpanded ? '▼' : '▶'}</span>
+        <h3 className="m-0 text-lg flex-1">
           <a
             href={repo.html_url}
             target="_blank"
             rel="noreferrer"
-            style={{ textDecoration: 'none' }}
+            className="no-underline text-inherit"
             onClick={(e) => e.stopPropagation()}
           >
             {repo.name}
@@ -60,69 +46,55 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
         </h3>
       </div>
       {repo.description && (
-        <p style={{ marginBottom: '1rem', opacity: 0.8, fontSize: '0.9rem', marginLeft: '1.5rem' }}>
-          {repo.description}
-        </p>
+        <p className="mb-4 opacity-80 text-sm ml-6">{repo.description}</p>
       )}
       {isExpanded && (
-        <div style={{ marginLeft: '1.5rem', marginTop: '1rem' }}>
-          {commitsLoading && <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>Loading commits…</p>}
+        <div className="ml-6 mt-4">
+          {commitsLoading && (
+            <p className="text-[0.85rem] opacity-70">Loading commits…</p>
+          )}
           {commitsError && (
-            <p style={{ fontSize: '0.85rem', opacity: 0.7, color: '#ff6b6b' }}>
+            <p className="text-[0.85rem] opacity-70 text-red-400">
               Error: {commitsError}
             </p>
           )}
           {!commitsLoading && !commitsError && commits && commits.length > 0 && (
-            <ul
-              style={{
-                fontSize: '0.85rem',
-                listStyle: 'none',
-                padding: 0,
-                margin: 0,
-                maxHeight: '400px',
-                overflowY: 'auto',
-              }}
-            >
+            <ul className="text-[0.85rem] list-none p-0 m-0 max-h-[400px] overflow-y-auto">
               {commits.map((commit) => (
                 <li
                   key={commit.sha}
-                  style={{
-                    marginBottom: '0.75rem',
-                    paddingBottom: '0.75rem',
-                    borderBottom: '1px solid rgba(255,255,255,0.05)',
-                  }}
+                  className="mb-3 pb-3 border-b border-border/30"
                 >
                   <a
                     href={commit.html_url}
                     target="_blank"
                     rel="noreferrer"
-                    style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+                    className="no-underline text-inherit block"
                   >
                     {commit.commit.message.split('\n')[0]}
                   </a>
-                  <span
-                    style={{
-                      opacity: 0.6,
-                      fontSize: '0.8rem',
-                      display: 'block',
-                      marginTop: '0.25rem',
-                    }}
-                  >
-                    {new Date(commit.commit.author.date).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
+                  <span className="opacity-60 text-xs block mt-1">
+                    {new Date(commit.commit.author.date).toLocaleDateString(
+                      'en-US',
+                      {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      },
+                    )}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-          {!commitsLoading && !commitsError && commits && commits.length === 0 && (
-            <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>No commits found</p>
-          )}
+          {!commitsLoading &&
+            !commitsError &&
+            commits &&
+            commits.length === 0 && (
+              <p className="text-[0.85rem] opacity-70">No commits found</p>
+            )}
         </div>
       )}
     </div>

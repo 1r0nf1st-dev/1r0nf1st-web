@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Hero } from '../components/Hero';
 import { Footer } from '../components/Footer';
+import { cardClasses, cardOverlay, cardTitle } from '../styles/cards';
+import { btnBase, btnPrimary } from '../styles/buttons';
 
 export const ChangePasswordPage = (): JSX.Element => {
   const [newPassword, setNewPassword] = useState('');
@@ -55,60 +57,28 @@ export const ChangePasswordPage = (): JSX.Element => {
   };
 
   return (
-    <div className="app-shell">
+    <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
       <Hero />
-      <main className="main">
-        <section
-          style={{
-            width: '100%',
-            maxWidth: '500px',
-            margin: '0 auto',
-          }}
-        >
-          <article className="card">
-            <h2 className="card-title" style={{ marginBottom: '1.5rem' }}>
-              Change Password
-            </h2>
-            <form onSubmit={handleSubmit}>
+      <main className="flex-1 flex items-stretch justify-center pt-7">
+        <section className="w-full max-w-[500px] mx-auto">
+          <article className={cardClasses}>
+            <div className={cardOverlay} aria-hidden />
+            <h2 className={`${cardTitle} mb-6`}>Change Password</h2>
+            <form onSubmit={handleSubmit} className="relative z-10">
               {error && (
-                <div
-                  style={{
-                    padding: '0.75rem',
-                    marginBottom: '1rem',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    borderRadius: '8px',
-                    color: '#ef4444',
-                    fontSize: '0.9rem',
-                  }}
-                >
+                <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
                   {error}
                 </div>
               )}
               {success && (
-                <div
-                  style={{
-                    padding: '0.75rem',
-                    marginBottom: '1rem',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    border: '1px solid rgba(34, 197, 94, 0.3)',
-                    borderRadius: '8px',
-                    color: '#22c55e',
-                    fontSize: '0.9rem',
-                  }}
-                >
+                <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-500 text-sm">
                   {success}
                 </div>
               )}
-              <div style={{ marginBottom: '1rem' }}>
+              <div className="mb-4">
                 <label
                   htmlFor="newPassword"
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontSize: '0.9rem',
-                    fontWeight: 500,
-                  }}
+                  className="block mb-2 text-sm font-medium text-foreground"
                 >
                   New Password
                 </label>
@@ -119,29 +89,16 @@ export const ChangePasswordPage = (): JSX.Element => {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    color: 'var(--text-main)',
-                    fontSize: '1rem',
-                  }}
+                  className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
-                <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', opacity: 0.7 }}>
+                <p className="mt-2 text-[0.85rem] opacity-70">
                   Must be at least 6 characters
                 </p>
               </div>
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div className="mb-6">
                 <label
                   htmlFor="confirmPassword"
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontSize: '0.9rem',
-                    fontWeight: 500,
-                  }}
+                  className="block mb-2 text-sm font-medium text-foreground"
                 >
                   Confirm New Password
                 </label>
@@ -152,27 +109,13 @@ export const ChangePasswordPage = (): JSX.Element => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    color: 'var(--text-main)',
-                    fontSize: '1rem',
-                  }}
+                  className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
               <button
                 type="submit"
-                className="button button-primary"
+                className={`${btnBase} ${btnPrimary} w-full mb-4`}
                 disabled={isLoading}
-                style={{
-                  width: '100%',
-                  marginBottom: '1rem',
-                  opacity: isLoading ? 0.6 : 1,
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                }}
               >
                 {isLoading ? 'Changing password...' : 'Change Password'}
               </button>
