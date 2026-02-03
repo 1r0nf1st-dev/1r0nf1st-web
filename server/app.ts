@@ -5,6 +5,9 @@ import { githubRouter } from './routes/github.js';
 import { mediumRouter } from './routes/medium.js';
 import { spotifyRouter } from './routes/spotify.js';
 import { stravaRouter } from './routes/strava.js';
+import { weatherRouter } from './routes/weather.js';
+import { quoteRouter } from './routes/quote.js';
+import { vercelRouter } from './routes/vercel.js';
 import { authRouter } from './routes/auth.js';
 import { config } from './config.js';
 
@@ -50,6 +53,9 @@ app.use('/api/github', githubRouter);
 app.use('/api/medium', mediumRouter);
 app.use('/api/spotify', spotifyRouter);
 app.use('/api/strava', stravaRouter);
+app.use('/api/weather', weatherRouter);
+app.use('/api/quote', quoteRouter);
+app.use('/api/vercel', vercelRouter);
 app.use('/api/auth', authRouter);
 
 // 404 handler for unmatched routes

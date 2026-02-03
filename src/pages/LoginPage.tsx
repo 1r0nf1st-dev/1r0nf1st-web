@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Hero } from '../components/Hero';
 import { Footer } from '../components/Footer';
+import { cardClasses, cardOverlay, cardTitle } from '../styles/cards';
+import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 export const LoginPage = (): JSX.Element => {
   const [email, setEmail] = useState('');
@@ -35,45 +37,25 @@ export const LoginPage = (): JSX.Element => {
   };
 
   return (
-    <div className="app-shell">
+    <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
       <Hero />
-      <main className="main">
-        <section
-          style={{
-            width: '100%',
-            maxWidth: '500px',
-            margin: '0 auto',
-          }}
-        >
-          <article className="card">
-            <h2 className="card-title" style={{ marginBottom: '1.5rem' }}>
+      <main className="flex-1 flex items-stretch justify-center pt-7">
+        <section className="w-full max-w-[500px] mx-auto">
+          <article className={cardClasses}>
+            <div className={cardOverlay} aria-hidden />
+            <h2 className={`${cardTitle} mb-6`}>
               {isRegister ? 'Create Account' : 'Login'}
             </h2>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} className="relative z-10">
               {error && (
-                <div
-                  style={{
-                    padding: '0.75rem',
-                    marginBottom: '1rem',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
-                    borderRadius: '8px',
-                    color: '#ef4444',
-                    fontSize: '0.9rem',
-                  }}
-                >
+                <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
                   {error}
                 </div>
               )}
-              <div style={{ marginBottom: '1rem' }}>
+              <div className="mb-4">
                 <label
                   htmlFor="email"
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontSize: '0.9rem',
-                    fontWeight: 500,
-                  }}
+                  className="block mb-2 text-sm font-medium text-foreground"
                 >
                   Email
                 </label>
@@ -83,27 +65,14 @@ export const LoginPage = (): JSX.Element => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    color: 'var(--text-main)',
-                    fontSize: '1rem',
-                  }}
+                  className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
               {isRegister && (
-                <div style={{ marginBottom: '1rem' }}>
+                <div className="mb-4">
                   <label
                     htmlFor="username"
-                    style={{
-                      display: 'block',
-                      marginBottom: '0.5rem',
-                      fontSize: '0.9rem',
-                      fontWeight: 500,
-                    }}
+                    className="block mb-2 text-sm font-medium text-foreground"
                   >
                     Username (optional)
                   </label>
@@ -112,30 +81,17 @@ export const LoginPage = (): JSX.Element => {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      backgroundColor: 'rgba(255,255,255,0.05)',
-                      color: 'var(--text-main)',
-                      fontSize: '1rem',
-                    }}
+                    className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
-                  <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', opacity: 0.7 }}>
+                  <p className="mt-2 text-[0.85rem] opacity-70">
                     If not provided, email prefix will be used
                   </p>
                 </div>
               )}
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div className="mb-6">
                 <label
                   htmlFor="password"
-                  style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontSize: '0.9rem',
-                    fontWeight: 500,
-                  }}
+                  className="block mb-2 text-sm font-medium text-foreground"
                 >
                   Password
                 </label>
@@ -146,32 +102,18 @@ export const LoginPage = (): JSX.Element => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={isRegister ? 6 : undefined}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    color: 'var(--text-main)',
-                    fontSize: '1rem',
-                  }}
+                  className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
                 {isRegister && (
-                  <p style={{ marginTop: '0.5rem', fontSize: '0.85rem', opacity: 0.7 }}>
+                  <p className="mt-2 text-[0.85rem] opacity-70">
                     Password must be at least 6 characters
                   </p>
                 )}
               </div>
               <button
                 type="submit"
-                className="button button-primary"
+                className={`${btnBase} ${btnPrimary} w-full mb-4`}
                 disabled={isLoading}
-                style={{
-                  width: '100%',
-                  marginBottom: '1rem',
-                  opacity: isLoading ? 0.6 : 1,
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                }}
               >
                 {isLoading ? 'Please wait...' : isRegister ? 'Register' : 'Login'}
               </button>
@@ -181,8 +123,7 @@ export const LoginPage = (): JSX.Element => {
                   setIsRegister(!isRegister);
                   setError('');
                 }}
-                className="button button-ghost"
-                style={{ width: '100%', fontSize: '0.9rem' }}
+                className={`${btnBase} ${btnGhost} w-full text-sm`}
               >
                 {isRegister
                   ? 'Already have an account? Login'
@@ -190,17 +131,10 @@ export const LoginPage = (): JSX.Element => {
               </button>
             </form>
             {!isRegister && (
-              <div
-                style={{
-                  marginTop: '1.5rem',
-                  padding: '1rem',
-                  backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                  borderRadius: '8px',
-                  fontSize: '0.85rem',
-                  opacity: 0.8,
-                }}
-              >
-                <strong>Note:</strong> Use your email address to login. If you haven't created an account yet, click "Register" to create one.
+              <div className="mt-6 p-4 bg-primary/10 rounded-lg text-sm opacity-80 relative z-10">
+                <strong>Note:</strong> Use your email address to login. If you
+                haven&apos;t created an account yet, click &quot;Register&quot;
+                to create one.
               </div>
             )}
           </article>

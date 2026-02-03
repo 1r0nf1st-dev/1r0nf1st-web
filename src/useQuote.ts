@@ -2,20 +2,15 @@ import { useEffect, useState } from 'react';
 import { env } from './config';
 import { getJson } from './apiClient';
 
-export interface StravaTotalsPeriod {
-  distanceMiles: number;
-  movingTimeSeconds: number;
-  elevationGainM: number;
+export interface QuoteData {
+  id: string;
+  content: string;
+  author: string;
+  tags: string[];
 }
 
-export interface StravaTotals {
-  recent: StravaTotalsPeriod;
-  ytd: StravaTotalsPeriod;
-  allTime: StravaTotalsPeriod;
-}
-
-interface StravaStatsState {
-  totals: StravaTotals | null;
+interface QuoteState {
+  quote: QuoteData | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -34,9 +29,9 @@ function getApiBase(): string {
   return apiBase;
 }
 
-export function useStravaStats(): StravaStatsState {
-  const [state, setState] = useState<StravaStatsState>({
-    totals: null,
+export function useQuote(): QuoteState {
+  const [state, setState] = useState<QuoteState>({
+    quote: null,
     isLoading: true,
     error: null,
   });
@@ -44,22 +39,22 @@ export function useStravaStats(): StravaStatsState {
   useEffect(() => {
     let isCancelled = false;
 
-    const url = `${getApiBase()}/strava/totals`;
+    const url = `${getApiBase()}/quote/random`;
 
-    getJson<StravaTotals>(url)
-      .then((totals) => {
+    getJson<QuoteData>(url)
+      .then((quote) => {
         if (isCancelled) return;
-        setState({ totals, isLoading: false, error: null });
+        setState({ quote, isLoading: false, error: null });
       })
       .catch((error: unknown) => {
         if (isCancelled) return;
-        let message = 'Something went wrong fetching Strava data.';
+        let message = 'Something went wrong fetching the quote.';
         if (error instanceof Error) {
           message = error.message;
         } else if (typeof error === 'string') {
           message = error;
         }
-        setState({ totals: null, isLoading: false, error: message });
+        setState({ quote: null, isLoading: false, error: message });
       });
 
     return () => {

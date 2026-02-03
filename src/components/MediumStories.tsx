@@ -2,8 +2,9 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useMediumStories } from '../useMediumStories';
 import { MediumStoryCard } from './MediumStoryCard';
+import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
-const DEFAULT_LIMIT = 8;
+const DEFAULT_LIMIT = 6;
 
 export const MediumStories = (): JSX.Element => {
   const { stories, isLoading, error } = useMediumStories(DEFAULT_LIMIT);
@@ -11,27 +12,30 @@ export const MediumStories = (): JSX.Element => {
 
   if (isLoading) {
     return (
-      <article className="card" id="medium">
-        <h2 className="card-title">Latest on Medium</h2>
-        <p className="card-body">Loading stories from Medium…</p>
+      <article className={cardClasses} id="medium">
+        <div className={cardOverlay} aria-hidden />
+        <h2 className={cardTitle}>Latest on Medium</h2>
+        <p className={cardBody}>Loading stories from Medium…</p>
       </article>
     );
   }
 
   if (error) {
     return (
-      <article className="card" id="medium">
-        <h2 className="card-title">Latest on Medium</h2>
-        <p className="card-body">Error: {error}</p>
+      <article className={cardClasses} id="medium">
+        <div className={cardOverlay} aria-hidden />
+        <h2 className={cardTitle}>Latest on Medium</h2>
+        <p className={cardBody}>Error: {error}</p>
       </article>
     );
   }
 
   if (!stories || stories.length === 0) {
     return (
-      <article className="card" id="medium">
-        <h2 className="card-title">Latest on Medium</h2>
-        <p className="card-body">
+      <article className={cardClasses} id="medium">
+        <div className={cardOverlay} aria-hidden />
+        <h2 className={cardTitle}>Latest on Medium</h2>
+        <p className={cardBody}>
           No stories found. Make sure the API server is running and{' '}
           <code>MEDIUM_FEED_URL</code> or <code>MEDIUM_USERNAME</code> is set in{' '}
           <code>.env</code>.

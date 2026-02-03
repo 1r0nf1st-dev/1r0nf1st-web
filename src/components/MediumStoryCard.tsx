@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import type { MediumStory } from '../useMediumStories';
+import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
 
 export interface MediumStoryCardProps {
   story: MediumStory;
@@ -25,15 +26,16 @@ export const MediumStoryCard = ({
   id,
 }: MediumStoryCardProps): JSX.Element => {
   return (
-    <article className="card" id={id}>
-      <div className="card-body" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.5rem' }}>
+    <article className={cardClasses} id={id}>
+      <div className={cardOverlay} aria-hidden />
+      <div className={`${cardBody} flex flex-col h-full`}>
+        <div className="flex items-start gap-3 mb-2">
           {story.thumbnailUrl && (
             <a
               href={story.link}
               target="_blank"
               rel="noreferrer"
-              style={{ flexShrink: 0 }}
+              className="shrink-0"
               aria-hidden
             >
               <img
@@ -41,55 +43,38 @@ export const MediumStoryCard = ({
                 alt=""
                 width={120}
                 height={80}
-                style={{
-                  objectFit: 'cover',
-                  borderRadius: '4px',
-                  display: 'block',
-                }}
+                className="object-cover rounded block"
               />
             </a>
           )}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h2 className="card-title" style={{ marginBottom: '0.25rem' }}>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base font-medium mb-1 text-foreground">
               <a
                 href={story.link}
                 target="_blank"
                 rel="noreferrer"
-                style={{ textDecoration: 'none', color: 'inherit' }}
+                className="no-underline text-inherit"
               >
                 {story.title}
               </a>
             </h2>
-            <p style={{ margin: 0, opacity: 0.8, fontSize: '0.85rem' }}>
+            <p className="m-0 opacity-80 text-sm">
               {formatPubDate(story.pubDate)} · {story.author}
             </p>
           </div>
         </div>
         {isExpanded && story.description && (
           <div
-            style={{
-              marginTop: '0.75rem',
-              fontSize: '0.9rem',
-              lineHeight: 1.5,
-              maxHeight: '300px',
-              overflowY: 'auto',
-              flex: 1,
-              minHeight: 0,
-            }}
-            className="medium-story-content"
+            className="mt-3 text-sm leading-relaxed max-h-[300px] overflow-y-auto flex-1 min-h-0 [&_img]:max-w-full [&_a]:text-primary [&_a]:no-underline [&_a:hover]:underline"
             dangerouslySetInnerHTML={{ __html: story.description }}
           />
         )}
-        <div style={{ marginTop: 'auto', paddingTop: '0.75rem' }}>
+        <div className="mt-auto pt-3">
           <a
             href={story.link}
             target="_blank"
             rel="noreferrer"
-            style={{
-              fontSize: '0.85rem',
-              color: 'var(--accent)',
-              textDecoration: 'none',
-            }}
+            className="text-sm text-primary no-underline hover:underline"
           >
             Read on Medium →
           </a>

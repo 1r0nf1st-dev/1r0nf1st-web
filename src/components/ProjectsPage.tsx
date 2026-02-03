@@ -1,5 +1,7 @@
 import type { JSX } from 'react';
 import { Link } from 'react-router-dom';
+import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { btnBase, btnGhost } from '../styles/buttons';
 import {
   FaRocket,
   FaCode,
@@ -179,48 +181,24 @@ export const ProjectsPage = (): JSX.Element => {
   ];
 
   return (
-    <div className="app-shell">
+    <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
       <Hero />
 
-      <main className="main">
+      <main className="flex-1 flex items-stretch justify-center pt-7">
         <section
-          style={{
-            width: '100%',
-            maxWidth: '1080px',
-            margin: '0 auto',
-          }}
+          className="w-full max-w-[1080px] mx-auto"
           aria-label="Projects"
         >
-          <article className="card">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1rem',
-              }}
-            >
-              <h2 className="card-title" style={{ margin: 0 }}>
-                Projects
-              </h2>
-              <Link
-                to="/"
-                className="button button-ghost"
-                style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-              >
+          <article className={cardClasses}>
+            <div className={cardOverlay} aria-hidden />
+            <div className="flex justify-between items-center mb-4 relative z-10">
+              <h2 className={`${cardTitle} m-0`}>Projects</h2>
+              <Link to="/" className={`${btnBase} ${btnGhost} text-sm py-2 px-4`}>
                 ← Back to Home
               </Link>
             </div>
-            <div className="card-body">
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                  gap: '1.5rem',
-                  marginTop: '1rem',
-                  width: '100%',
-                }}
-              >
+            <div className={cardBody}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 mt-4 w-full">
                 {projects.map((project) => {
                   const IconComponent = project.icon;
                   return (
@@ -229,66 +207,18 @@ export const ProjectsPage = (): JSX.Element => {
                       href={project.link}
                       target="_blank"
                       rel="noreferrer"
-                      style={{
-                        display: 'block',
-                        padding: '1.5rem',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '8px',
-                        backgroundColor: 'rgba(255,255,255,0.02)',
-                        transition: 'all 0.2s ease',
-                        textDecoration: 'none',
-                        color: 'inherit',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.02)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }}
+                      className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
                     >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '1rem',
-                          marginBottom: '0.75rem',
-                        }}
-                      >
-                        <IconComponent
-                          style={{
-                            fontSize: '2rem',
-                            color: 'var(--accent)',
-                            flexShrink: 0,
-                          }}
-                        />
-                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600 }}>
+                      <div className="flex items-center gap-4 mb-3">
+                        <IconComponent className="text-3xl text-primary shrink-0" />
+                        <h3 className="m-0 text-xl font-semibold">
                           {project.title}
                         </h3>
                       </div>
-                      <p
-                        style={{
-                          margin: '0 0 1rem 0',
-                          opacity: 0.8,
-                          fontSize: '0.9rem',
-                          lineHeight: 1.5,
-                        }}
-                      >
+                      <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
                         {project.description}
                       </p>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          fontSize: '0.85rem',
-                          opacity: 0.7,
-                          color: 'var(--accent)',
-                        }}
-                      >
+                      <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
                         <span>View project</span>
                         <span>→</span>
                       </div>
