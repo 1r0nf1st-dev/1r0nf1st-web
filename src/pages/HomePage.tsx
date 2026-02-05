@@ -7,6 +7,7 @@ import { DevToArticles } from '../components/DevToArticles';
 import { SpotifyListening } from '../components/SpotifyListening';
 import { Weather } from '../components/Weather';
 import { Quote } from '../components/Quote';
+import { Joke } from '../components/Joke';
 import { Footer } from '../components/Footer';
 
 export const HomePage = (): JSX.Element => {
@@ -29,6 +30,7 @@ export const HomePage = (): JSX.Element => {
             Built with React, TypeScript, Express.js, and Tailwind CSS. Deployed on Vercel with serverless functions. Integrates with GitHub, Medium, Spotify, Strava, OpenWeather, and more.
           </InfoCard>
           <Quote />
+          <Joke />
           <Weather />
           <GitHubProjects />
           <MediumStories />
