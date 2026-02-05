@@ -38,6 +38,43 @@ interface Project {
 
 export const ProjectsPage = (): JSX.Element => {
   const projects: Project[] = [
+    // Working projects first
+    {
+      id: 9,
+      icon: FaBullseye,
+      title: 'Goal Tracker',
+      description: "Precision goal-setting and tracking application that helps users achieve their objectives with detailed progress monitoring and milestones.",
+      link: '/projects/goal-tracker',
+    },
+    {
+      id: 19,
+      icon: FaSun,
+      title: 'Weather Dashboard',
+      description: "Beautiful weather application with detailed forecasts, interactive maps, and location-based recommendations.",
+      link: '/projects/weather',
+    },
+    {
+      id: 17,
+      icon: FaHeart,
+      title: 'Health Tracker',
+      description: "Personal health and wellness application with activity tracking, goal setting, and progress visualization.",
+      link: '/projects/health-tracker',
+    },
+    {
+      id: 11,
+      icon: FaCloud,
+      title: 'Cloud Infrastructure',
+      description: "A scalable cloud-based solution designed for modern applications. Features include automated deployment and resource management.",
+      link: '/projects/cloud',
+    },
+    {
+      id: 10,
+      icon: FaStar,
+      title: 'Featured Showcase',
+      description: "A curated collection platform that highlights top-rated content, products, and services with user reviews and recommendations.",
+      link: '/projects/showcase',
+    },
+    // Placeholder projects
     {
       id: 1,
       icon: FaRocket,
@@ -95,27 +132,6 @@ export const ProjectsPage = (): JSX.Element => {
       link: '#project-8',
     },
     {
-      id: 9,
-      icon: FaBullseye,
-      title: 'Goal Tracker',
-      description: "Precision goal-setting and tracking application that helps users achieve their objectives with detailed progress monitoring and milestones.",
-      link: '/projects/goal-tracker',
-    },
-    {
-      id: 10,
-      icon: FaStar,
-      title: 'Featured Showcase',
-      description: "A curated collection platform that highlights top-rated content, products, and services with user reviews and recommendations.",
-      link: '/projects/showcase',
-    },
-    {
-      id: 11,
-      icon: FaCloud,
-      title: 'Cloud Infrastructure',
-      description: "A scalable cloud-based solution designed for modern applications. Features include automated deployment and resource management.",
-      link: '/projects/cloud',
-    },
-    {
       id: 12,
       icon: FaShieldAlt,
       title: 'Security Platform',
@@ -151,25 +167,11 @@ export const ProjectsPage = (): JSX.Element => {
       link: '#project-16',
     },
     {
-      id: 17,
-      icon: FaHeart,
-      title: 'Health Tracker',
-      description: "Personal health and wellness application with activity tracking, goal setting, and progress visualization.",
-      link: '/projects/health-tracker',
-    },
-    {
       id: 18,
       icon: FaFire,
       title: 'Performance Optimizer',
       description: "Advanced performance optimization tool that identifies bottlenecks and suggests improvements for faster execution.",
       link: '#project-18',
-    },
-    {
-      id: 19,
-      icon: FaSun,
-      title: 'Weather Dashboard',
-      description: "Beautiful weather application with detailed forecasts, interactive maps, and location-based recommendations.",
-      link: '/projects/weather',
     },
     {
       id: 20,
