@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Color Palette Extractor</title>
+    <style>
+        body { 
+            font-family: system-ui; 
+            padding: 40px; 
+            max-width: 1200px; 
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        .color-box { 
+            display: inline-block; 
+            width: 120px; 
+            height: 120px; 
+            margin: 10px; 
+            border: 2px solid #333;
+            border-radius: 8px;
+            position: relative;
+            vertical-align: top;
+        }
+        .color-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px;
+            font-size: 11px;
+            text-align: center;
+            border-radius: 0 0 6px 6px;
+        }
+        #colors { margin-top: 30px; }
+        #css-output {
+            margin-top: 40px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        h1 { color: #333; }
+        h2 { color: #555; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Color Palette Extractor</h1>
+    <p>Analyzing your logo to extract the color palette...</p>
+    <img id="logo" src="/logo.jpg" style="max-width: 400px; border: 2px solid #ccc; border-radius: 8px; margin: 20px 0;">
+    <div id="colors"></div>
+    <div id="css-output"></div>
+    
+    <script>
+        const img = document.getElementById('logo');
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            const colorMap = new Map();
+            
+            // Sample pixels (every 20th pixel for performance)
+            for (let i = 0; i < pixels.length; i += 80) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                const a = pixels[i + 3];
+                
+                // Skip transparent pixels
+                if (a < 128) continue;
+                
+                // Quantize to reduce noise (32 levels)
+                const qr = Math.floor(r / 32) * 32;
+                const qg = Math.floor(g / 32) * 32;
+                const qb = Math.floor(b / 32) * 32;
+                
+                const key = `${qr},${qg},${qb}`;
+                colorMap.set(key, (colorMap.get(key) || 0) + 1);
+            }
+            
+            // Get top 8 colors
+            const sorted = Array.from(colorMap.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8);
+            
+            const colorsDiv = document.getElementById('colors');
+            colorsDiv.innerHTML = '<h2>Dominant Colors (Top 8):</h2>';
+            
+            const colorList = [];
+            sorted.forEach(([color, count], index) => {
+                const [r, g, b] = color.split(',').map(Number);
+                const hex = '#' + [r, g, b].map(x => {
+                    const hex = x.toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                }).join('');
+                
+                colorList.push({ r, g, b, hex, index: index + 1 });
+                
+                const div = document.createElement('div');
+                div.className = 'color-box';
+                div.style.backgroundColor = hex;
+                div.innerHTML = `<div class="color-info">${hex}<br>RGB(${r},${g},${b})<br>Rank: #${index + 1}</div>`;
+                colorsDiv.appendChild(div);
+            });
+            
+            // Generate CSS variables
+            const primary = colorList[0];
+            const secondary = colorList[1] || primary;
+            const accent = colorList[2] || secondary;
+            
+            // Calculate complementary colors for text
+            const getContrastColor = (r, g, b) => {
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                return brightness > 128 ? '#0f172a' : '#e5e7eb';
+            };
+            
+            const textColor = getContrastColor(primary.r, primary.g, primary.b);
+            const bgColor = `rgb(${Math.max(0, primary.r - 240)}, ${Math.max(0, primary.g - 240)}, ${Math.max(0, primary.b - 240)})`;
+            
+            const cssOutput = document.getElementById('css-output');
+            cssOutput.innerHTML = `
+                <h2>📋 Generated CSS Variables</h2>
+                <p>Copy these colors to update your theme in <code>src/index.css</code>:</p>
+                <pre>/* Primary colors from logo */
+--color-primary: ${primary.hex};
+--color-primary-strong: ${secondary.hex};
+--color-accent: ${accent.hex};
+
+/* All extracted colors: */
+${colorList.map((c, i) => `--color-${i === 0 ? 'primary' : i === 1 ? 'secondary' : `accent-${i - 1}`}: ${c.hex};`).join('\n')}
+
+/* Suggested theme colors */
+--color-background: ${bgColor};
+--color-foreground: ${textColor};
+</pre>
+                <p><strong>Primary:</strong> ${primary.hex} | <strong>Secondary:</strong> ${secondary.hex} | <strong>Accent:</strong> ${accent.hex}</p>
+            `;
+            
+            // Log to console for easy copying
+            console.log('\n=== COLOR PALETTE FROM LOGO ===');
+            console.log('Primary:', primary.hex);
+            console.log('Secondary:', secondary.hex);
+            console.log('Accent:', accent.hex);
+            console.log('\nAll colors:', colorList.map(c => c.hex).join(', '));
+        };
+        
+        img.onerror = function() {
+            document.body.innerHTML = '<h1>Error</h1><p>Could not load logo.jpg. Make sure the file exists in the public folder.</p>';
+        };
+    </script>
+</body>
+</html>

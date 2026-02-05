@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Hero } from '../components/Hero';
 import { Footer } from '../components/Footer';
@@ -16,6 +16,7 @@ export const LoginPage = (): JSX.Element => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -28,7 +29,9 @@ export const LoginPage = (): JSX.Element => {
       } else {
         await login(email, password);
       }
-      navigate('/');
+      // Redirect to returnTo URL if provided, otherwise go to home
+      const returnTo = searchParams.get('returnTo');
+      navigate(returnTo || '/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
@@ -65,7 +68,7 @@ export const LoginPage = (): JSX.Element => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
               </div>
               {isRegister && (
@@ -81,7 +84,7 @@ export const LoginPage = (): JSX.Element => {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
+                    className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                   />
                   <p className="mt-2 text-[0.85rem] opacity-70">
                     If not provided, email prefix will be used
@@ -102,7 +105,7 @@ export const LoginPage = (): JSX.Element => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={isRegister ? 6 : undefined}
-                  className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
                 {isRegister && (
                   <p className="mt-2 text-[0.85rem] opacity-70">

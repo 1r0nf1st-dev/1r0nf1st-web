@@ -33,4 +33,11 @@ export const config = {
   openWeatherApiKey: process.env.OPENWEATHER_API_KEY?.trim() ?? '',
   vercelApiToken: process.env.VERCEL_API_TOKEN?.trim() ?? '',
   vercelProjectId: process.env.VERCEL_PROJECT_ID?.trim() ?? '',
+  devToUsername: process.env.DEVTO_USERNAME?.trim() ?? '',
+  devToTag: process.env.DEVTO_TAG?.trim() ?? '',
+  devToSource: (process.env.DEVTO_SOURCE?.trim() ?? 'username') as
+    | 'username'
+    | 'tag'
+    | 'latest'
+    | 'top',
 };

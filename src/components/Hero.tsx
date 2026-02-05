@@ -21,14 +21,14 @@ export const Hero = (): JSX.Element => {
 
   return (
     <header className="w-full">
-      <div className="relative rounded-xl border border-border bg-white dark:bg-surface shadow-md dark:shadow-soft overflow-hidden px-6 py-8 md:px-10 md:py-10 backdrop-blur-sm">
+      <div className="relative rounded-xl border-2 border-primary/40 dark:border-border bg-gradient-to-br from-white via-primary/8 to-primary/5 dark:from-surface dark:to-surface-soft shadow-lg dark:shadow-soft overflow-hidden px-6 py-8 md:px-10 md:py-10 backdrop-blur-sm">
         <div
-          className="absolute inset-0 bg-gradient-to-br from-primary/12 via-primary/6 to-transparent dark:from-primary/20 dark:via-transparent from-10% to-55% opacity-100 dark:opacity-80 pointer-events-none"
+          className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/8 to-transparent dark:from-primary/20 dark:via-transparent from-10% to-55% opacity-100 dark:opacity-80 pointer-events-none"
           aria-hidden
         />
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-2">
-            <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-full border border-border bg-primary/12 dark:bg-primary/10 text-xs uppercase tracking-wider text-muted font-medium">
+            <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-full border-2 border-primary/40 dark:border-border bg-primary/15 dark:bg-primary/10 text-xs uppercase tracking-wider text-primary-strong dark:text-muted font-medium">
               Portfolio · React + Vite
             </span>
             <div className="flex items-center gap-3">
@@ -53,8 +53,13 @@ export const Hero = (): JSX.Element => {
               )}
             </div>
           </div>
-          <Link to="/" className="no-underline text-inherit">
-            <h1 className="mt-4 mb-2 text-3xl md:text-4xl font-semibold tracking-tight cursor-pointer">
+          <Link to="/" className="no-underline text-inherit flex items-center gap-4 mt-4 mb-2">
+            <img
+              src="/logo.jpg"
+              alt="1r0nf1st logo"
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-2 border-primary/40 dark:border-border shadow-sm flex-shrink-0"
+            />
+            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight cursor-pointer">
               1r0nf1st
             </h1>
           </Link>

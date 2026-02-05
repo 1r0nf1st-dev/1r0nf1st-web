@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Color Palette Extractor</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; }
+        .color-box { 
+            display: inline-block; 
+            width: 100px; 
+            height: 100px; 
+            margin: 10px; 
+            border: 2px solid #333;
+            border-radius: 8px;
+            position: relative;
+        }
+        .color-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            font-size: 11px;
+            text-align: center;
+        }
+        #colors { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Color Palette from Logo</h1>
+    <img id="logo" src="/logo.jpg" style="max-width: 300px; border: 1px solid #ccc; margin-bottom: 20px;">
+    <div id="colors"></div>
+    
+    <script>
+        const img = document.getElementById('logo');
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            const colorMap = new Map();
+            
+            // Sample pixels
+            for (let i = 0; i < pixels.length; i += 40) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                
+                // Quantize to reduce noise
+                const qr = Math.floor(r / 32) * 32;
+                const qg = Math.floor(g / 32) * 32;
+                const qb = Math.floor(b / 32) * 32;
+                
+                const key = `${qr},${qg},${qb}`;
+                colorMap.set(key, (colorMap.get(key) || 0) + 1);
+            }
+            
+            // Get top 8 colors
+            const sorted = Array.from(colorMap.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8);
+            
+            const colorsDiv = document.getElementById('colors');
+            colorsDiv.innerHTML = '<h2>Dominant Colors (Top 8):</h2>';
+            
+            const colorList = [];
+            sorted.forEach(([color, count], index) => {
+                const [r, g, b] = color.split(',').map(Number);
+                const hex = '#' + [r, g, b].map(x => {
+                    const hex = x.toString(16);
+                    return hex.length === 1 ? '0' + hex : hex;
+                }).join('');
+                
+                colorList.push({ r, g, b, hex, index: index + 1 });
+                
+                const div = document.createElement('div');
+                div.className = 'color-box';
+                div.style.backgroundColor = hex;
+                div.innerHTML = `<div class="color-info">${hex}<br>RGB(${r},${g},${b})</div>`;
+                colorsDiv.appendChild(div);
+            });
+            
+            // Output CSS variables
+            console.log('\n=== CSS Color Variables ===');
+            console.log('Primary (most dominant):', colorList[0].hex);
+            console.log('Secondary:', colorList[1]?.hex || colorList[0].hex);
+            console.log('\nAll colors:', colorList.map(c => c.hex).join(', '));
+        };
+    </script>
+</body>
+</html>
