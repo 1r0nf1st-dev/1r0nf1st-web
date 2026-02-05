@@ -5,10 +5,8 @@ import { GitHubProjects } from '../components/GitHubProjects';
 import { MediumStories } from '../components/MediumStories';
 import { DevToArticles } from '../components/DevToArticles';
 import { SpotifyListening } from '../components/SpotifyListening';
-import { StravaStats } from '../components/StravaStats';
 import { Weather } from '../components/Weather';
 import { Quote } from '../components/Quote';
-import { VercelDeployments } from '../components/VercelDeployments';
 import { Footer } from '../components/Footer';
 
 export const HomePage = (): JSX.Element => {
@@ -33,13 +31,9 @@ export const HomePage = (): JSX.Element => {
           <Quote />
           <Weather />
           <GitHubProjects />
-          <VercelDeployments />
           <MediumStories />
           <DevToArticles />
           <SpotifyListening />
-          <StravaStats />
-          
-         
         </section>
       </main>
 

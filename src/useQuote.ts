@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { env } from './config';
 import { getJson } from './apiClient';
 
@@ -13,6 +13,7 @@ interface QuoteState {
   quote: QuoteData | null;
   isLoading: boolean;
   error: string | null;
+  refetch: () => void;
 }
 
 function getApiBase(): string {
@@ -34,33 +35,41 @@ export function useQuote(): QuoteState {
     quote: null,
     isLoading: true,
     error: null,
+    refetch: () => {},
   });
 
-  useEffect(() => {
-    let isCancelled = false;
+  const fetchQuote = useCallback(() => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     const url = `${getApiBase()}/quote/random`;
 
     getJson<QuoteData>(url)
       .then((quote) => {
-        if (isCancelled) return;
-        setState({ quote, isLoading: false, error: null });
+        setState({ quote, isLoading: false, error: null, refetch: fetchQuote });
       })
       .catch((error: unknown) => {
-        if (isCancelled) return;
         let message = 'Something went wrong fetching the quote.';
         if (error instanceof Error) {
           message = error.message;
         } else if (typeof error === 'string') {
           message = error;
         }
-        setState({ quote: null, isLoading: false, error: message });
+        setState({
+          quote: null,
+          isLoading: false,
+          error: message,
+          refetch: fetchQuote,
+        });
       });
-
-    return () => {
-      isCancelled = true;
-    };
   }, []);
+
+  useEffect(() => {
+    setState((prev) => ({ ...prev, refetch: fetchQuote }));
+  }, [fetchQuote]);
+
+  useEffect(() => {
+    fetchQuote();
+  }, [fetchQuote]);
 
   return state;
 }
