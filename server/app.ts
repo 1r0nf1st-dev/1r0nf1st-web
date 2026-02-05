@@ -8,7 +8,9 @@ import { stravaRouter } from './routes/strava.js';
 import { weatherRouter } from './routes/weather.js';
 import { quoteRouter } from './routes/quote.js';
 import { vercelRouter } from './routes/vercel.js';
+import { devtoRouter } from './routes/devto.js';
 import { authRouter } from './routes/auth.js';
+import { goalsRouter } from './routes/goals.js';
 import { config } from './config.js';
 
 // Validate required environment variables in production (skip on Vercel; env is set in dashboard)
@@ -56,7 +58,9 @@ app.use('/api/strava', stravaRouter);
 app.use('/api/weather', weatherRouter);
 app.use('/api/quote', quoteRouter);
 app.use('/api/vercel', vercelRouter);
+app.use('/api/devto', devtoRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/goals', goalsRouter);
 
 // 404 handler for unmatched routes
 app.use((_req, res) => {

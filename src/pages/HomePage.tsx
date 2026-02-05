@@ -3,6 +3,7 @@ import { Hero } from '../components/Hero';
 import { InfoCard } from '../components/InfoCard';
 import { GitHubProjects } from '../components/GitHubProjects';
 import { MediumStories } from '../components/MediumStories';
+import { DevToArticles } from '../components/DevToArticles';
 import { SpotifyListening } from '../components/SpotifyListening';
 import { StravaStats } from '../components/StravaStats';
 import { Weather } from '../components/Weather';
@@ -34,6 +35,7 @@ export const HomePage = (): JSX.Element => {
           <GitHubProjects />
           <VercelDeployments />
           <MediumStories />
+          <DevToArticles />
           <SpotifyListening />
           <StravaStats />
           

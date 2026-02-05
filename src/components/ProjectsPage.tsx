@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost } from '../styles/buttons';
 import {
@@ -99,7 +99,7 @@ export const ProjectsPage = (): JSX.Element => {
       icon: FaBullseye,
       title: 'Goal Tracker',
       description: "Precision goal-setting and tracking application that helps users achieve their objectives with detailed progress monitoring and milestones.",
-      link: '#project-9',
+      link: '/projects/goal-tracker',
     },
     {
       id: 10,
@@ -201,14 +201,9 @@ export const ProjectsPage = (): JSX.Element => {
               <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 mt-4 w-full">
                 {projects.map((project) => {
                   const IconComponent = project.icon;
-                  return (
-                    <a
-                      key={project.id}
-                      href={project.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
-                    >
+                  const isInternalLink = project.link.startsWith('/');
+                  const cardContent = (
+                    <>
                       <div className="flex items-center gap-4 mb-3">
                         <IconComponent className="text-3xl text-primary shrink-0" />
                         <h3 className="m-0 text-xl font-semibold">
@@ -222,6 +217,26 @@ export const ProjectsPage = (): JSX.Element => {
                         <span>View project</span>
                         <span>→</span>
                       </div>
+                    </>
+                  );
+                  
+                  return isInternalLink ? (
+                    <Link
+                      key={project.id}
+                      to={project.link}
+                      className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
+                    >
+                      {cardContent}
+                    </Link>
+                  ) : (
+                    <a
+                      key={project.id}
+                      href={project.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
+                    >
+                      {cardContent}
                     </a>
                   );
                 })}

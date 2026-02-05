@@ -89,7 +89,7 @@ export const ChangePasswordPage = (): JSX.Element => {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
                 <p className="mt-2 text-[0.85rem] opacity-70">
                   Must be at least 6 characters
@@ -109,7 +109,7 @@ export const ChangePasswordPage = (): JSX.Element => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full p-3 rounded-lg border border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
               </div>
               <button
