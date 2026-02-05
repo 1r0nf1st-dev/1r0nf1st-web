@@ -82,6 +82,11 @@ body {
     BlinkMacSystemFont,
     "SF Pro Text",
     sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+}
+
+.dark body {
   background:
     radial-gradient(circle at top, rgba(99, 102, 241, 0.08), transparent 55%),
     radial-gradient(circle at bottom, rgba(139, 92, 246, 0.06), transparent 60%),
