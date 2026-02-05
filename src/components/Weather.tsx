@@ -2,8 +2,12 @@ import type { JSX } from 'react';
 import { useWeather } from '../useWeather';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
-export const Weather = (): JSX.Element | null => {
-  const { weather, isLoading, error } = useWeather('London');
+interface WeatherProps {
+  city?: string;
+}
+
+export const Weather = ({ city = 'London' }: WeatherProps): JSX.Element | null => {
+  const { weather, isLoading, error } = useWeather(city);
 
   if (isLoading) {
     return (

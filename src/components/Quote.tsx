@@ -1,9 +1,10 @@
 import type { JSX } from 'react';
 import { useQuote } from '../useQuote';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { btnBase, btnGhost } from '../styles/buttons';
 
 export const Quote = (): JSX.Element | null => {
-  const { quote, isLoading, error } = useQuote();
+  const { quote, isLoading, error, refetch } = useQuote();
 
   if (isLoading) {
     return (
@@ -20,9 +21,23 @@ export const Quote = (): JSX.Element | null => {
       <article className={cardClasses} id="quote">
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Quote</h2>
-        <p className={cardBody}>
-          Quote unavailable right now. Try again later.
-        </p>
+        <div className={cardBody}>
+          <p className="mb-4">
+            Quote unavailable right now. Try again later.
+          </p>
+          {import.meta.env.DEV && error && (
+            <p className="mb-4 text-xs opacity-80" role="status">
+              {error}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className={`${btnBase} ${btnGhost} text-sm`}
+          >
+            Try again
+          </button>
+        </div>
       </article>
     );
   }

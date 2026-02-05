@@ -68,18 +68,28 @@ async function fetchFromZenQuotes(): Promise<QuoteData> {
   };
 }
 
+/** Fallback quotes when external APIs are down */
+const FALLBACK_QUOTES: QuoteData[] = [
+  { id: 'fb-1', content: 'The only way to do great work is to love what you do.', author: 'Steve Jobs', tags: ['work', 'passion'] },
+  { id: 'fb-2', content: 'It does not matter how slowly you go as long as you do not stop.', author: 'Confucius', tags: ['persistence'] },
+  { id: 'fb-3', content: 'Quality is not an act, it is a habit.', author: 'Aristotle', tags: ['quality', 'habit'] },
+  { id: 'fb-4', content: 'The best time to plant a tree was 20 years ago. The second best time is now.', author: 'Chinese Proverb', tags: ['action', 'time'] },
+  { id: 'fb-5', content: 'We cannot solve our problems with the same thinking we used when we created them.', author: 'Albert Einstein', tags: ['thinking', 'problems'] },
+];
+
+function getFallbackQuote(): QuoteData {
+  const index = Math.floor(Math.random() * FALLBACK_QUOTES.length);
+  return FALLBACK_QUOTES[index];
+}
+
 export async function fetchRandomQuote(): Promise<QuoteData> {
   try {
     return await fetchFromQuotable();
   } catch {
     try {
       return await fetchFromZenQuotes();
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Quote services unreachable.';
-      throw new Error(
-        `Quote service is temporarily unreachable. Check your network or try again later. (${message})`,
-      );
+    } catch {
+      return getFallbackQuote();
     }
   }
 }

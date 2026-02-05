@@ -33,11 +33,15 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
-      throw new ApiError(
-        text || `Request to ${url} failed with status ${response.status}`,
-        response.status,
-        url,
-      );
+      let message = text || `Request to ${url} failed with status ${response.status}`;
+      try {
+        const json = JSON.parse(text) as { error?: string; message?: string };
+        if (typeof json.error === 'string') message = json.error;
+        else if (typeof json.message === 'string') message = json.message;
+      } catch {
+        // keep message as text
+      }
+      throw new ApiError(message, response.status, url);
     }
 
     return (await response.json()) as T;

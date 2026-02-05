@@ -106,14 +106,14 @@ export const ProjectsPage = (): JSX.Element => {
       icon: FaStar,
       title: 'Featured Showcase',
       description: "A curated collection platform that highlights top-rated content, products, and services with user reviews and recommendations.",
-      link: '#project-10',
+      link: '/projects/showcase',
     },
     {
       id: 11,
       icon: FaCloud,
       title: 'Cloud Infrastructure',
       description: "A scalable cloud-based solution designed for modern applications. Features include automated deployment and resource management.",
-      link: '#project-11',
+      link: '/projects/cloud',
     },
     {
       id: 12,
@@ -155,7 +155,7 @@ export const ProjectsPage = (): JSX.Element => {
       icon: FaHeart,
       title: 'Health Tracker',
       description: "Personal health and wellness application with activity tracking, goal setting, and progress visualization.",
-      link: '#project-17',
+      link: '/projects/health-tracker',
     },
     {
       id: 18,
@@ -169,7 +169,7 @@ export const ProjectsPage = (): JSX.Element => {
       icon: FaSun,
       title: 'Weather Dashboard',
       description: "Beautiful weather application with detailed forecasts, interactive maps, and location-based recommendations.",
-      link: '#project-19',
+      link: '/projects/weather',
     },
     {
       id: 20,
