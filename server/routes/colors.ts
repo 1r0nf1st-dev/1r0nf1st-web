@@ -1,6 +1,4 @@
 import { Router } from 'express';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 
 export const colorsRouter = Router();
 

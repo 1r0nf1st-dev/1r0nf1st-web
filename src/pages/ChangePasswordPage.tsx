@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,7 +17,7 @@ export const ChangePasswordPage = (): JSX.Element => {
   const { changePassword } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setSuccess('');

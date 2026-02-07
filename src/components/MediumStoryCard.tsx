@@ -5,7 +5,7 @@ import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
 export interface MediumStoryCardProps {
   story: MediumStory;
   isExpanded: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
   id?: string;
 }
 
@@ -22,7 +22,6 @@ function formatPubDate(iso: string): string {
 export const MediumStoryCard = ({
   story,
   isExpanded,
-  onToggle,
   id,
 }: MediumStoryCardProps): JSX.Element => {
   return (

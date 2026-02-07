@@ -22,6 +22,10 @@ export default [
       },
       globals: {
         ...globals.browser,
+        __BUILD_VERSION__: 'readonly',
+        __VERSION__: 'readonly',
+        __BUILD_NUMBER__: 'readonly',
+        __BUILD_DATE__: 'readonly',
       },
     },
     plugins: {
@@ -46,7 +50,7 @@ export default [
   },
   prettierConfig,
   {
-    files: ['server/**/*.ts'],
+    files: ['server/**/*.ts', 'api/**/*.ts', 'scripts/**/*.js', '*.config.{ts,js}', 'vitest.config.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -55,6 +59,12 @@ export default [
       },
       globals: {
         ...globals.node,
+        process: 'readonly',
+        __dirname: 'readonly',
+        __BUILD_VERSION__: 'readonly',
+        __VERSION__: 'readonly',
+        __BUILD_NUMBER__: 'readonly',
+        __BUILD_DATE__: 'readonly',
       },
     },
     plugins: {
@@ -63,5 +73,17 @@ export default [
     rules: {
       ...tsPlugin.configs.recommended.rules,
     },
+  },
+  {
+    files: ['src/**/*.test.{ts,tsx}', 'src/test/**/*.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        global: 'readonly',
+      },
+    },
+  },
+  {
+    ignores: ['dist/**', 'node_modules/**', 'server/dist/**'],
   },
 ];

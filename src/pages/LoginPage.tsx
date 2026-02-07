@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import type { FormEvent } from 'react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,7 +19,7 @@ export const LoginPage = (): JSX.Element => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setIsLoading(true);

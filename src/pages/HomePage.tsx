@@ -23,7 +23,7 @@ export const HomePage = (): JSX.Element => {
           aria-label="Portfolio content"
         >
           <InfoCard title="About">
-            Welcome to my personal portfolio. Here you'll find my latest coding projects, blog posts, music I'm listening to, fitness activities, and more. Everything is powered by live data from various APIs.
+            Welcome to my personal portfolio. Here you&apos;ll find my latest coding projects, blog posts, music I&apos;m listening to, fitness activities, and more. Everything is powered by live data from various APIs.
           </InfoCard>
 
           <InfoCard title="Tech Stack">

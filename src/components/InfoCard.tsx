@@ -3,7 +3,7 @@ import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
 export interface InfoCardProps {
   title: string;
-  children: React.ReactNode;
+  children: JSX.Element | string | (JSX.Element | string)[];
 }
 
 export const InfoCard = ({ title, children }: InfoCardProps): JSX.Element => {

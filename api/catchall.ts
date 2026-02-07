@@ -227,7 +227,7 @@ export default async function handler(
 
   // Set timeout to prevent hanging (Vercel functions have max duration)
   // Declare outside try block so it's accessible in catch
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   // Load and execute Express app
   try {

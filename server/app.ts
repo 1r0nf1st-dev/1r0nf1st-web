@@ -12,7 +12,11 @@ import { vercelRouter } from './routes/vercel.js';
 import { devtoRouter } from './routes/devto.js';
 import { authRouter } from './routes/auth.js';
 import { goalsRouter } from './routes/goals.js';
+import { logsRouter } from './routes/logs.js';
 import { config } from './config.js';
+import { logger } from './utils/logger.js';
+import { requestLogger } from './middleware/requestLogger.js';
+import { errorLogger } from './middleware/errorLogger.js';
 
 // Validate required environment variables in production (skip on Vercel; env is set in dashboard)
 if (config.nodeEnv === 'production' && !process.env.VERCEL) {
@@ -27,9 +31,10 @@ if (config.nodeEnv === 'production' && !process.env.VERCEL) {
     requiredVars.push('SUPABASE_ANON_KEY');
   }
   if (requiredVars.length > 0) {
-    console.error('❌ Missing required environment variables for production:');
-    requiredVars.forEach((v) => console.error(`   - ${v}`));
-    console.error('\nPlease set all required environment variables before starting the server.');
+    logger.error(
+      { missingVars: requiredVars },
+      'Missing required environment variables for production',
+    );
     process.exit(1);
   }
 }
@@ -48,6 +53,9 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Request logging middleware (must be after body parser, before routes)
+app.use(requestLogger);
+
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -63,6 +71,7 @@ app.use('/api/vercel', vercelRouter);
 app.use('/api/devto', devtoRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/goals', goalsRouter);
+app.use('/api/logs', logsRouter);
 
 // 404 handler for unmatched routes
 app.use((_req, res) => {
@@ -72,15 +81,19 @@ app.use((_req, res) => {
   });
 });
 
+// Error logging middleware (must be before error handler)
+app.use(errorLogger);
+
 // Global error handler middleware
 app.use(
   (
     err: Error,
     _req: express.Request,
     res: express.Response,
-    _next: express.NextFunction,
+    _next: express.NextFunction, // eslint-disable-line @typescript-eslint/no-unused-vars
   ) => {
-    console.error('Unhandled error:', err);
+    // Error is already logged by errorLogger middleware
+    const statusCode = (err as Error & { status?: number }).status || 500;
 
     // Don't leak error details in production
     const message =
@@ -88,8 +101,8 @@ app.use(
         ? 'Internal server error'
         : err.message || 'An unexpected error occurred';
 
-    res.status(500).json({
-      error: 'Internal Server Error',
+    res.status(statusCode).json({
+      error: statusCode >= 500 ? 'Internal Server Error' : 'Error',
       message,
       ...(config.nodeEnv === 'development' && { stack: err.stack }),
     });

@@ -54,6 +54,42 @@ export function useGoals(): GoalsState {
     error: null,
   });
 
+  useEffect(() => {
+    let isCancelled = false;
+    // Initialize loading state before async fetch - this is a valid pattern for data fetching hooks
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Setting initial loading state before async operation is necessary
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    const url = `${getApiBase()}/goals`;
+    getJson<Goal[]>(url)
+      .then((goals) => {
+        if (!isCancelled) {
+          setState({ goals, isLoading: false, error: null });
+        }
+      })
+      .catch((error: unknown) => {
+        if (!isCancelled) {
+          let message = 'Something went wrong fetching goals.';
+          if (error instanceof ApiError) {
+            if (error.status === 401) {
+              message = 'Please log in to view your goals.';
+            } else {
+              message = error.message;
+            }
+          } else if (error instanceof Error) {
+            message = error.message;
+          } else if (typeof error === 'string') {
+            message = error;
+          }
+          setState({ goals: null, isLoading: false, error: message });
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
   const fetchGoals = async () => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
@@ -78,23 +114,11 @@ export function useGoals(): GoalsState {
     }
   };
 
-  useEffect(() => {
-    let isCancelled = false;
-
-    fetchGoals().catch(() => {
-      if (!isCancelled) {
-        // Error already handled in fetchGoals
-      }
-    });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
   return {
     ...state,
-    refetch: fetchGoals,
+    refetch: async () => {
+      await fetchGoals();
+    },
   };
 }
 
@@ -106,11 +130,10 @@ export async function createGoal(
   status?: 'active' | 'completed' | 'paused' | 'cancelled',
 ): Promise<Goal> {
   const url = `${getApiBase()}/goals`;
-  const response = await fetch(url, {
+  return getJson<Goal>(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
     },
     body: JSON.stringify({
       title,
@@ -120,13 +143,6 @@ export async function createGoal(
       status,
     }),
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to create goal' }));
-    throw new Error(error.error || 'Failed to create goal');
-  }
-
-  return response.json();
 }
 
 export async function updateGoal(
@@ -140,36 +156,20 @@ export async function updateGoal(
   },
 ): Promise<Goal> {
   const url = `${getApiBase()}/goals/${goalId}`;
-  const response = await fetch(url, {
+  return getJson<Goal>(url, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
     },
     body: JSON.stringify(updates),
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to update goal' }));
-    throw new Error(error.error || 'Failed to update goal');
-  }
-
-  return response.json();
 }
 
 export async function deleteGoal(goalId: string): Promise<void> {
   const url = `${getApiBase()}/goals/${goalId}`;
-  const response = await fetch(url, {
+  await getJson<void>(url, {
     method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
-    },
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to delete goal' }));
-    throw new Error(error.error || 'Failed to delete goal');
-  }
 }
 
 export async function createMilestone(
@@ -178,21 +178,13 @@ export async function createMilestone(
   description?: string,
 ): Promise<GoalMilestone> {
   const url = `${getApiBase()}/goals/${goalId}/milestones`;
-  const response = await fetch(url, {
+  return getJson<GoalMilestone>(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
     },
     body: JSON.stringify({ title, description }),
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to create milestone' }));
-    throw new Error(error.error || 'Failed to create milestone');
-  }
-
-  return response.json();
 }
 
 export async function updateMilestone(
@@ -204,34 +196,18 @@ export async function updateMilestone(
   },
 ): Promise<GoalMilestone> {
   const url = `${getApiBase()}/goals/milestones/${milestoneId}`;
-  const response = await fetch(url, {
+  return getJson<GoalMilestone>(url, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
     },
     body: JSON.stringify(updates),
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to update milestone' }));
-    throw new Error(error.error || 'Failed to update milestone');
-  }
-
-  return response.json();
 }
 
 export async function deleteMilestone(milestoneId: string): Promise<void> {
   const url = `${getApiBase()}/goals/milestones/${milestoneId}`;
-  const response = await fetch(url, {
+  await getJson<void>(url, {
     method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('authToken') || ''}`,
-    },
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Failed to delete milestone' }));
-    throw new Error(error.error || 'Failed to delete milestone');
-  }
 }

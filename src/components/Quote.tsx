@@ -60,7 +60,7 @@ export const Quote = (): JSX.Element | null => {
       <h2 className={cardTitle}>Quote</h2>
       <div className={cardBody}>
         <blockquote className="m-0 p-0 border-none text-[1.05rem] leading-relaxed opacity-95">
-          <p className="m-0 mb-4">"{quote.content}"</p>
+          <p className="m-0 mb-4">&quot;{quote.content}&quot;</p>
           <footer className="text-[0.95rem] font-medium opacity-90">
             — {quote.author}
           </footer>

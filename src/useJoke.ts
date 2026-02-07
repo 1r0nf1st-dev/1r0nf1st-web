@@ -31,45 +31,69 @@ function getApiBase(): string {
 }
 
 export function useJoke(): JokeState {
-  const [state, setState] = useState<JokeState>({
-    joke: null,
-    isLoading: true,
-    error: null,
-    refetch: () => {},
-  });
+  const [joke, setJoke] = useState<JokeData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchJoke = useCallback(() => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+  const fetchJoke = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-    const url = `${getApiBase()}/joke/random`;
-
-    getJson<JokeData>(url)
-      .then((joke) => {
-        setState({ joke, isLoading: false, error: null, refetch: fetchJoke });
-      })
-      .catch((error: unknown) => {
-        let message = 'Something went wrong fetching the joke.';
-        if (error instanceof Error) {
-          message = error.message;
-        } else if (typeof error === 'string') {
-          message = error;
-        }
-        setState({
-          joke: null,
-          isLoading: false,
-          error: message,
-          refetch: fetchJoke,
-        });
-      });
+    try {
+      const url = `${getApiBase()}/joke/random`;
+      const jokeData = await getJson<JokeData>(url);
+      setJoke(jokeData);
+      setIsLoading(false);
+    } catch (err: unknown) {
+      let message = 'Something went wrong fetching the joke.';
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === 'string') {
+        message = err;
+      }
+      setError(message);
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    setState((prev) => ({ ...prev, refetch: fetchJoke }));
-  }, [fetchJoke]);
+    // Fetch joke on mount
+    let isCancelled = false;
+    // Initialize loading state before async fetch - this is a valid pattern for data fetching hooks
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Setting initial loading state before async operation is necessary
+    setIsLoading(true);
+    setError(null);
 
-  useEffect(() => {
-    fetchJoke();
-  }, [fetchJoke]);
+    const url = `${getApiBase()}/joke/random`;
+    getJson<JokeData>(url)
+      .then((jokeData) => {
+        if (!isCancelled) {
+          setJoke(jokeData);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!isCancelled) {
+          let message = 'Something went wrong fetching the joke.';
+          if (err instanceof Error) {
+            message = err.message;
+          } else if (typeof err === 'string') {
+            message = err;
+          }
+          setError(message);
+          setIsLoading(false);
+        }
+      });
 
-  return state;
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  return {
+    joke,
+    isLoading,
+    error,
+    refetch: fetchJoke,
+  };
 }

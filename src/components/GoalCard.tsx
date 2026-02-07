@@ -4,6 +4,7 @@ import type { Goal } from '../useGoals';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost } from '../styles/buttons';
 import { FaCheckCircle, FaCircle, FaTrash, FaEdit, FaFlag } from 'react-icons/fa';
+import { logger } from '../utils/logger';
 
 export interface GoalCardProps {
   goal: Goal;
@@ -60,8 +61,15 @@ export const GoalCard = ({
   const [editDescription, setEditDescription] = useState(goal.description || '');
   const [editProgress, setEditProgress] = useState(goal.progress_percentage);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleSave = async () => {
+    if (!editTitle.trim()) {
+      setError('Please enter a goal title');
+      return;
+    }
+    setError(null);
     try {
       await onUpdate(goal.id, {
         title: editTitle,
@@ -70,31 +78,38 @@ export const GoalCard = ({
       });
       setIsEditing(false);
     } catch (error) {
-      console.error('Failed to update goal:', error);
-      alert('Failed to update goal. Please try again.');
+      const message =
+        error instanceof Error ? error.message : 'Failed to update goal. Please try again.';
+      setError(message);
+      logger.error('Failed to update goal', { error, goalId: goal.id });
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this goal?')) {
-      return;
-    }
     setIsDeleting(true);
+    setError(null);
     try {
       await onDelete(goal.id);
     } catch (error) {
-      console.error('Failed to delete goal:', error);
-      alert('Failed to delete goal. Please try again.');
+      const message =
+        error instanceof Error ? error.message : 'Failed to delete goal. Please try again.';
+      setError(message);
       setIsDeleting(false);
+      logger.error('Failed to delete goal', { error, goalId: goal.id });
     }
   };
 
   const handleStatusChange = async (newStatus: Goal['status']) => {
+    setError(null);
     try {
       await onUpdate(goal.id, { status: newStatus });
     } catch (error) {
-      console.error('Failed to update goal status:', error);
-      alert('Failed to update goal status. Please try again.');
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to update goal status. Please try again.';
+      setError(message);
+      logger.error('Failed to update goal status', { error, goalId: goal.id, newStatus });
     }
   };
 
@@ -107,6 +122,11 @@ export const GoalCard = ({
       <div className={`${cardBody} flex flex-col h-full`}>
         {isEditing ? (
           <div className="space-y-4">
+            {error && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
             <div>
               <label htmlFor={`goal-title-${goal.id}`} className="block text-sm font-medium mb-1">
                 Title
@@ -163,6 +183,7 @@ export const GoalCard = ({
               <button
                 onClick={() => {
                   setIsEditing(false);
+                  setError(null);
                   setEditTitle(goal.title);
                   setEditDescription(goal.description || '');
                   setEditProgress(goal.progress_percentage);
@@ -175,6 +196,37 @@ export const GoalCard = ({
           </div>
         ) : (
           <>
+            {error && (
+              <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
+            {showDeleteConfirm && (
+              <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded">
+                <p className="text-sm mb-2 text-foreground">
+                  Are you sure you want to delete this goal? This action cannot be undone.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className={`${btnBase} text-sm py-1.5 px-3 bg-red-500 hover:bg-red-600 text-white`}
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setError(null);
+                    }}
+                    disabled={isDeleting}
+                    className={`${btnBase} ${btnGhost} text-sm py-1.5 px-3`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 min-w-0">
                 <h3 className={`${cardTitle} text-lg mb-1`}>{goal.title}</h3>
@@ -202,7 +254,7 @@ export const GoalCard = ({
                   <FaEdit />
                 </button>
                 <button
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteConfirm(true)}
                   disabled={isDeleting}
                   className="p-2 text-muted hover:text-red-500 transition-colors disabled:opacity-50"
                   aria-label="Delete goal"
