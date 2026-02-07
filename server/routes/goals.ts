@@ -3,7 +3,6 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { authenticateToken } from '../middleware/auth.js';
 import {
   getGoalsByUserId,
-  getGoalById,
   getGoalWithMilestones,
   createGoal,
   updateGoal,

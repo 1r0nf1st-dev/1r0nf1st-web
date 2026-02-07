@@ -28,14 +28,17 @@ export function useGitHubCommits(repo: string | null): GitHubCommitsState {
   });
 
   useEffect(() => {
+    let isCancelled = false;
+
     if (!repo) {
-      setState({ commits: null, isLoading: false, error: null });
+      // Early return: reset state when repo becomes null
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Early return pattern: reset state when dependency becomes null
+      setState((prev) => ({ ...prev, commits: null, isLoading: false, error: null }));
       return;
     }
 
-    let isCancelled = false;
-
-    setState({ commits: null, isLoading: true, error: null });
+    // Initialize loading state before async fetch
+    setState((prev) => ({ ...prev, commits: null, isLoading: true, error: null }));
 
     const searchParams = new URLSearchParams({
       repo,

@@ -40,4 +40,17 @@ export const config = {
     | 'tag'
     | 'latest'
     | 'top',
+  logLevel: (process.env.LOG_LEVEL?.trim() ?? (process.env.NODE_ENV === 'production' ? 'info' : 'debug')) as
+    | 'fatal'
+    | 'error'
+    | 'warn'
+    | 'info'
+    | 'debug'
+    | 'trace',
+  enableRequestLogging: process.env.ENABLE_REQUEST_LOGGING
+    ? process.env.ENABLE_REQUEST_LOGGING.trim().toLowerCase() === 'true'
+    : process.env.NODE_ENV === 'development',
+  enableAnalytics: process.env.ENABLE_ANALYTICS
+    ? process.env.ENABLE_ANALYTICS.trim().toLowerCase() === 'true'
+    : false,
 };

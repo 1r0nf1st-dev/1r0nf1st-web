@@ -5,7 +5,7 @@ import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
 export interface DevToArticleCardProps {
   article: DevToArticle;
   isExpanded: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
   id?: string;
 }
 
@@ -20,7 +20,6 @@ function formatPubDate(iso: string): string {
 export const DevToArticleCard = ({
   article,
   isExpanded,
-  onToggle,
   id,
 }: DevToArticleCardProps): JSX.Element => {
   return (

@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { config } from '../config.js';
+import { logger } from '../utils/logger.js';
 
 // Create Supabase client with service role key (for server-side operations)
 // Only create client if credentials are provided
@@ -13,11 +14,9 @@ if (config.supabaseUrl && config.supabaseServiceRoleKey) {
     },
   });
 } else {
-  if (config.nodeEnv === 'development') {
-    console.warn(
-      '⚠️  Supabase credentials are missing. Authentication features will not work. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your .env file.',
-    );
-  }
+  logger.warn(
+    'Supabase credentials are missing. Authentication features will not work. Please set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in your .env file.',
+  );
 }
 
 export { supabase };

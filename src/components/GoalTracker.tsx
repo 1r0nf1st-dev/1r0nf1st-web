@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoals, createGoal, updateGoal, deleteGoal } from '../useGoals';
 import { GoalCard } from './GoalCard';
@@ -8,22 +8,24 @@ import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
 import { FaPlus, FaBullseye, FaLock } from 'react-icons/fa';
 import type { Goal } from '../useGoals';
+import { logger } from '../utils/logger';
 
 export const GoalTracker = (): JSX.Element | null => {
   const { user } = useAuth();
-  const location = useLocation();
-  const { goals, isLoading, error, refetch } = useGoals();
+  const { goals, isLoading, error: goalsError, refetch } = useGoals();
   const [isCreating, setIsCreating] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalDescription, setNewGoalDescription] = useState('');
   const [newGoalTargetDate, setNewGoalTargetDate] = useState('');
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const handleCreateGoal = async () => {
     if (!newGoalTitle.trim()) {
-      alert('Please enter a goal title');
+      setCreateError('Please enter a goal title');
       return;
     }
 
+    setCreateError(null);
     try {
       await createGoal(
         newGoalTitle.trim(),
@@ -36,8 +38,10 @@ export const GoalTracker = (): JSX.Element | null => {
       setIsCreating(false);
       await refetch();
     } catch (error) {
-      console.error('Failed to create goal:', error);
-      alert('Failed to create goal. Please try again.');
+      const message =
+        error instanceof Error ? error.message : 'Failed to create goal. Please try again.';
+      setCreateError(message);
+      logger.error('Failed to create goal', { error });
     }
   };
 
@@ -85,7 +89,7 @@ export const GoalTracker = (): JSX.Element | null => {
   }
 
   // Show login instructions if user is not authenticated
-  if (!user || error?.includes('log in') || error?.includes('authenticated')) {
+  if (!user || goalsError?.includes('log in') || goalsError?.includes('authenticated')) {
     return (
       <div className="md:col-span-3">
         <article className={cardClasses} id="goals">
@@ -127,7 +131,7 @@ export const GoalTracker = (): JSX.Element | null => {
     );
   }
 
-  if (error) {
+  if (goalsError) {
     return (
       <article className={cardClasses} id="goals">
         <div className={cardOverlay} aria-hidden />
@@ -135,7 +139,7 @@ export const GoalTracker = (): JSX.Element | null => {
           <FaBullseye className="inline mr-2" />
           Goals
         </h2>
-        <p className={cardBody}>Error: {error}</p>
+        <p className={cardBody}>Error: {goalsError}</p>
       </article>
     );
   }
@@ -167,6 +171,11 @@ export const GoalTracker = (): JSX.Element | null => {
         {isCreating && (
           <div className={`${cardBody} mb-4 p-4 border-2 border-primary/35 dark:border-border rounded-lg`}>
             <h3 className="text-lg font-semibold mb-3">Create New Goal</h3>
+            {createError && (
+              <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-600 dark:text-red-400">
+                {createError}
+              </div>
+            )}
             <div className="space-y-3">
               <div>
                 <label htmlFor="new-goal-title" className="block text-sm font-medium mb-1">
@@ -236,7 +245,7 @@ export const GoalTracker = (): JSX.Element | null => {
 
         {(!goals || goals.length === 0) && !isCreating && (
           <p className={cardBody}>
-            No goals yet. Click "New Goal" to create your first goal!
+            No goals yet. Click &quot;New Goal&quot; to create your first goal!
           </p>
         )}
       </article>

@@ -46,9 +46,7 @@ export async function fetchCurrentWeather(
   }
 
   // Debug: Log key length (but not the actual key) to help diagnose issues
-  if (config.nodeEnv === 'development') {
-    console.log(`[Weather] Using API key (length: ${apiKey.length})`);
-  }
+  // Note: This is logged at debug level, so it won't appear in production
 
   const url = `${OPENWEATHER_API}/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
 

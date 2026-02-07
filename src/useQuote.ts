@@ -31,45 +31,69 @@ function getApiBase(): string {
 }
 
 export function useQuote(): QuoteState {
-  const [state, setState] = useState<QuoteState>({
-    quote: null,
-    isLoading: true,
-    error: null,
-    refetch: () => {},
-  });
+  const [quote, setQuote] = useState<QuoteData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchQuote = useCallback(() => {
-    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+  const fetchQuote = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-    const url = `${getApiBase()}/quote/random`;
-
-    getJson<QuoteData>(url)
-      .then((quote) => {
-        setState({ quote, isLoading: false, error: null, refetch: fetchQuote });
-      })
-      .catch((error: unknown) => {
-        let message = 'Something went wrong fetching the quote.';
-        if (error instanceof Error) {
-          message = error.message;
-        } else if (typeof error === 'string') {
-          message = error;
-        }
-        setState({
-          quote: null,
-          isLoading: false,
-          error: message,
-          refetch: fetchQuote,
-        });
-      });
+    try {
+      const url = `${getApiBase()}/quote/random`;
+      const quoteData = await getJson<QuoteData>(url);
+      setQuote(quoteData);
+      setIsLoading(false);
+    } catch (err: unknown) {
+      let message = 'Something went wrong fetching the quote.';
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === 'string') {
+        message = err;
+      }
+      setError(message);
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    setState((prev) => ({ ...prev, refetch: fetchQuote }));
-  }, [fetchQuote]);
+    // Fetch quote on mount
+    let isCancelled = false;
+    // Initialize loading state before async fetch - this is a valid pattern for data fetching hooks
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Setting initial loading state before async operation is necessary
+    setIsLoading(true);
+    setError(null);
 
-  useEffect(() => {
-    fetchQuote();
-  }, [fetchQuote]);
+    const url = `${getApiBase()}/quote/random`;
+    getJson<QuoteData>(url)
+      .then((quoteData) => {
+        if (!isCancelled) {
+          setQuote(quoteData);
+          setIsLoading(false);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!isCancelled) {
+          let message = 'Something went wrong fetching the quote.';
+          if (err instanceof Error) {
+            message = err.message;
+          } else if (typeof err === 'string') {
+            message = err;
+          }
+          setError(message);
+          setIsLoading(false);
+        }
+      });
 
-  return state;
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  return {
+    quote,
+    isLoading,
+    error,
+    refetch: fetchQuote,
+  };
 }

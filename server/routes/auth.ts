@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../db/supabase.js';
 import { authenticateToken, type AuthRequest } from '../middleware/auth.js';
+import { logger } from '../utils/logger.js';
 
 export const authRouter = Router();
 
@@ -70,7 +71,7 @@ authRouter.post('/register', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error({ error, path: '/register' }, 'Registration error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -123,7 +124,7 @@ authRouter.post('/login', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error({ error, path: '/login' }, 'Login error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -168,7 +169,7 @@ authRouter.post('/refresh', async (req, res) => {
       refreshToken: data.session.refresh_token,
     });
   } catch (error) {
-    console.error('Refresh token error:', error);
+    logger.error({ error, path: '/refresh' }, 'Refresh token error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -221,7 +222,7 @@ authRouter.post('/change-password', authenticateToken, async (req: AuthRequest, 
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error({ error, path: '/change-password', userId: req.userId }, 'Change password error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -244,7 +245,7 @@ authRouter.post('/logout', authenticateToken, async (req: AuthRequest, res) => {
 
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error({ error, path: '/logout', userId: req.userId }, 'Logout error');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
