@@ -7,6 +7,15 @@ import { logger } from '../utils/logger.js';
 let supabase: SupabaseClient | null = null;
 
 if (config.supabaseUrl && config.supabaseServiceRoleKey) {
+  // Verify we're using the service role key (starts with 'eyJ' - it's a JWT)
+  // Anon key starts with 'sb_publishable_' or 'eyJ' but has different permissions
+  if (!config.supabaseServiceRoleKey.startsWith('eyJ')) {
+    logger.error(
+      'SUPABASE_SERVICE_ROLE_KEY appears to be incorrect. Service role keys are JWT tokens starting with "eyJ". ' +
+        'Please check your Supabase Dashboard → Project Settings → API → service_role key (not the anon key).',
+    );
+  }
+  
   supabase = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,

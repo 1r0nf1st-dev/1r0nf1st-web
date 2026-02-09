@@ -12,10 +12,43 @@ export class ApiError extends Error {
   }
 }
 
+async function refreshAuthToken(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    return null;
+  }
+
+  try {
+    const response = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as { token?: string; refreshToken?: string };
+    if (data.token) {
+      localStorage.setItem('authToken', data.token);
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken);
+      }
+      return data.token;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   try {
     // Get auth token from localStorage
-    const token = localStorage.getItem('authToken');
+    let token = localStorage.getItem('authToken');
     const headers: Record<string, string> = {
       Accept: 'application/json',
       ...((init?.headers as Record<string, string>) ?? {}),
@@ -26,10 +59,29 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       ...init,
       headers,
     });
+
+    // If we get a 403 and we have a token, try to refresh the token and retry once
+    // Skip refresh for auth endpoints to avoid infinite loops
+    const isAuthEndpoint = url.includes('/api/auth/');
+    if (response.status === 403 && token && !isAuthEndpoint) {
+      const newToken = await refreshAuthToken();
+      if (newToken) {
+        // Retry the request with the new token
+        headers.Authorization = `Bearer ${newToken}`;
+        response = await fetch(url, {
+          ...init,
+          headers,
+        });
+      } else {
+        // Refresh failed, clear tokens
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+      }
+    }
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');

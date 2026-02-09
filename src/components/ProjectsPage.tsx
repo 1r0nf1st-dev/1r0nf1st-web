@@ -23,6 +23,7 @@ import {
   FaFire,
   FaSun,
   FaLeaf,
+  FaStickyNote,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons';
 import { Hero } from './Hero';
@@ -45,6 +46,13 @@ export const ProjectsPage = (): JSX.Element => {
       title: 'Goal Tracker',
       description: "Precision goal-setting and tracking application that helps users achieve their objectives with detailed progress monitoring and milestones.",
       link: '/projects/goal-tracker',
+    },
+    {
+      id: 21,
+      icon: FaStickyNote,
+      title: 'Notes',
+      description: "A powerful note-taking application with rich text editing, notebooks, tags, and full-text search. Organize your thoughts and ideas effortlessly.",
+      link: '/notes',
     },
     {
       id: 19,
@@ -184,7 +192,9 @@ export const ProjectsPage = (): JSX.Element => {
 
   return (
     <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
-      <Hero />
+      <div className="w-full max-w-[1080px] mx-auto">
+        <Hero />
+      </div>
 
       <main className="flex-1 flex items-stretch justify-center pt-7">
         <section
