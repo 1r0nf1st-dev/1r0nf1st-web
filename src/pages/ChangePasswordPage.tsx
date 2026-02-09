@@ -1,12 +1,22 @@
 import type { JSX } from 'react';
 import type { FormEvent } from 'react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Hero } from '../components/Hero';
 import { Footer } from '../components/Footer';
 import { cardClasses, cardOverlay, cardTitle } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
+import { getJson } from '../apiClient';
+
+function getApiBase(): string {
+  const env = import.meta.env?.VITE_API_BASE_URL?.trim();
+  if (env?.startsWith('http')) {
+    const base = env.endsWith('/') ? env.slice(0, -1) : env;
+    return base.endsWith('/api') ? base : `${base}/api`;
+  }
+  return '/api';
+}
 
 export const ChangePasswordPage = (): JSX.Element => {
   const [newPassword, setNewPassword] = useState('');
@@ -14,25 +24,38 @@ export const ChangePasswordPage = (): JSX.Element => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { changePassword } = useAuth();
+  const [recoveryToken, setRecoveryToken] = useState<string | null>(null);
+  const { user, changePassword, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Read recovery token from URL hash (from password reset email link)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash) return;
+    const params = new URLSearchParams(hash.replace(/^#/, ''));
+    const type = params.get('type');
+    const accessToken = params.get('access_token');
+    if (type === 'recovery' && accessToken) {
+      setRecoveryToken(accessToken);
+      // Clear hash so it isn't sent in requests or shown in URL
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+  }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    // Validation
     if (!newPassword || !confirmPassword) {
       setError('All fields are required');
       return;
     }
-
     if (newPassword.length < 6) {
       setError('New password must be at least 6 characters');
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
       return;
@@ -41,21 +64,44 @@ export const ChangePasswordPage = (): JSX.Element => {
     setIsLoading(true);
 
     try {
-      await changePassword(newPassword);
-      setSuccess('Password changed successfully!');
-      // Clear form
-      setNewPassword('');
-      setConfirmPassword('');
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      if (recoveryToken) {
+        await getJson<{ message: string }>(`${getApiBase()}/auth/confirm-reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accessToken: recoveryToken, newPassword }),
+        });
+        setSuccess('Password changed successfully! You can now log in.');
+        setNewPassword('');
+        setConfirmPassword('');
+        setRecoveryToken(null);
+        setTimeout(() => {
+          navigate('/login?reset=success', { replace: true });
+        }, 2000);
+      } else {
+        await changePassword(newPassword);
+        setSuccess('Password changed successfully!');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => {
+          navigate(searchParams.get('returnTo') || '/', { replace: true });
+        }, 2000);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to change password');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Recovery link: no login required. Logged-in change: require login.
+  if (!recoveryToken && !authLoading && !user) {
+    navigate('/login?returnTo=/change-password', { replace: true });
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="opacity-70">Redirecting to login…</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
@@ -64,7 +110,9 @@ export const ChangePasswordPage = (): JSX.Element => {
         <section className="w-full max-w-[500px] mx-auto">
           <article className={cardClasses}>
             <div className={cardOverlay} aria-hidden />
-            <h2 className={`${cardTitle} mb-6`}>Change Password</h2>
+            <h2 className={`${cardTitle} mb-6`}>
+              {recoveryToken ? 'Set new password' : 'Change Password'}
+            </h2>
             <form onSubmit={handleSubmit} className="relative z-10">
               {error && (
                 <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
@@ -118,7 +166,7 @@ export const ChangePasswordPage = (): JSX.Element => {
                 className={`${btnBase} ${btnPrimary} w-full mb-4`}
                 disabled={isLoading}
               >
-                {isLoading ? 'Changing password...' : 'Change Password'}
+                {isLoading ? 'Changing password...' : recoveryToken ? 'Set password' : 'Change Password'}
               </button>
             </form>
           </article>

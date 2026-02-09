@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { AuthHashErrorHandler } from './components/AuthHashErrorHandler';
 import { HomePage } from './pages/HomePage';
 import { ExperiencePage } from './pages/ExperiencePage';
 import { ProjectsPage } from './components/ProjectsPage';
@@ -11,30 +12,28 @@ import { FeaturedShowcasePage } from './pages/FeaturedShowcasePage';
 import { NotesPage } from './pages/NotesPage';
 import { LoginPage } from './pages/LoginPage';
 import { ChangePasswordPage } from './pages/ChangePasswordPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 const App = (): JSX.Element => {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/experience" element={<ExperiencePage />} />
-      <Route path="/projects" element={<ProjectsPage />} />
-      <Route path="/projects/goal-tracker" element={<GoalTrackerPage />} />
-      <Route path="/projects/weather" element={<WeatherPage />} />
-      <Route path="/projects/health-tracker" element={<HealthTrackerPage />} />
-      <Route path="/projects/cloud" element={<CloudInfrastructurePage />} />
-      <Route path="/projects/showcase" element={<FeaturedShowcasePage />} />
-      <Route path="/notes" element={<NotesPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/change-password"
-        element={
-          <ProtectedRoute>
-            <ChangePasswordPage />
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+    <>
+      <AuthHashErrorHandler />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/experience" element={<ExperiencePage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/goal-tracker" element={<GoalTrackerPage />} />
+        <Route path="/projects/weather" element={<WeatherPage />} />
+        <Route path="/projects/health-tracker" element={<HealthTrackerPage />} />
+        <Route path="/projects/cloud" element={<CloudInfrastructurePage />} />
+        <Route path="/projects/showcase" element={<FeaturedShowcasePage />} />
+        <Route path="/notes" element={<NotesPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/change-password" element={<ChangePasswordPage />} />
+      </Routes>
+    </>
   );
 };
 

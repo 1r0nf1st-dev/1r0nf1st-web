@@ -30,6 +30,10 @@ export const config = {
   supabaseUrl: process.env.SUPABASE_URL || '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+  /** Public URL of the frontend (e.g. https://1r0nf1st-web.vercel.app). Used for password reset redirect. */
+  siteUrl:
+    process.env.SITE_URL?.trim() ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173'),
   openWeatherApiKey: process.env.OPENWEATHER_API_KEY?.trim() ?? '',
   vercelApiToken: process.env.VERCEL_API_TOKEN?.trim() ?? '',
   vercelProjectId: process.env.VERCEL_PROJECT_ID?.trim() ?? '',
