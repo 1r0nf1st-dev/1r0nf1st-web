@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Hero } from '../components/Hero';
 import { Footer } from '../components/Footer';
@@ -18,6 +18,7 @@ export const LoginPage = (): JSX.Element => {
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const resetSuccess = searchParams.get('reset') === 'success';
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
@@ -51,6 +52,11 @@ export const LoginPage = (): JSX.Element => {
               {isRegister ? 'Create Account' : 'Login'}
             </h2>
             <form onSubmit={handleSubmit} className="relative z-10">
+              {resetSuccess && (
+                <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-600 dark:text-green-400 text-sm">
+                  Password reset successfully. You can now log in with your new password.
+                </div>
+              )}
               {error && (
                 <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
                   {error}
@@ -93,12 +99,22 @@ export const LoginPage = (): JSX.Element => {
                 </div>
               )}
               <div className="mb-6">
-                <label
-                  htmlFor="password"
-                  className="block mb-2 text-sm font-medium text-foreground"
-                >
-                  Password
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-foreground"
+                  >
+                    Password
+                  </label>
+                  {!isRegister && (
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                    >
+                      Forgot password?
+                    </Link>
+                  )}
+                </div>
                 <input
                   id="password"
                   type="password"

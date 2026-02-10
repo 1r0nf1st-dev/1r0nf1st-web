@@ -227,6 +227,88 @@ authRouter.post('/change-password', authenticateToken, async (req: AuthRequest, 
   }
 });
 
+// Forgot password: send recovery email
+authRouter.post('/forgot-password', async (req, res) => {
+  if (!supabase) {
+    res.status(503).json({ error: 'Database not configured.' });
+    return;
+  }
+
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
+
+    const { config } = await import('../config.js');
+    const redirectTo = `${config.siteUrl}/change-password`;
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo,
+    });
+
+    if (error) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+
+    res.json({
+      message:
+        'If an account exists for this email, you will receive a password reset link. Check your inbox and spam folder.',
+    });
+  } catch (error) {
+    logger.error({ error, path: '/forgot-password' }, 'Forgot password error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Confirm reset password (from recovery link): body { accessToken, newPassword }
+authRouter.post('/confirm-reset-password', async (req, res) => {
+  if (!supabase) {
+    res.status(503).json({ error: 'Database not configured.' });
+    return;
+  }
+
+  try {
+    const { accessToken, newPassword } = req.body;
+    if (!accessToken || typeof accessToken !== 'string') {
+      res.status(400).json({ error: 'Invalid or expired reset link' });
+      return;
+    }
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+      res.status(400).json({ error: 'New password must be at least 6 characters' });
+      return;
+    }
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser(accessToken);
+
+    if (userError || !user) {
+      res.status(400).json({
+        error: 'This reset link is invalid or has expired. Please request a new one.',
+      });
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
+      password: newPassword,
+    });
+
+    if (updateError) {
+      res.status(400).json({ error: updateError.message });
+      return;
+    }
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    logger.error({ error, path: '/confirm-reset-password' }, 'Confirm reset password error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Logout endpoint (optional - mainly for server-side session cleanup)
 authRouter.post('/logout', authenticateToken, async (req: AuthRequest, res) => {
   if (!supabase) {
