@@ -30,6 +30,7 @@ export const NoteEditor = ({
   editable = true,
 }: NoteEditorProps): JSX.Element => {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         // Exclude Link from StarterKit since we'll add it separately with custom config

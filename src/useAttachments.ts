@@ -1,20 +1,7 @@
 import { useState } from 'react';
 import { getJson, ApiError } from './apiClient';
+import { getApiBase } from './config';
 import type { Attachment } from './useNotes';
-
-function getApiBase(): string {
-  let apiBase = '/api';
-  if (import.meta.env.VITE_API_BASE_URL?.trim()) {
-    const trimmed = import.meta.env.VITE_API_BASE_URL.trim();
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-      const normalized = trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
-      apiBase = normalized.endsWith('/api') ? normalized : `${normalized}/api`;
-    } else {
-      apiBase = trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
-    }
-  }
-  return apiBase;
-}
 
 export interface DownloadUrlResponse {
   downloadUrl: string;

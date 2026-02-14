@@ -23,9 +23,33 @@ import {
   getAttachmentsByNoteId,
   createAttachment,
   deleteAttachment,
+  getNoteVersions,
+  getNoteVersion,
+  restoreNoteVersion,
+  addShareToNoteHistory,
+  shareNoteWithUser,
+  getNoteShares,
+  getSharedNotes,
+  getSharedNoteByToken,
+  updateSharePermission,
+  unshareNote,
 } from '../services/noteService.js';
+import {
+  sanitizeFreeText,
+  sanitizePlainText,
+  sanitizeFileName,
+  isSafeStoragePath,
+  isAllowedMimeType,
+  hasDangerousExtension,
+} from '../utils/sanitize.js';
+import { sendTransactionalEmail } from '../services/brevoService.js';
+import { config } from '../config.js';
 
 const notesRouter = Router();
+const NOTE_TITLE_MAX_LENGTH = 2000;
+const NOTE_SEARCH_MAX_LENGTH = 500;
+const NOTEBOOK_NAME_MAX_LENGTH = 200;
+const TAG_NAME_MAX_LENGTH = 100;
 
 // Configure multer for file uploads (store in memory)
 const upload = multer({
@@ -40,6 +64,40 @@ notesRouter.use(authenticateToken);
 
 // ========== Notes Routes ==========
 
+// GET /api/notes/shared - Get notes shared with current user (must be before /:id)
+notesRouter.get('/shared', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const notes = await getSharedNotes(req.userId);
+    res.json(notes);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch shared notes';
+    res.status(500).json({ error: message });
+  }
+});
+
+// GET /api/notes/shared/:token - Get note via public share token (no auth required)
+notesRouter.get('/shared/:token', async (req, res) => {
+  try {
+    const token = Array.isArray(req.params.token) ? req.params.token[0] : req.params.token;
+    const note = await getSharedNoteByToken(token);
+
+    if (!note) {
+      res.status(404).json({ error: 'Share link not found or expired' });
+      return;
+    }
+
+    res.json(note);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch shared note';
+    res.status(500).json({ error: message });
+  }
+});
+
 // GET /api/notes - List notes (with filters: ?notebook_id=...&tag_id=...&search=...&archived=true&pinned=true)
 notesRouter.get('/', async (req: AuthRequest, res) => {
   try {
@@ -51,7 +109,10 @@ notesRouter.get('/', async (req: AuthRequest, res) => {
     const filters = {
       notebook_id: typeof req.query.notebook_id === 'string' ? req.query.notebook_id : undefined,
       tag_id: typeof req.query.tag_id === 'string' ? req.query.tag_id : undefined,
-      search: typeof req.query.search === 'string' ? req.query.search : undefined,
+      search:
+        typeof req.query.search === 'string'
+          ? sanitizePlainText(req.query.search, NOTE_SEARCH_MAX_LENGTH)
+          : undefined,
       archived:
         typeof req.query.archived === 'string' ? req.query.archived === 'true' : undefined,
       pinned: typeof req.query.pinned === 'string' ? req.query.pinned === 'true' : undefined,
@@ -83,7 +144,10 @@ notesRouter.get('/search', async (req: AuthRequest, res) => {
       return;
     }
 
-    const query = typeof req.query.q === 'string' ? req.query.q : '';
+    const query = sanitizePlainText(
+      typeof req.query.q === 'string' ? req.query.q : '',
+      NOTE_SEARCH_MAX_LENGTH,
+    );
     if (!query.trim()) {
       res.status(400).json({ error: 'Search query is required' });
       return;
@@ -153,7 +217,7 @@ notesRouter.post('/notebooks', async (req: AuthRequest, res) => {
     }
 
     const notebook = await createNotebook(req.userId, {
-      name: name.trim(),
+      name: sanitizeFreeText(name.trim(), NOTEBOOK_NAME_MAX_LENGTH),
       parent_id,
       color,
     });
@@ -177,7 +241,7 @@ notesRouter.put('/notebooks/:id', async (req: AuthRequest, res) => {
     const { name, parent_id, color } = req.body;
 
     const notebook = await updateNotebook(notebookId, req.userId, {
-      name: name?.trim(),
+      name: name != null && typeof name === 'string' ? sanitizeFreeText(name.trim(), NOTEBOOK_NAME_MAX_LENGTH) : undefined,
       parent_id,
       color,
     });
@@ -266,7 +330,7 @@ notesRouter.post('/tags', async (req: AuthRequest, res) => {
     }
 
     const tag = await createTag(req.userId, {
-      name: name.trim(),
+      name: sanitizeFreeText(name.trim(), TAG_NAME_MAX_LENGTH),
       color,
     });
 
@@ -291,7 +355,7 @@ notesRouter.put('/tags/:id', async (req: AuthRequest, res) => {
     const { name, color } = req.body;
 
     const tag = await updateTag(tagId, req.userId, {
-      name: name?.trim(),
+      name: name != null && typeof name === 'string' ? sanitizeFreeText(name.trim(), TAG_NAME_MAX_LENGTH) : undefined,
       color,
     });
 
@@ -360,7 +424,7 @@ notesRouter.post('/', async (req: AuthRequest, res) => {
     const { title, content, notebook_id, tag_ids } = req.body;
 
     const note = await createNote(req.userId, {
-      title,
+      title: typeof title === 'string' ? sanitizeFreeText(title, NOTE_TITLE_MAX_LENGTH) : undefined,
       content,
       notebook_id,
       tag_ids: Array.isArray(tag_ids) ? tag_ids : undefined,
@@ -385,7 +449,7 @@ notesRouter.put('/:id', async (req: AuthRequest, res) => {
     const { title, content, notebook_id, tag_ids, is_pinned, is_archived } = req.body;
 
     const note = await updateNote(noteId, req.userId, {
-      title,
+      title: typeof title === 'string' ? sanitizeFreeText(title, NOTE_TITLE_MAX_LENGTH) : undefined,
       content,
       notebook_id,
       tag_ids: Array.isArray(tag_ids) ? tag_ids : undefined,
@@ -440,6 +504,90 @@ notesRouter.post('/:id/restore', async (req: AuthRequest, res) => {
   }
 });
 
+// ========== Note Versions Routes ==========
+
+// GET /api/notes/:id/versions - Get all versions for a note
+notesRouter.get('/:id/versions', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const versions = await getNoteVersions(noteId, req.userId);
+    res.json(versions);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch note versions';
+    const status =
+      error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+// GET /api/notes/:id/versions/:versionNumber - Get specific version
+notesRouter.get('/:id/versions/:versionNumber', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const versionNumberStr = Array.isArray(req.params.versionNumber)
+      ? req.params.versionNumber[0]
+      : req.params.versionNumber;
+    const versionNumber = Number.parseInt(versionNumberStr, 10);
+
+    if (Number.isNaN(versionNumber) || versionNumber < 1) {
+      res.status(400).json({ error: 'Invalid version number' });
+      return;
+    }
+
+    const version = await getNoteVersion(noteId, versionNumber, req.userId);
+    if (!version) {
+      res.status(404).json({ error: 'Version not found' });
+      return;
+    }
+
+    res.json(version);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch note version';
+    const status =
+      error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+// POST /api/notes/:id/versions/:versionNumber/restore - Restore a version
+notesRouter.post('/:id/versions/:versionNumber/restore', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const versionNumberStr = Array.isArray(req.params.versionNumber)
+      ? req.params.versionNumber[0]
+      : req.params.versionNumber;
+    const versionNumber = Number.parseInt(versionNumberStr, 10);
+
+    if (Number.isNaN(versionNumber) || versionNumber < 1) {
+      res.status(400).json({ error: 'Invalid version number' });
+      return;
+    }
+
+    const note = await restoreNoteVersion(noteId, versionNumber, req.userId);
+    res.json(note);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to restore version';
+    const status =
+      error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
 // ========== Attachments Routes ==========
 
 // GET /api/notes/:id/attachments - Get attachments for a note
@@ -477,6 +625,19 @@ notesRouter.post('/:id/attachments/upload', upload.single('file'), async (req: A
       return;
     }
 
+    if (!isAllowedMimeType(file.mimetype || '')) {
+      res.status(400).json({
+        error: 'File type not allowed. Allowed: images, PDF, text, CSV, JSON.',
+      });
+      return;
+    }
+
+    const sanitizedFileName = sanitizeFileName(file.originalname);
+    if (hasDangerousExtension(sanitizedFileName)) {
+      res.status(400).json({ error: 'File type not allowed for security reasons.' });
+      return;
+    }
+
     // Verify note belongs to user
     const { getNoteById, createAttachment } = await import('../services/noteService.js');
     const note = await getNoteById(noteId, req.userId);
@@ -487,7 +648,6 @@ notesRouter.post('/:id/attachments/upload', upload.single('file'), async (req: A
 
     // Generate file path: notes/{userId}/{noteId}/{timestamp}-{filename}
     const timestamp = Date.now();
-    const sanitizedFileName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
     const filePath = `notes/${req.userId}/${noteId}/${timestamp}-${sanitizedFileName}`;
 
     // Upload file directly to Supabase Storage using service role key (bypasses RLS)
@@ -526,15 +686,28 @@ notesRouter.post('/:id/attachments/upload', upload.single('file'), async (req: A
         },
         'Failed to upload file to Supabase Storage',
       );
-      res.status(500).json({ error: `Failed to upload file: ${uploadError.message}` });
+      
+      // Provide helpful error message for RLS policy violations
+      let errorMessage = `Failed to upload file: ${uploadError.message}`;
+      const isRlsOrForbidden =
+        uploadError.message.includes('row-level security') ||
+        String(uploadError.statusCode) === '403';
+      if (isRlsOrForbidden) {
+        errorMessage +=
+          ' This is likely an RLS issue. Try: (A) Storage → Buckets → note-attachments → disable RLS; ' +
+          'or (B) run 012_storage_service_role_policy.sql or 013_storage_service_role_jwt_policy.sql in Supabase SQL Editor. ' +
+          'See server/db/migrations/RUN_MIGRATIONS.md.';
+      }
+      
+      res.status(500).json({ error: errorMessage });
       return;
     }
 
     logger.debug({ filePath, uploadData }, 'File uploaded successfully');
 
-    // Create attachment metadata
+    // Create attachment metadata (use sanitized name for display/storage)
     const attachment = await createAttachment(noteId, req.userId, {
-      file_name: file.originalname,
+      file_name: sanitizedFileName,
       file_path: filePath,
       file_type: file.mimetype || 'application/octet-stream',
       file_size: file.size,
@@ -557,19 +730,38 @@ notesRouter.post('/:id/attachments', async (req: AuthRequest, res) => {
     }
 
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const { file_name, file_path, file_type, file_size, mime_type } = req.body;
+    let { file_name, file_path, file_type, file_size, mime_type } = req.body;
 
     if (!file_name || !file_path || !file_type || file_size === undefined) {
       res.status(400).json({ error: 'file_name, file_path, file_type, and file_size are required' });
       return;
     }
 
+    const expectedPrefix = `notes/${req.userId}/${noteId}/`;
+    if (!isSafeStoragePath(String(file_path).trim(), expectedPrefix)) {
+      res.status(400).json({ error: 'Invalid file path' });
+      return;
+    }
+
+    file_name = sanitizeFileName(String(file_name));
+    if (hasDangerousExtension(file_name)) {
+      res.status(400).json({ error: 'File type not allowed for security reasons.' });
+      return;
+    }
+
+    if (!isAllowedMimeType(String(file_type))) {
+      res.status(400).json({
+        error: 'File type not allowed. Allowed: images, PDF, text, CSV, JSON.',
+      });
+      return;
+    }
+
     const attachment = await createAttachment(noteId, req.userId, {
       file_name,
-      file_path,
-      file_type,
-      file_size,
-      mime_type,
+      file_path: String(file_path).trim(),
+      file_type: String(file_type).trim(),
+      file_size: Number(file_size),
+      mime_type: typeof mime_type === 'string' ? mime_type.trim() : undefined,
     });
 
     res.status(201).json(attachment);
@@ -638,6 +830,165 @@ notesRouter.get('/attachments/:id/download', async (req: AuthRequest, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to get download URL';
     res.status(500).json({ error: message });
+  }
+});
+
+// ========== Note Sharing Routes ==========
+
+// POST /api/notes/:id/share - Share note with user or create public link
+notesRouter.post('/:id/share', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const { shared_with_user_id, shared_with_user_email, permission, expires_at } = req.body;
+
+    // Validate permission
+    if (permission && permission !== 'view' && permission !== 'edit') {
+      res.status(400).json({ error: 'Permission must be "view" or "edit"' });
+      return;
+    }
+
+    const share = await shareNoteWithUser(noteId, req.userId, {
+      shared_with_user_id,
+      shared_with_user_email,
+      permission: permission || 'view',
+      expires_at: expires_at || undefined,
+    });
+
+    const note = await getNoteById(noteId, req.userId);
+    const noteTitle = note?.title?.trim() || 'A note';
+
+    // Send notification email (don't fail share if email fails)
+    if (config.brevoApiKey) {
+      if (share.shared_with_user_id && share.shared_with_user?.email) {
+        const recipientEmail = share.shared_with_user.email;
+        const loginUrl = `${config.siteUrl}/login`;
+        const notesUrl = `${config.siteUrl}/notes`;
+        try {
+          await sendTransactionalEmail({
+            to: [recipientEmail],
+            subject: `You've been given access to a note: ${noteTitle}`,
+            message: `Hello,\n\nSomeone has shared a note with you: "${noteTitle}".\n\nTo view it:\n1. Log in at ${loginUrl}\n2. Go to Notes at ${notesUrl}\n3. Open the "Shared" tab to see notes shared with you.\n\nIf you don't have an account yet, sign up at ${loginUrl} to get started.\n\nBest,\n1r0nf1st`,
+          });
+        } catch (emailErr) {
+          const { logger } = await import('../utils/logger.js');
+          logger.warn({ err: emailErr, recipientEmail, noteId }, 'Failed to send share notification email');
+        }
+      } else if (
+        !share.shared_with_user_id &&
+        shared_with_user_email &&
+        typeof shared_with_user_email === 'string' &&
+        share.share_token
+      ) {
+        const recipientEmail = shared_with_user_email.trim();
+        const viewLink = `${config.siteUrl}/notes/shared/${share.share_token}`;
+        try {
+          await sendTransactionalEmail({
+            to: [recipientEmail],
+            subject: `You've been given access to a note: ${noteTitle}`,
+            message: `Hello,\n\nSomeone has shared a note with you: "${noteTitle}".\n\nView it here (no account needed): ${viewLink}\n\nIf you sign up later with this email, you can also see shared notes in the Shared tab at ${config.siteUrl}/notes.\n\nBest,\n1r0nf1st`,
+          });
+        } catch (emailErr) {
+          const { logger } = await import('../utils/logger.js');
+          logger.warn({ err: emailErr, recipientEmail, noteId }, 'Failed to send share link email');
+        }
+      }
+    }
+
+    // Add share event to this note's version history (don't fail the share if this fails)
+    const recipientLabel =
+      share.shared_with_user_id && share.shared_with_user?.email
+        ? share.shared_with_user.email
+        : typeof shared_with_user_email === 'string' && shared_with_user_email.trim()
+          ? `${shared_with_user_email.trim()} (link)`
+          : 'public link';
+    const viewLink =
+      share.share_token ? `${config.siteUrl}/notes/shared/${share.share_token}` : null;
+    try {
+      await addShareToNoteHistory(noteId, req.userId, {
+        recipientLabel,
+        permission: share.permission,
+        viewLink,
+      });
+    } catch (historyErr) {
+      const { logger } = await import('../utils/logger.js');
+      logger.warn({ err: historyErr, noteId, ownerId: req.userId }, 'Failed to add share to note history');
+    }
+
+    res.status(201).json(share);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to share note';
+    const status =
+      error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+// GET /api/notes/:id/shares - Get all shares for a note
+notesRouter.get('/:id/shares', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const shares = await getNoteShares(noteId, req.userId);
+    res.json(shares);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch note shares';
+    const status =
+      error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+// PUT /api/notes/shares/:shareId - Update share permission
+notesRouter.put('/shares/:shareId', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const shareId = Array.isArray(req.params.shareId) ? req.params.shareId[0] : req.params.shareId;
+    const { permission } = req.body;
+
+    if (!permission || (permission !== 'view' && permission !== 'edit')) {
+      res.status(400).json({ error: 'Permission must be "view" or "edit"' });
+      return;
+    }
+
+    const share = await updateSharePermission(shareId, req.userId, permission);
+    res.json(share);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to update share permission';
+    const status =
+      error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+// DELETE /api/notes/shares/:shareId - Remove share
+notesRouter.delete('/shares/:shareId', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const shareId = Array.isArray(req.params.shareId) ? req.params.shareId[0] : req.params.shareId;
+    await unshareNote(shareId, req.userId);
+    res.status(204).send();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to unshare note';
+    const status =
+      error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
   }
 });
 

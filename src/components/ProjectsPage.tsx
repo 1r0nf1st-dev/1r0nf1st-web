@@ -1,5 +1,8 @@
+'use client';
+
 import type { JSX } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
+import { useAuth } from '../contexts/AuthContext';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost } from '../styles/buttons';
 import {
@@ -24,10 +27,14 @@ import {
   FaSun,
   FaLeaf,
   FaStickyNote,
+  FaEnvelope,
 } from 'react-icons/fa';
 import type { IconType } from 'react-icons';
 import { Hero } from './Hero';
 import { Footer } from './Footer';
+import { AdminOnlyPlaceholderCard } from './AdminOnlyPlaceholderCard';
+
+const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 
 interface Project {
   id: number;
@@ -38,6 +45,9 @@ interface Project {
 }
 
 export const ProjectsPage = (): JSX.Element => {
+  const { user } = useAuth();
+  const isAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
   const projects: Project[] = [
     // Working projects first
     {
@@ -205,12 +215,60 @@ export const ProjectsPage = (): JSX.Element => {
             <div className={cardOverlay} aria-hidden />
             <div className="flex justify-between items-center mb-4 relative z-10">
               <h2 className={`${cardTitle} m-0`}>Projects</h2>
-              <Link to="/" className={`${btnBase} ${btnGhost} text-sm py-2 px-4`}>
+              <Link href="/" className={`${btnBase} ${btnGhost} text-sm py-2 px-4`}>
                 ← Back to Home
               </Link>
             </div>
             <div className={cardBody}>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 mt-4 w-full">
+                {isAdmin ? (
+                  <Link
+                    href="/projects/send-email"
+                    className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
+                  >
+                    <div className="flex items-center gap-4 mb-3">
+                      <FaEnvelope className="text-3xl text-primary shrink-0" />
+                      <h3 className="m-0 text-xl font-semibold">Send Email</h3>
+                    </div>
+                    <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
+                      Send transactional emails via Brevo. Admin only.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
+                      <span>View project</span>
+                      <span>→</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <AdminOnlyPlaceholderCard
+                    title="Send Email"
+                    description="Send transactional emails via Brevo. Admin only."
+                    icon={FaEnvelope}
+                  />
+                )}
+                {isAdmin ? (
+                  <Link
+                    href="/projects/domain-auth"
+                    className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
+                  >
+                    <div className="flex items-center gap-4 mb-3">
+                      <FaShieldAlt className="text-3xl text-primary shrink-0" />
+                      <h3 className="m-0 text-xl font-semibold">Domain Auth (DKIM / DMARC)</h3>
+                    </div>
+                    <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
+                      Check DNS for DMARC and DKIM on your sending domain. Admin only.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
+                      <span>View project</span>
+                      <span>→</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <AdminOnlyPlaceholderCard
+                    title="Domain Auth (DKIM / DMARC)"
+                    description="Check DNS for DMARC and DKIM on your sending domain. Admin only."
+                    icon={FaShieldAlt}
+                  />
+                )}
                 {projects.map((project) => {
                   const IconComponent = project.icon;
                   const isInternalLink = project.link.startsWith('/');
@@ -235,7 +293,7 @@ export const ProjectsPage = (): JSX.Element => {
                   return isInternalLink ? (
                     <Link
                       key={project.id}
-                      to={project.link}
+                      href={project.link}
                       className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
                     >
                       {cardContent}

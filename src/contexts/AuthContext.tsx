@@ -1,6 +1,8 @@
-import type { JSX } from 'react';
+'use client';
+
+import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect } from 'react';
-import { getJson } from '../apiClient.js';
+import { getJson } from '../apiClient';
 
 interface User {
   id: string;
@@ -20,7 +22,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: JSX.Element }): JSX.Element => {
+export const AuthProvider = ({ children }: { children: ReactNode }): ReactNode => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

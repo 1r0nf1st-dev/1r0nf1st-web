@@ -1,10 +1,11 @@
 {
-  "buildCommand": "pnpm build:server && pnpm build:client",
-  "outputDirectory": "dist",
-  "framework": "vite",
+  "buildCommand": "pnpm build:server && pnpm build",
+  "framework": "nextjs",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/catchall?x-path=:path*" },
-    { "source": "/((?!api).*)", "destination": "/index.html" }
+    {
+      "source": "/api/:path*",
+      "destination": "/api/catchall?x-path=:path*"
+    }
   ],
   "functions": {
     "api/catchall.ts": {

@@ -1,3 +1,5 @@
+'use client';
+
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useDevToArticles } from '../useDevToArticles';
@@ -8,8 +10,15 @@ const DEFAULT_LIMIT = 6;
 
 // You can configure the source here or via environment variable
 // Options: 'username' (your articles), 'tag' (articles by tag), 'latest' (latest articles), 'top' (top articles)
-const DEVTO_SOURCE = (import.meta.env.VITE_DEVTO_SOURCE as 'username' | 'tag' | 'latest' | 'top') || 'latest';
-const DEVTO_TAG = import.meta.env.VITE_DEVTO_TAG || 'javascript'; // Default tag if using tag source
+const DEVTO_SOURCE =
+  ((typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_DEVTO_SOURCE : (import.meta as { env?: Record<string, string> }).env?.VITE_DEVTO_SOURCE) as
+    | 'username'
+    | 'tag'
+    | 'latest'
+    | 'top') || 'latest';
+const DEVTO_TAG =
+  (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_DEVTO_TAG : (import.meta as { env?: Record<string, string> }).env?.VITE_DEVTO_TAG) ||
+  'javascript';
 
 export const DevToArticles = (): JSX.Element | null => {
   // Only pass tag if source is 'tag' and tag is provided

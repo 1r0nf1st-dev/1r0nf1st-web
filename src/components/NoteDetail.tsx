@@ -6,6 +6,9 @@ import { updateNote, deleteNote, getNoteById } from '../useNotes';
 import { SaveConfirmationModal } from './SaveConfirmationModal';
 import { FileUpload } from './FileUpload';
 import { AttachmentsList } from './AttachmentsList';
+import { NoteVersionHistory } from './NoteVersionHistory';
+import { ShareNoteModal } from './ShareNoteModal';
+import { ShareSettings } from './ShareSettings';
 import { cardClasses, cardOverlay, cardTitle } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
@@ -16,6 +19,8 @@ export interface NoteDetailProps {
   onSave: () => void;
   onDelete: () => void;
   onClose: () => void;
+  /** Called when the notes list should refresh (e.g. after sharing, which adds a history note). */
+  onNotesChanged?: () => void;
 }
 
 export const NoteDetail = ({
@@ -25,6 +30,7 @@ export const NoteDetail = ({
   onSave,
   onDelete,
   onClose,
+  onNotesChanged,
 }: NoteDetailProps): JSX.Element => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<Record<string, unknown>>({});
@@ -34,6 +40,9 @@ export const NoteDetail = ({
   const [isArchived, setIsArchived] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareSettings, setShowShareSettings] = useState(false);
   const [attachments, setAttachments] = useState<Note['attachments']>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
 
@@ -176,8 +185,23 @@ export const NoteDetail = ({
     );
   }
 
+  // Show version history if requested
+  if (showVersionHistory) {
+    return (
+      <NoteVersionHistory
+        noteId={note.id}
+        onVersionRestored={() => {
+          setShowVersionHistory(false);
+          onSave(); // Refresh the note after restore
+        }}
+        onClose={() => setShowVersionHistory(false)}
+      />
+    );
+  }
+
   return (
-    <article className={cardClasses}>
+    <>
+      <article className={cardClasses}>
       <div className={cardOverlay} aria-hidden />
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex items-center justify-between mb-4">
@@ -301,6 +325,28 @@ export const NoteDetail = ({
             </button>
             <button
               type="button"
+              onClick={() => setShowVersionHistory(true)}
+              className={`${btnBase} ${btnGhost}`}
+              title="View version history"
+            >
+              History
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowShareModal(true)}
+              className={`${btnBase} ${btnGhost}`}
+            >
+              Share
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowShareSettings(true)}
+              className={`${btnBase} ${btnGhost}`}
+            >
+              Share Settings
+            </button>
+            <button
+              type="button"
               onClick={handleDelete}
               className={`${btnBase} ${btnGhost}`}
             >
@@ -319,6 +365,26 @@ export const NoteDetail = ({
           setShowSaveModal(false);
         }}
       />
+      {showShareModal && (
+        <ShareNoteModal
+          noteId={note.id}
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          onShareCreated={() => {
+            setShowShareModal(false);
+            setShowShareSettings(true);
+            onNotesChanged?.();
+          }}
+        />
+      )}
+      {showShareSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <ShareSettings noteId={note.id} onClose={() => setShowShareSettings(false)} />
+          </div>
+        </div>
+      )}
     </article>
+    </>
   );
 };

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase } from '../db/supabase.js';
 import { authenticateToken, type AuthRequest } from '../middleware/auth.js';
 import { logger } from '../utils/logger.js';
+import { config } from '../config.js';
 
 export const authRouter = Router();
 
@@ -79,6 +80,7 @@ authRouter.post('/register', async (req, res) => {
 // Login endpoint
 authRouter.post('/login', async (req, res) => {
   if (!supabase) {
+    logger.error('Supabase client not initialized');
     res.status(503).json({ error: 'Database not configured. Please set Supabase credentials.' });
     return;
   }
@@ -91,6 +93,13 @@ authRouter.post('/login', async (req, res) => {
       return;
     }
 
+    logger.info({ 
+      email,
+      supabaseUrl: config.supabaseUrl,
+      hasServiceRoleKey: !!config.supabaseServiceRoleKey,
+      serviceRoleKeyPrefix: config.supabaseServiceRoleKey?.substring(0, 20) + '...'
+    }, 'Attempting login');
+
     // Sign in with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -98,6 +107,14 @@ authRouter.post('/login', async (req, res) => {
     });
 
     if (error) {
+      logger.error({ 
+        error: error.message, 
+        errorCode: error.status,
+        errorName: error.name,
+        email,
+        supabaseUrl: config.supabaseUrl,
+        hasServiceRoleKey: !!config.supabaseServiceRoleKey
+      }, 'Login failed');
       // Surface helpful Supabase messages (e.g. "Email not confirmed") while keeping generic for invalid credentials
       const message =
         error.message === 'Email not confirmed'
@@ -244,14 +261,19 @@ authRouter.post('/forgot-password', async (req, res) => {
     const { config } = await import('../config.js');
     const redirectTo = `${config.siteUrl}/change-password`;
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    logger.debug({ email: email.trim(), redirectTo, path: '/forgot-password' }, 'Sending password reset email');
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo,
     });
 
     if (error) {
+      logger.error({ error: error.message, email: email.trim(), path: '/forgot-password' }, 'Failed to send reset email');
       res.status(400).json({ error: error.message });
       return;
     }
+
+    logger.debug({ email: email.trim(), path: '/forgot-password' }, 'Password reset email sent successfully');
 
     res.json({
       message:
@@ -263,7 +285,7 @@ authRouter.post('/forgot-password', async (req, res) => {
   }
 });
 
-// Confirm reset password (from recovery link): body { accessToken, newPassword }
+// Confirm reset password (from recovery link): body { accessToken, refreshToken, newPassword }
 authRouter.post('/confirm-reset-password', async (req, res) => {
   if (!supabase) {
     res.status(503).json({ error: 'Database not configured.' });
@@ -271,7 +293,7 @@ authRouter.post('/confirm-reset-password', async (req, res) => {
   }
 
   try {
-    const { accessToken, newPassword } = req.body;
+    const { accessToken, refreshToken, newPassword } = req.body;
     if (!accessToken || typeof accessToken !== 'string') {
       res.status(400).json({ error: 'Invalid or expired reset link' });
       return;
@@ -281,26 +303,39 @@ authRouter.post('/confirm-reset-password', async (req, res) => {
       return;
     }
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser(accessToken);
+    // Set session with recovery token to establish authenticated context
+    const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken || '', // Refresh token might not be present in recovery links
+    });
 
-    if (userError || !user) {
+    if (sessionError || !sessionData.session || !sessionData.user) {
+      logger.error(
+        { error: sessionError, path: '/confirm-reset-password' },
+        'Failed to set session with recovery token',
+      );
       res.status(400).json({
         error: 'This reset link is invalid or has expired. Please request a new one.',
       });
       return;
     }
 
-    const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
+    // Now update the password using the authenticated session
+    const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
     if (updateError) {
+      logger.error(
+        { error: updateError, userId: sessionData.user.id, path: '/confirm-reset-password' },
+        'Failed to update password',
+      );
       res.status(400).json({ error: updateError.message });
       return;
     }
+
+    // Sign out the session after password change for security
+    await supabase.auth.signOut();
 
     res.json({ message: 'Password changed successfully' });
   } catch (error) {

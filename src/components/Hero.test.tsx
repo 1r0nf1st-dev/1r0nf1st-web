@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { Hero } from './Hero';
 import * as authContextModule from '../contexts/AuthContext';
+
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(() => '/'),
+  useRouter: vi.fn(() => ({ push: vi.fn(), replace: vi.fn() })),
+}));
 
 // Mock AuthContext
 vi.mock('../contexts/AuthContext', () => ({
@@ -18,9 +23,7 @@ describe('Hero', () => {
   const renderHero = () => {
     return render(
       <ThemeProvider>
-        <BrowserRouter>
-          <Hero />
-        </BrowserRouter>
+        <Hero />
       </ThemeProvider>,
     );
   };
@@ -114,6 +117,6 @@ describe('Hero', () => {
     });
 
     renderHero();
-    expect(screen.getByText('Portfolio · React + Vite')).toBeInTheDocument();
+    expect(screen.getByText('Portfolio · Next.js + React')).toBeInTheDocument();
   });
 });

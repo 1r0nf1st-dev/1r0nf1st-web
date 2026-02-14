@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { logger } from '../utils/logger.js';
 import { config } from '../config.js';
+import { stripHtmlAndScripts } from '../utils/sanitize.js';
 
 export const logsRouter = Router();
 
@@ -76,22 +77,22 @@ logsRouter.post('/error', async (req, res) => {
       return;
     }
 
-    // Sanitize and log the error
+    // Sanitize and log the error (strip HTML/scripts to prevent log injection)
     const errorLog: Record<string, unknown> = {
       source: 'client',
-      message: message.substring(0, 1000), // Limit message length
-      errorName: errorName || 'Error',
-      url: url?.substring(0, 500),
-      userAgent: userAgent?.substring(0, 500),
+      message: stripHtmlAndScripts(message).substring(0, 1000),
+      errorName: stripHtmlAndScripts(String(errorName || 'Error')).substring(0, 200),
+      url: url ? stripHtmlAndScripts(url).substring(0, 500) : undefined,
+      userAgent: userAgent ? stripHtmlAndScripts(userAgent).substring(0, 500) : undefined,
       timestamp: timestamp || new Date().toISOString(),
     };
 
     if (stack) {
-      errorLog.stack = stack.substring(0, 5000); // Limit stack trace length
+      errorLog.stack = stripHtmlAndScripts(stack).substring(0, 5000);
     }
 
     if (componentStack) {
-      errorLog.componentStack = componentStack.substring(0, 2000);
+      errorLog.componentStack = stripHtmlAndScripts(componentStack).substring(0, 2000);
     }
 
     if (userId) {
@@ -158,12 +159,12 @@ logsRouter.post('/analytics', async (req, res) => {
       return;
     }
 
-    // Sanitize and log the analytics event
+    // Sanitize and log the analytics event (strip HTML/scripts)
     const analyticsLog: Record<string, unknown> = {
       source: 'client-analytics',
-      event: event.substring(0, 100),
+      event: stripHtmlAndScripts(event).substring(0, 100),
       timestamp: timestamp || new Date().toISOString(),
-      url: req.get('referer')?.substring(0, 500),
+      url: req.get('referer') ? stripHtmlAndScripts(req.get('referer')!).substring(0, 500) : undefined,
     };
 
     if (data && typeof data === 'object') {

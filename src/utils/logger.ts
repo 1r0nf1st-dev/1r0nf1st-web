@@ -12,7 +12,10 @@ class Logger {
   private logLevel: LogLevel;
 
   constructor() {
-    this.isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
+    this.isDevelopment =
+      (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') ||
+      (typeof import.meta !== 'undefined' &&
+        (import.meta.env?.DEV || import.meta.env?.MODE === 'development'));
     // In production, only log errors and warnings
     // In development, log everything
     this.logLevel = this.isDevelopment ? 'debug' : 'warn';

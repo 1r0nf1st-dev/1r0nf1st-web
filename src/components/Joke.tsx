@@ -27,7 +27,7 @@ export const Joke = (): JSX.Element | null => {
           <p className="mb-4">
             Joke unavailable right now. Try again later.
           </p>
-          {import.meta.env.DEV && error && (
+          {typeof process !== 'undefined' && process.env.NODE_ENV === 'development' && error && (
             <p className="mb-4 text-xs opacity-80" role="status">
               {error}
             </p>

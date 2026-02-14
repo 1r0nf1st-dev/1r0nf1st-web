@@ -1,3 +1,5 @@
+'use client';
+
 import type { JSX } from 'react';
 import { useVercelDeployments, type VercelDeployment } from '../useVercelDeployments';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';

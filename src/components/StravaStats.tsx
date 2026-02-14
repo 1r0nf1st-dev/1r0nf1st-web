@@ -1,3 +1,5 @@
+'use client';
+
 import type { JSX, ReactNode } from 'react';
 import { useStravaStats } from '../useStravaStats';
 import type { StravaTotalsPeriod } from '../useStravaStats';

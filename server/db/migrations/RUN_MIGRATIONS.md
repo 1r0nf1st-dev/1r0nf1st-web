@@ -41,6 +41,25 @@ After running the migration, verify RLS is disabled:
 
 ## Storage uploads still failing with "new row violates row-level security policy"?
 
+**Option A: Disable RLS on the bucket (simplest)**
+
+1. In Supabase Dashboard go to **Storage** → **Buckets**
+2. Click on `note-attachments` (or create it if missing)
+3. Open **Configuration** / **Settings**
+4. **Disable** "Enforce RLS" or "Enable RLS" for this bucket
+5. Save
+
+This lets the service role upload without policies. Access is still controlled server-side.
+
+**Option B: Run RLS migrations**
+
+If you must keep RLS enabled, try in order:
+
+1. Run `012_storage_service_role_policy.sql` in SQL Editor
+2. If that fails, run `013_storage_service_role_jwt_policy.sql` in SQL Editor
+
+**Also verify:**
+
 If server-side uploads to the `note-attachments` bucket still return 403 RLS:
 
 1. **Use the real service role key**  
@@ -48,6 +67,19 @@ If server-side uploads to the `note-attachments` bucket still return 403 RLS:
 
 2. **Add Storage policies for the service role**  
    In **SQL Editor**, run the contents of `012_storage_service_role_policy.sql`. That adds RLS policies on `storage.objects` so the service role can insert/select/delete in the `note-attachments` bucket.
+
+## Migration 015: Disable RLS for shared_notes
+
+After creating the `shared_notes` table in migration 013, you need to disable RLS on it:
+
+1. Go to **SQL Editor** in Supabase Dashboard
+2. Copy and paste the contents of `015_disable_shared_notes_rls.sql`
+3. Click **Run** to execute
+
+Or run directly:
+```sql
+ALTER TABLE shared_notes DISABLE ROW LEVEL SECURITY;
+```
 
 ## Note
 

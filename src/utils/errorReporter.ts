@@ -1,5 +1,5 @@
-import { logger } from './logger.js';
-import { env } from '../config.js';
+import { logger } from './logger';
+import { env } from '../config';
 
 interface ErrorReport {
   message: string;
@@ -32,7 +32,7 @@ export async function reportError(
   });
 
   // Don't report errors in development (too noisy)
-  if (import.meta.env.DEV) {
+  if (process.env.NODE_ENV === 'development') {
     return;
   }
 
