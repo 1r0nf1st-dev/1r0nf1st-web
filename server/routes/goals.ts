@@ -12,8 +12,13 @@ import {
   updateMilestone,
   deleteMilestone,
 } from '../services/goalService.js';
+import { sanitizeFreeText } from '../utils/sanitize.js';
 
 const goalsRouter = Router();
+const GOAL_TITLE_MAX_LENGTH = 500;
+const GOAL_DESCRIPTION_MAX_LENGTH = 5000;
+const MILESTONE_TITLE_MAX_LENGTH = 500;
+const MILESTONE_DESCRIPTION_MAX_LENGTH = 2000;
 
 // All routes require authentication
 goalsRouter.use(authenticateToken);
@@ -74,8 +79,11 @@ goalsRouter.post('/', async (req: AuthRequest, res) => {
     }
 
     const goal = await createGoal(req.userId, {
-      title: title.trim(),
-      description,
+      title: sanitizeFreeText(title.trim(), GOAL_TITLE_MAX_LENGTH),
+      description:
+        description != null && typeof description === 'string'
+          ? sanitizeFreeText(description.trim(), GOAL_DESCRIPTION_MAX_LENGTH)
+          : undefined,
       target_date,
       progress_percentage,
       status,
@@ -101,8 +109,11 @@ goalsRouter.put('/:id', async (req: AuthRequest, res) => {
     const { title, description, target_date, progress_percentage, status } = req.body;
 
     const goal = await updateGoal(goalId, req.userId, {
-      title: title?.trim(),
-      description,
+      title: title != null && typeof title === 'string' ? sanitizeFreeText(title.trim(), GOAL_TITLE_MAX_LENGTH) : undefined,
+      description:
+        description != null && typeof description === 'string'
+          ? sanitizeFreeText(description.trim(), GOAL_DESCRIPTION_MAX_LENGTH)
+          : undefined,
       target_date,
       progress_percentage,
       status,
@@ -174,8 +185,11 @@ goalsRouter.post('/:id/milestones', async (req: AuthRequest, res) => {
 
     const milestone = await createMilestone(req.userId, {
       goal_id: goalId,
-      title: title.trim(),
-      description,
+      title: sanitizeFreeText(title.trim(), MILESTONE_TITLE_MAX_LENGTH),
+      description:
+        description != null && typeof description === 'string'
+          ? sanitizeFreeText(description.trim(), MILESTONE_DESCRIPTION_MAX_LENGTH)
+          : undefined,
     });
 
     res.status(201).json(milestone);
@@ -200,8 +214,11 @@ goalsRouter.put('/milestones/:milestoneId', async (req: AuthRequest, res) => {
     const { title, description, completed } = req.body;
 
     const milestone = await updateMilestone(milestoneId, req.userId, {
-      title: title?.trim(),
-      description,
+      title: title != null && typeof title === 'string' ? sanitizeFreeText(title.trim(), MILESTONE_TITLE_MAX_LENGTH) : undefined,
+      description:
+        description != null && typeof description === 'string'
+          ? sanitizeFreeText(description.trim(), MILESTONE_DESCRIPTION_MAX_LENGTH)
+          : undefined,
       completed,
     });
 

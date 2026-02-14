@@ -1,0 +1,10 @@
+{
+  "components/NoteDetail.tsx -> ../useNotes": {
+    "id": "components/NoteDetail.tsx -> ../useNotes",
+    "files": []
+  },
+  "views/NotesPage.tsx -> ../useNotes": {
+    "id": "views/NotesPage.tsx -> ../useNotes",
+    "files": []
+  }
+}

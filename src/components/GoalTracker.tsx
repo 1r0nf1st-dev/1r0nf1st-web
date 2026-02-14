@@ -1,6 +1,9 @@
+'use client';
+
 import type { JSX } from 'react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoals, createGoal, updateGoal, deleteGoal } from '../useGoals';
 import { GoalCard } from './GoalCard';
@@ -11,6 +14,7 @@ import type { Goal } from '../useGoals';
 import { logger } from '../utils/logger';
 
 export const GoalTracker = (): JSX.Element | null => {
+  const pathname = usePathname();
   const { user } = useAuth();
   const { goals, isLoading, error: goalsError, refetch } = useGoals();
   const [isCreating, setIsCreating] = useState(false);
@@ -113,13 +117,13 @@ export const GoalTracker = (): JSX.Element | null => {
             </ul>
             <div className="flex gap-3 justify-start items-center">
               <Link
-                to={`/login?returnTo=${encodeURIComponent(location.pathname)}`}
+                href={`/login?returnTo=${encodeURIComponent(pathname || '/projects/goal-tracker')}`}
                 className={`${btnBase} ${btnPrimary} text-sm py-2 px-8 whitespace-nowrap`}
               >
                 Log In
               </Link>
               <Link
-                to="/projects"
+                href="/projects"
                 className={`${btnBase} ${btnGhost} text-sm py-2 px-8 whitespace-nowrap`}
               >
                 Back to Projects

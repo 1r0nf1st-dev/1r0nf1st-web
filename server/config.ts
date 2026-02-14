@@ -57,4 +57,10 @@ export const config = {
   enableAnalytics: process.env.ENABLE_ANALYTICS
     ? process.env.ENABLE_ANALYTICS.trim().toLowerCase() === 'true'
     : false,
+  /** Brevo (Sendinblue) API key for sending transactional emails. Get from https://app.brevo.com/settings/keys/api */
+  brevoApiKey: process.env.BREVO_API_KEY?.trim() ?? '',
+  /** Sender email for Brevo (from .env). Not validated except that it must be set when sending. */
+  brevoFromEmail: process.env.BREVO_FROM_EMAIL?.trim() ?? '',
+  /** Optional sender name for Brevo. */
+  brevoFromName: process.env.BREVO_FROM_NAME?.trim() ?? '1r0nf1st',
 };

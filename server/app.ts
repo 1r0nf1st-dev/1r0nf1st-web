@@ -14,6 +14,8 @@ import { authRouter } from './routes/auth.js';
 import { goalsRouter } from './routes/goals.js';
 import { notesRouter } from './routes/notes.js';
 import { logsRouter } from './routes/logs.js';
+import { emailRouter } from './routes/email.js';
+import { contactRouter } from './routes/contact.js';
 import { config } from './config.js';
 import { logger } from './utils/logger.js';
 import { requestLogger } from './middleware/requestLogger.js';
@@ -74,6 +76,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/notes', notesRouter);
 app.use('/api/logs', logsRouter);
+app.use('/api/email', emailRouter);
+app.use('/api/contact', contactRouter);
 
 // 404 handler for unmatched routes
 app.use((_req, res) => {

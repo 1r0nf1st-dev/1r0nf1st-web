@@ -1,6 +1,8 @@
+'use client';
+
 import type { JSX } from 'react';
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 /**
  * Reads the URL hash for Supabase auth redirect errors (e.g. otp_expired)
@@ -40,13 +42,13 @@ export const AuthHashErrorHandler = (): JSX.Element | null => {
         <p className="text-sm font-medium">{message}</p>
         <div className="flex items-center gap-3">
           <Link
-            to="/login"
+            href="/login"
             className="text-sm font-semibold underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-800 rounded"
           >
             Go to login
           </Link>
           <Link
-            to="/forgot-password"
+            href="/forgot-password"
             className="text-sm font-semibold underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-800 rounded"
           >
             Request a new reset link

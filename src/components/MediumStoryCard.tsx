@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import DOMPurify from 'dompurify';
 import type { MediumStory } from '../useMediumStories';
 import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
 
@@ -65,7 +66,12 @@ export const MediumStoryCard = ({
         {isExpanded && story.description && (
           <div
             className="mt-3 text-sm leading-relaxed max-h-[300px] overflow-y-auto flex-1 min-h-0 [&_img]:max-w-full [&_a]:text-primary [&_a]:no-underline [&_a:hover]:underline"
-            dangerouslySetInnerHTML={{ __html: story.description }}
+            dangerouslySetInnerHTML={{
+              __html: DOMPurify.sanitize(story.description, {
+                ALLOWED_TAGS: ['p', 'br', 'a', 'strong', 'em', 'ul', 'ol', 'li', 'img', 'blockquote'],
+                ALLOWED_ATTR: ['href', 'src', 'alt', 'title'],
+              }),
+            }}
           />
         )}
         <div className="mt-auto pt-3">

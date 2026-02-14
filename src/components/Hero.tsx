@@ -1,22 +1,25 @@
+'use client';
+
 import type { JSX } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { HiSun, HiMoon } from 'react-icons/hi';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 export const Hero = (): JSX.Element => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const isProjectsPage = location.pathname === '/projects';
-  const isLoginPage = location.pathname === '/login';
-  const isChangePasswordPage = location.pathname === '/change-password';
+  const isProjectsPage = pathname === '/projects';
+  const isLoginPage = pathname === '/login';
+  const isChangePasswordPage = pathname === '/change-password';
 
   const handleLogout = async (): Promise<void> => {
     await logout();
-    navigate('/');
+    router.push('/');
   };
 
   return (
@@ -29,7 +32,7 @@ export const Hero = (): JSX.Element => {
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-2">
             <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-full border-2 border-primary/40 dark:border-border bg-primary/15 dark:bg-primary/10 text-xs uppercase tracking-wider text-primary-strong dark:text-muted font-medium">
-              Portfolio · React + Vite
+              Portfolio · Next.js + React
             </span>
             <div className="flex items-center gap-3">
               <button
@@ -53,7 +56,7 @@ export const Hero = (): JSX.Element => {
               )}
             </div>
           </div>
-          <Link to="/" className="no-underline text-inherit flex items-center gap-4 mt-4 mb-2">
+          <Link href="/" className="no-underline text-inherit flex items-center gap-4 mt-4 mb-2">
             <img
               src="/logo.jpg"
               alt="1r0nf1st logo"
@@ -68,11 +71,11 @@ export const Hero = (): JSX.Element => {
           </p>
           <div className="flex flex-wrap gap-3">
             {isProjectsPage || isLoginPage || isChangePasswordPage ? (
-              <Link to="/" className={`${btnBase} ${btnPrimary}`}>
+              <Link href="/" className={`${btnBase} ${btnPrimary}`}>
                 Back to Home
               </Link>
             ) : (
-              <Link to="/projects" className={`${btnBase} ${btnPrimary}`}>
+              <Link href="/projects" className={`${btnBase} ${btnPrimary}`}>
                 View projects
               </Link>
             )}
@@ -80,7 +83,7 @@ export const Hero = (): JSX.Element => {
               <>
                 {!isChangePasswordPage && (
                   <Link
-                    to="/change-password"
+                    href="/change-password"
                     className={`${btnBase} ${btnGhost}`}
                   >
                     Change Password
@@ -96,7 +99,7 @@ export const Hero = (): JSX.Element => {
               </>
             ) : (
               !isLoginPage && (
-                <Link to="/login" className={`${btnBase} ${btnGhost}`}>
+                <Link href="/login" className={`${btnBase} ${btnGhost}`}>
                   Login
                 </Link>
               )

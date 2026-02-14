@@ -1,4 +1,6 @@
-import type { JSX } from 'react';
+'use client';
+
+import type { ReactNode } from 'react';
 import {
   createContext,
   useContext,
@@ -45,8 +47,8 @@ function applyTheme(theme: Theme): void {
 export const ThemeProvider = ({
   children,
 }: {
-  children: JSX.Element;
-}): JSX.Element => {
+  children: ReactNode;
+}): ReactNode => {
   const [theme, setThemeState] = useState<Theme>(() => {
     return getStoredTheme() ?? getSystemTheme();
   });

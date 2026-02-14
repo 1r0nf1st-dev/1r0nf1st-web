@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { env } from './config';
 import { getJson, ApiError } from './apiClient';
 
@@ -135,7 +135,7 @@ export function useNotes(filters?: NotesFilters): NotesState {
     };
   }, [filterKey]);
 
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -164,13 +164,11 @@ export function useNotes(filters?: NotesFilters): NotesState {
       }
       setState({ notes: null, isLoading: false, error: message });
     }
-  };
+  }, [filterKey]);
 
   return {
     ...state,
-    refetch: async () => {
-      await fetchNotes();
-    },
+    refetch: fetchNotes,
   };
 }
 

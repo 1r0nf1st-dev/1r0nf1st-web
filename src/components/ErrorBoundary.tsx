@@ -1,6 +1,8 @@
+'use client';
+
 import type { JSX } from 'react';
 import { Component, type ReactNode } from 'react';
-import { reportError } from '../utils/errorReporter.js';
+import { reportError } from '../utils/errorReporter';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
 
@@ -84,7 +86,7 @@ function DefaultErrorFallback({
             We&apos;re sorry, but something unexpected happened. The error has been logged and we&apos;ll
             look into it.
           </p>
-          {import.meta.env.DEV && (
+          {process.env.NODE_ENV === 'development' && (
             <details className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm">
               <summary className="cursor-pointer font-medium mb-2">Error details (dev only)</summary>
               <pre className="whitespace-pre-wrap text-xs overflow-auto">
