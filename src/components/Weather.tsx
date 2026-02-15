@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import { useWeather } from '../useWeather';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
 interface WeatherProps {
@@ -14,7 +15,11 @@ export const Weather = ({ city = 'London' }: WeatherProps): JSX.Element | null =
       <article className={cardClasses} id="weather">
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Weather</h2>
-        <p className={cardBody}>Loading current weather…</p>
+        <div className={cardBody} aria-busy>
+          <Skeleton className="mb-4 h-12 w-24" />
+          <Skeleton className="mb-2 h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
       </article>
     );
   }

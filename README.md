@@ -1,12 +1,12 @@
 ## 1r0nf1st-website
 
-Modern Vite + React + TypeScript portfolio site with a separate Express API server. The frontend calls the local API server, which handles all external API requests (GitHub, etc.), keeping tokens and secrets server-side. Includes user authentication powered by Supabase Auth.
+Modern Next.js + React + TypeScript portfolio site with a separate Express API server. The frontend uses the Next.js App Router and proxies `/api` to the Express server, which handles external APIs (GitHub, Medium, Spotify, Strava, Brevo, etc.) and keeps tokens server-side. Includes user authentication (Supabase Auth), notes with TipTap, contact form, goal tracking, and more.
 
 ### Prerequisites
 
 - **Node.js** (recommended: latest LTS)
 - **pnpm** (this repo uses pnpm; install via `corepack enable` or `npm i -g pnpm`)
-- **Supabase account** (free tier available at https://supabase.com) - for user authentication database
+- **Supabase account** (free tier at https://supabase.com) – for auth, notes, and attachments
 
 ### Install dependencies
 
@@ -16,9 +16,9 @@ pnpm install
 
 ### Run the dev servers
 
-The project runs two servers in development:
+The project runs two processes in development:
 
-- **Frontend (Vite)**: `http://localhost:5173`
+- **Frontend (Next.js)**: `http://localhost:3000` (Next.js default)
 - **API server (Express)**: `http://localhost:3001`
 
 Start both with:
@@ -27,14 +27,14 @@ Start both with:
 pnpm dev
 ```
 
-**Note:** The `dev` script automatically runs TypeScript type-checking before starting the servers. If there are type errors, the servers won't start.
+This runs type-checking first, then starts the API server and waits for its health check, then starts the Next.js dev server.
 
 You can also run them separately:
 
-- `pnpm dev:client` - Frontend only
-- `pnpm dev:server` - API server only
-- `pnpm server` - Run API server once (no watch mode)
-- `pnpm type-check` - Run TypeScript type-checking for both frontend and backend
+- `pnpm dev:client` – Next.js frontend only
+- `pnpm dev:server` – API server only
+- `pnpm server` – Run API server once (no watch mode)
+- `pnpm type-check` – TypeScript type-checking for frontend and backend
 
 ### Build for production
 
@@ -42,33 +42,38 @@ You can also run them separately:
 pnpm build
 ```
 
-This builds both the frontend and backend:
+This builds:
 
-- `pnpm build:client` - Builds React frontend (outputs to `dist/`)
-- `pnpm build:server` - Compiles TypeScript server (outputs to `server/dist/`)
+- **Server**: TypeScript → `server/dist/`
+- **Next.js**: Static/SSR output → `.next/`
 
-### Run production server
+### Run production build
 
 After building:
 
 ```bash
-pnpm start:server
+pnpm start
 ```
 
-### Preview the production build
+This starts the Next.js production server. On Vercel, the API is handled by a serverless catchall function; locally, you can run the Express server with `pnpm start:server` if needed.
+
+### Preview production build locally
 
 ```bash
 pnpm preview
 ```
 
+Runs `next build && next start` to simulate production.
+
 ### Deploy to Vercel
 
-The project is set up for Vercel: the **Vite** frontend is built to `dist/`, and the **Express** API runs as a Vercel serverless function for all `/api/*` routes.
+The project is configured for Vercel with Next.js as the framework:
 
-1. **Connect the repo** to Vercel (GitHub/GitLab/Bitbucket) and import this project.
-2. **Framework preset**: leave **Vite** (auto-detected) or set it explicitly. The `vercel.json` build command runs `pnpm build:server && pnpm build:client` so the API is built before the frontend.
-3. **Environment variables**: in the Vercel project **Settings → Environment Variables**, add the same variables you use locally (see `.env.example`). Do **not** set `VITE_API_BASE_URL` in production so the frontend uses relative `/api` on the same origin.
-4. **Deploy**: push to your connected branch; Vercel will build and deploy. The site will serve the Vite app and route `/api/*` to the Express app.
+1. **Connect the repo** to Vercel and import this project.
+2. **Framework**: Next.js (auto-detected from `vercel.json`).
+3. **Build command**: `pnpm build:server && pnpm build` (already in `vercel.json`).
+4. **Environment variables**: In Vercel **Settings → Environment Variables**, add the same variables as in `.env.example`. See [Environment and API configuration](#environment-and-api-configuration) below.
+5. **Deploy**: Push to your connected branch; Vercel builds and deploys. The site serves the Next.js app and routes `/api/*` to the Express backend via a serverless catchall.
 
 ### Lint and format
 
@@ -86,7 +91,7 @@ The project is set up for Vercel: the **Vite** frontend is built to `dist/`, and
 
 ### Testing
 
-The project uses **Vitest** for testing with **React Testing Library** for component tests.
+The project uses **Vitest** with **React Testing Library** for component and hook tests.
 
 - **Run all tests**:
 
@@ -94,177 +99,135 @@ The project uses **Vitest** for testing with **React Testing Library** for compo
   pnpm test
   ```
 
-- **Run tests in watch mode**:
+- **Watch mode**: `pnpm test:watch`
+- **UI**: `pnpm test:ui`
+- **Coverage**: `pnpm test:coverage`
 
-  ```bash
-  pnpm test:watch
-  ```
-
-- **Run tests with UI**:
-
-  ```bash
-  pnpm test:ui
-  ```
-
-- **Generate coverage report**:
-
-  ```bash
-  pnpm test:coverage
-  ```
-
-Tests are located alongside source files with `.test.ts` or `.test.tsx` extensions. The test setup includes:
-
-- **Frontend tests**: React components, hooks, and utilities using React Testing Library
-- **Server tests**: Express routes, middleware, and services
-- **Mocking**: API calls, localStorage, and external dependencies are mocked for isolated testing
-
-Test files follow the naming convention: `*.test.{ts,tsx}` and are automatically discovered by Vitest.
+Tests live next to source files with `.test.ts` or `.test.tsx` extensions.
 
 ### Environment and API configuration
 
-1. **Create your env file** (in the project root):
+1. **Create `.env`** in the project root:
 
    ```bash
    cp .env.example .env
    ```
 
-   The Express server automatically loads environment variables from `.env` using `dotenv`.
+   The Express server loads environment variables via `dotenv`.
 
-2. **Server-side configuration** (used by Express API server):
-   - `GITHUB_USERNAME` – your GitHub username (used to fetch public repos).
-   - `GITHUB_TOKEN` (optional) – personal access token for higher GitHub rate limits.  
-     **Never commit this**; `.env` is already git-ignored.
-   - `PORT` (optional) – API server port (defaults to 3001).
-   - `PUBLIC_API_BASE` (optional) – base URL for any other public REST API you want to call.
-   - `NODE_ENV` (optional) – environment mode: `development` or `production` (defaults to `development`).
-   - `ALLOWED_ORIGINS` (optional) – comma-separated list of allowed CORS origins for production (e.g., `https://yoursite.com,https://www.yoursite.com`). Leave unset for development (allows all origins).
-   - `SUPABASE_URL` – your Supabase project URL (get from Supabase dashboard → Settings → API).
-   - `SUPABASE_ANON_KEY` – your Supabase anon/public key (get from Supabase dashboard → Settings → API). Safe for client-side use.
-   - `SUPABASE_SERVICE_ROLE_KEY` – your Supabase service role key (get from Supabase dashboard → Settings → API). **IMPORTANT:** Use the `service_role` key, NOT the `anon` key. Keep this secret and never expose it in client-side code.
+2. **Server-side configuration** (Express API):
+
+   - `GITHUB_USERNAME` – GitHub username for public repos (used on Cloud Infrastructure page).
+   - `GITHUB_TOKEN` (optional) – Personal access token for higher GitHub rate limits.
+   - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` – Supabase project credentials (required for auth and notes).
+   - `BREVO_API_KEY`, `BREVO_FROM_EMAIL` – Brevo (Sendinblue) for contact form and transactional email.
+   - `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID` (optional) – For deployment info on Cloud Infrastructure page.
+   - `PORT` (optional) – API server port (default 3001).
+   - `NODE_ENV` – `development` or `production`.
+   - `ALLOWED_ORIGINS` – Comma-separated CORS origins for production.
+   - `SITE_URL` – Public frontend URL (for password reset emails; Vercel sets `VERCEL_URL` automatically).
+
+   See `.env.example` for the full list, including Medium, Dev.to, Spotify, Strava, OpenWeather, and optional integrations.
 
 3. **Frontend configuration**:
-   - `VITE_API_BASE_URL` (optional) – API server URL. Leave empty or unset for development (uses `/api` with Vite proxy). Set to full URL for production (e.g., `https://api.yoursite.com`).
 
-**Example `.env` file:**
+   - `NEXT_PUBLIC_API_BASE_URL` (optional) – API base URL. Leave empty in development and on Vercel (uses relative `/api`). Set only if the API is on a different origin.
 
-```bash
-# Frontend
-VITE_API_BASE_URL=http://localhost:3001
+### Supabase setup
 
-# Server - GitHub
-GITHUB_USERNAME=your-github-username
-GITHUB_TOKEN=ghp_your_token_here
-PORT=3001
+1. Create a Supabase project at https://supabase.com.
+2. Enable **Email/Password** auth in Authentication → Providers.
+3. Copy **Project URL**, **anon**, and **service_role** keys from Settings → API into `.env`.
+4. Run migrations for notes, attachments, and storage – see `server/db/migrations/RUN_MIGRATIONS.md` for steps and RLS/Storage setup.
 
-# Server - Environment
-NODE_ENV=development
-
-# Server - Supabase Auth
-SUPABASE_URL=https://your-project-id.supabase.co
-SUPABASE_ANON_KEY=your-anon-key-here
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
-```
-
-After updating `.env`, restart the dev servers (`pnpm dev`) so both Vite and Express pick up the new environment variables.
-
-### Supabase Auth Setup
-
-1. **Create a Supabase project** at https://supabase.com
-2. **Enable Email/Password Authentication**:
-   - Go to **Authentication** → **Providers** in your Supabase dashboard
-   - Ensure **Email** provider is enabled
-   - For development, disable "Confirm email" (enable for production)
-3. **Get your credentials** from Supabase dashboard → Settings → API:
-   - Copy the **Project URL** → `SUPABASE_URL`
-   - Copy the **anon public** key → `SUPABASE_ANON_KEY`
-   - Copy the **service_role** key → `SUPABASE_SERVICE_ROLE_KEY`
-4. **Add credentials to `.env`** file (see example above)
-5. **Create your first user**:
-   - Option A: Via Supabase Dashboard → Authentication → Users → Add user
-   - Option B: Via your app at `/login` → Register
-
-See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for detailed setup instructions.
+See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for detailed auth setup.
 
 ### Features
 
-#### Authentication (Powered by Supabase Auth)
+#### Authentication (Supabase Auth)
 
-- **User Registration** – Create new user accounts with email and password
-- **User Login** – Secure authentication with Supabase JWT tokens
-- **Password Change** – Users can change their password (when authenticated)
-- **Protected Routes** – Routes that require authentication
-- **Session Management** – JWT tokens stored in localStorage, auto-verification on page load
-- **Email Verification** – Optional email confirmation (configurable in Supabase dashboard)
-- **Token Refresh** – Automatic token refresh handling
+- Registration and login
+- Password change (authenticated users)
+- Password reset (forgot password flow)
+- Protected routes and session management
+- JWT tokens in `localStorage` with refresh handling
+
+#### Notes
+
+- Rich-text editor (TipTap) with tables, task lists, images, links
+- Notebooks and tags
+- File attachments (Supabase Storage)
+- Note sharing
+- Version history and restore
+
+#### Contact & Email
+
+- Public contact form (Brevo)
+- Domain auth (DKIM/DMARC) for custom sending domains
+- Admin-only email send page
 
 #### Routing
 
-- **Home Page** (`/`) – Main portfolio page with GitHub projects
-- **Projects Page** (`/projects`) – Grid view of all projects (20 placeholder projects)
-- **Login Page** (`/login`) – User authentication (login/register)
-- **Change Password Page** (`/change-password`) – Protected route for password changes
+- `/` – Home (portfolio, Medium, Dev.to, Spotify, Weather, Quote, Joke, Contact)
+- `/projects` – Project grid (Goal Tracker, Notes, Weather, Health, Cloud Infrastructure, Featured Showcase, etc.)
+- `/projects/cloud` – Cloud Infrastructure (Vercel deployments, GitHub projects)
+- `/projects/showcase` – Featured Showcase (Dev.to, Medium)
+- `/notes` – Notes app (login required)
+- `/login` – Login and registration
+- `/change-password` – Change password (authenticated)
+- `/forgot-password` – Password reset request
 
-#### API Endpoints
+#### API endpoints (examples)
 
-- `GET /api/github/repos` – Fetch GitHub repositories
-- `GET /api/github/commits` – Fetch commits for a repository
-- `POST /api/auth/register` – Register a new user (email + password)
-- `POST /api/auth/login` – Login and get Supabase JWT token
-- `GET /api/auth/verify` – Verify JWT token
-- `POST /api/auth/refresh` – Refresh access token
-- `POST /api/auth/change-password` – Change user password (protected)
-- `POST /api/auth/logout` – Logout and invalidate session
+- `GET /api/github/repos`, `GET /api/github/commits`
+- `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/change-password`, etc.
+- `POST /api/contact` – Contact form submission
+- `GET/POST/PUT/DELETE /api/notes/*` – Notes CRUD
+- `GET/POST/PUT/DELETE /api/goals/*` – Goals CRUD
+- Plus Medium, Dev.to, Spotify, Strava, Weather, Vercel, Quote, Joke, Logs, Email
 
 ### Project structure
 
 ```
-├── src/                          # React frontend (Vite)
-│   ├── components/              # Reusable React components
-│   │   ├── Footer.tsx
-│   │   ├── GitHubProjects.tsx
-│   │   ├── Hero.tsx
-│   │   ├── InfoCard.tsx
-│   │   ├── ProjectsPage.tsx
-│   │   └── ProtectedRoute.tsx
-│   ├── contexts/                # React contexts
-│   │   └── AuthContext.tsx     # Authentication state management
-│   ├── pages/                   # Page components
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── globals.css
+│   │   ├── login/
+│   │   ├── notes/
+│   │   ├── change-password/
+│   │   ├── forgot-password/
+│   │   └── projects/           # Project subpages
+│   ├── views/                  # Page components
 │   │   ├── HomePage.tsx
-│   │   ├── LoginPage.tsx
-│   │   └── ChangePasswordPage.tsx
-│   ├── apiClient.ts             # Generic API client with auth
-│   ├── config.ts                # Frontend configuration
-│   ├── useGitHubRepos.ts        # Hook for GitHub repos
-│   ├── useGitHubCommits.ts      # Hook for GitHub commits
-│   ├── App.tsx                  # Main app component with routes
-│   └── main.tsx                 # Entry point
-├── server/                      # Express API server
-│   ├── db/                      # Database configuration
-│   │   ├── supabase.ts         # Supabase client setup
-│   │   └── migrations/         # SQL migration files
-│   ├── middleware/             # Express middleware
-│   │   └── auth.ts             # JWT authentication middleware
-│   ├── routes/                  # API route handlers
-│   │   ├── github.ts           # GitHub API routes
-│   │   └── auth.ts             # Authentication routes
-│   ├── services/                # Business logic
-│   │   └── githubService.ts    # GitHub API integration
-│   ├── config.ts               # Server configuration
-│   └── index.ts                # Server entry point
-└── .env.example                # Environment variables template
+│   │   ├── NotesPage.tsx
+│   │   ├── CloudInfrastructurePage.tsx
+│   │   └── ...
+│   ├── components/             # Reusable UI components
+│   ├── contexts/               # React contexts (Auth, Theme)
+│   └── ...
+├── server/
+│   ├── db/
+│   │   ├── supabase.ts
+│   │   └── migrations/         # SQL migrations
+│   ├── middleware/
+│   ├── routes/
+│   ├── services/
+│   ├── config.ts
+│   └── index.ts
+├── .env.example
+└── vercel.json
 ```
 
-### Security Features
+### Security
 
-- **Supabase Auth** – Professional-grade authentication with built-in security
-- **Password Hashing** – Automatic secure password hashing (managed by Supabase)
-- **JWT Authentication** – Secure token-based authentication with automatic refresh
-- **Protected Routes** – Server-side route protection with Supabase token verification
-- **CORS Configuration** – Environment-based CORS settings for production
-- **Environment Variables** – Sensitive data stored in `.env` (git-ignored)
-- **No Password Exposure** – Passwords never logged or returned in API responses
-- **Row Level Security** – Can be configured with Supabase RLS policies
+- Supabase Auth for authentication and password hashing
+- JWT-based protected routes and API endpoints
+- CORS config via `ALLOWED_ORIGINS` in production
+- Sensitive values in `.env` (git-ignored)
+- RLS and storage policies – see `server/db/migrations/RUN_MIGRATIONS.md`
 
-### Creating Your First User
+### Creating your first user
 
-See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for instructions on creating your first user via the Supabase dashboard or your application.
+See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for creating users via the Supabase dashboard or the app’s registration flow.

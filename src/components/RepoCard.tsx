@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import { useGitHubCommits } from '../useGitHubCommits';
+import { Skeleton } from './Skeleton';
 
 export interface RepoCardProps {
   repo: {
@@ -51,7 +52,11 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
       {isExpanded && (
         <div className="ml-6 mt-4">
           {commitsLoading && (
-            <p className="text-[0.85rem] opacity-70">Loading commits…</p>
+            <div className="flex flex-col gap-2" aria-busy>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
           )}
           {commitsError && (
             <p className="text-[0.85rem] opacity-70 text-red-400">

@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useDevToArticles } from '../useDevToArticles';
 import { DevToArticleCard } from './DevToArticleCard';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
 const DEFAULT_LIMIT = 6;
@@ -53,7 +54,11 @@ export const DevToArticles = (): JSX.Element | null => {
       <article className={cardClasses} id="devto">
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>{getTitle()}</h2>
-        <p className={cardBody}>Loading articles from Dev.to…</p>
+        <div className={cardBody} aria-busy>
+          <Skeleton className="mb-3 h-4 w-full" />
+          <Skeleton className="mb-3 h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
       </article>
     );
   }

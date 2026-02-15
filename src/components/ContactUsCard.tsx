@@ -114,7 +114,7 @@ export const ContactUsCard = (): JSX.Element => {
       <div className={cardOverlay} aria-hidden />
       <h2 className={cardTitle}>Contact us</h2>
       <p className={`${cardBody} mb-4`}>
-        Send us a message and we&apos;ll get back to you as soon as we can.
+        We&apos;d love to help with any web projects you need. Get in contact with us.
       </p>
       <form onSubmit={handleSubmit} className="relative z-10 flex flex-col gap-3" noValidate>
         <div>

@@ -2,6 +2,7 @@
 
 import type { JSX } from 'react';
 import { useVercelDeployments, type VercelDeployment } from '../useVercelDeployments';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
 function formatRelativeTime(timestamp: number): string {
@@ -127,7 +128,11 @@ export const VercelDeployments = (): JSX.Element | null => {
     return (
       <article className="card" id="vercel-deployments">
         <h2 className="card-title">Vercel Deployments</h2>
-        <p className="card-body">Loading deployments…</p>
+        <div className="card-body" aria-busy>
+          <Skeleton className="mb-3 h-4 w-full" />
+          <Skeleton className="mb-3 h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
       </article>
     );
   }

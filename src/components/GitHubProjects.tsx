@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useGitHubRepos } from '../useGitHubRepos';
 import { RepoCard } from './RepoCard';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
 export const GitHubProjects = (): JSX.Element => {
@@ -14,7 +15,13 @@ export const GitHubProjects = (): JSX.Element => {
     <article className={cardClasses} id="projects">
       <div className={cardOverlay} aria-hidden="true" />
       <h2 className={cardTitle}>GitHub projects</h2>
-      {isLoading && <p className={cardBody}>Loading repositories from GitHub…</p>}
+      {isLoading && (
+        <div className={cardBody} aria-busy>
+          <Skeleton className="mb-4 h-4 w-3/4" />
+          <Skeleton className="h-4 w-full mb-4" />
+          <Skeleton className="h-4 w-5/6" />
+        </div>
+      )}
       {error && !isLoading && <p className={cardBody}>Error: {error}</p>}
       {!isLoading && !error && repos && repos.length === 0 && (
         <p className={cardBody}>

@@ -27,16 +27,19 @@ export const CutsceneCodingProblem = ({
 
   const advance = useCallback(() => {
     setPhase((p) => {
-      if (p === 'fixed') {
-        onComplete();
-        return 'done';
-      }
+      if (p === 'fixed') return 'done';
       if (p === 'problem') return 'robot-enter';
       if (p === 'robot-enter') return 'solving';
       if (p === 'solving') return 'fixed';
       return p;
     });
-  }, [onComplete]);
+  }, []);
+
+  useEffect(() => {
+    if (phase === 'done') {
+      onComplete();
+    }
+  }, [phase, onComplete]);
 
   useEffect(() => {
     if (phase === 'done') return;

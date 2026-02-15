@@ -3,6 +3,7 @@
 import type { JSX } from 'react';
 import { redirect } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { Skeleton } from './Skeleton';
 
 interface ProtectedRouteProps {
   children: JSX.Element;
@@ -14,14 +15,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps): JSX.Element =
   if (isLoading) {
     return (
       <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-        }}
+        className="flex flex-col items-center justify-center min-h-screen gap-4 p-8"
+        aria-busy
       >
-        <div style={{ fontSize: '1.1rem', opacity: 0.7 }}>Loading...</div>
+        <Skeleton className="h-4 w-48" />
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-4 w-40" />
       </div>
     );
   }

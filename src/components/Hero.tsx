@@ -67,7 +67,7 @@ export const Hero = (): JSX.Element => {
             </h1>
           </Link>
           <p className="mb-6 max-w-md text-muted leading-relaxed">
-            A dynamic portfolio showcasing my latest projects, writing, and activity across GitHub, Medium, Spotify, and Strava. Built with React, TypeScript, and real-time API integrations.
+            A dynamic portfolio showcasing my latest projects, writing, and activity across GitHub, Medium, Spotify, and Strava. Built with Next.js, React, TypeScript, and real-time API integrations.
           </p>
           <div className="flex flex-wrap gap-3">
             {isProjectsPage || isLoginPage || isChangePasswordPage ? (
@@ -104,14 +104,6 @@ export const Hero = (): JSX.Element => {
                 </Link>
               )
             )}
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noreferrer"
-              className={`${btnBase} ${btnGhost}`}
-            >
-              GitHub profile
-            </a>
           </div>
         </div>
       </div>

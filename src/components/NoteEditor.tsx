@@ -132,7 +132,13 @@ export const NoteEditor = ({
   }, [editor, content]);
 
   if (!editor) {
-    return <div className="text-muted">Loading editor...</div>;
+    return (
+      <div className="border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface overflow-hidden p-6" aria-busy>
+        <div className="h-4 w-full mb-4 animate-pulse rounded-md bg-muted/40 dark:bg-muted/30" role="status" aria-label="Loading" />
+        <div className="h-4 w-3/4 mb-4 animate-pulse rounded-md bg-muted/40 dark:bg-muted/30" role="status" aria-label="Loading" />
+        <div className="h-32 w-full animate-pulse rounded-md bg-muted/40 dark:bg-muted/30" role="status" aria-label="Loading" />
+      </div>
+    );
   }
 
   return (

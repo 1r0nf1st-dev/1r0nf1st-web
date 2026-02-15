@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoals, createGoal, updateGoal, deleteGoal } from '../useGoals';
 import { GoalCard } from './GoalCard';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
 import { FaPlus, FaBullseye, FaLock } from 'react-icons/fa';
@@ -87,7 +88,11 @@ export const GoalTracker = (): JSX.Element | null => {
           <FaBullseye className="inline mr-2" />
           Goals
         </h2>
-        <p className={cardBody}>Loading your goals…</p>
+        <div className={cardBody} aria-busy>
+          <Skeleton className="mb-3 h-4 w-full" />
+          <Skeleton className="mb-3 h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
       </article>
     );
   }

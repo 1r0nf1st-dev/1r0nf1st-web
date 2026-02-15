@@ -1,6 +1,5 @@
 import type { JSX } from 'react';
 import Link from 'next/link';
-import { GitHubProjects } from '../components/GitHubProjects';
 import { DevToArticles } from '../components/DevToArticles';
 import { MediumStories } from '../components/MediumStories';
 import { Footer } from '../components/Footer';
@@ -28,9 +27,6 @@ export const FeaturedShowcasePage = (): JSX.Element => {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-3">
-              <GitHubProjects />
-            </div>
             <div className="md:col-span-3">
               <DevToArticles />
             </div>

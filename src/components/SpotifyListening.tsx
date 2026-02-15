@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useSpotifyRecentlyPlayed } from '../useSpotifyRecentlyPlayed';
 import { SpotifyTrackCard } from './SpotifyTrackCard';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
 const DEFAULT_LIMIT = 8;
@@ -13,7 +14,11 @@ export const SpotifyListening = (): JSX.Element | null => {
       <article className={cardClasses} id="spotify">
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Recently played</h2>
-        <p className={cardBody}>Loading from Spotify…</p>
+        <div className={cardBody} aria-busy>
+          <Skeleton className="mb-3 h-16 w-full" />
+          <Skeleton className="mb-3 h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
       </article>
     );
   }

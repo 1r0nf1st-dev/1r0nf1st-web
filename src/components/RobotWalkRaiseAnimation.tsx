@@ -1,19 +1,17 @@
+'use client';
+
 import type { JSX } from 'react';
 
-const ROBOT_IMAGE_URL = '/1r0nf1st-robot.png';
-
-/** ViewBox aspect ratio for the full-body robot image (portrait-ish). */
-const VIEWBOX_WIDTH = 200;
-const VIEWBOX_HEIGHT = 280;
+const VIDEO_SRC = '/ai-artwork.mp4';
 
 export interface RobotWalkRaiseAnimationProps {
   /** Optional CSS class for the root wrapper. */
   className?: string;
   /** Width in pixels (default 140). */
   width?: number;
-  /** Height in pixels (default matches aspect ratio if only width given). */
+  /** Height in pixels (optional; video maintains aspect ratio when only width is given). */
   height?: number;
-  /** If true, loop the animation; otherwise play once and hold final pose. */
+  /** If true, loop the video; otherwise play once. */
   loop?: boolean;
 }
 
@@ -23,32 +21,22 @@ export const RobotWalkRaiseAnimation = ({
   height,
   loop = false,
 }: RobotWalkRaiseAnimationProps): JSX.Element => {
-  const h = height ?? Math.round((width * VIEWBOX_HEIGHT) / VIEWBOX_WIDTH);
-
   return (
     <div
-      className={`${loop ? 'robot-walk-raise-loop' : 'robot-walk-raise'} ${className}`.trim()}
-      style={{ width, height: h }}
+      className={className.trim()}
+      style={{ width, height: height ?? 'auto', maxWidth: '100%' }}
       role="img"
-      aria-label="1r0nf1st robot walking then raising hand"
+      aria-label="1r0nf1st AI artwork animation"
     >
-      <svg
-        viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-        width={width}
-        height={h}
-        preserveAspectRatio="xMidYMid meet"
-        className="block"
+      <video
+        src={VIDEO_SRC}
+        autoPlay
+        muted
+        playsInline
+        loop={loop}
+        className="block w-full h-auto rounded-lg object-cover"
         aria-hidden
-      >
-        <image
-          href={ROBOT_IMAGE_URL}
-          x={0}
-          y={0}
-          width={VIEWBOX_WIDTH}
-          height={VIEWBOX_HEIGHT}
-          preserveAspectRatio="xMidYMid meet"
-        />
-      </svg>
+      />
     </div>
   );
 };
