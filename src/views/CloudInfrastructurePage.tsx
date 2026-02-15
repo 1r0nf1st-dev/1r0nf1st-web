@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import Link from 'next/link';
 import { VercelDeployments } from '../components/VercelDeployments';
+import { GitHubProjects } from '../components/GitHubProjects';
 import { Footer } from '../components/Footer';
 import { Hero } from '../components/Hero';
 import { btnBase, btnGhost } from '../styles/buttons';
@@ -28,6 +29,9 @@ export const CloudInfrastructurePage = (): JSX.Element => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-3">
               <VercelDeployments />
+            </div>
+            <div className="md:col-span-3">
+              <GitHubProjects />
             </div>
           </div>
         </section>

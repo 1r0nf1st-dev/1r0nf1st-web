@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useNoteVersions, getNoteVersion, restoreNoteVersion, type NoteVersion } from '../useNoteVersions';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
 import { RestoreVersionModal } from './RestoreVersionModal';
@@ -95,7 +96,11 @@ export const NoteVersionHistory = ({ noteId, onVersionRestored, onClose }: NoteV
         </div>
 
         {isLoading ? (
-          <p className={cardBody}>Loading versions...</p>
+          <div className={cardBody} aria-busy>
+            <Skeleton className="mb-3 h-4 w-full" />
+            <Skeleton className="mb-3 h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
         ) : error ? (
           <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
             {error}

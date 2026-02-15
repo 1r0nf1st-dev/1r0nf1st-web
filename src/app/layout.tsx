@@ -8,7 +8,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: '1r0nf1st Website',
   description:
-    'A dynamic portfolio showcasing latest projects, writing, and activity across GitHub, Medium, Spotify, and Strava. Built with React, TypeScript, and real-time API integrations.',
+    'A dynamic portfolio showcasing latest projects, writing, and activity across GitHub, Medium, Spotify, and Strava. Built with Next.js, React, TypeScript, and real-time API integrations.',
   openGraph: {
     title: '1r0nf1st Website',
     description:

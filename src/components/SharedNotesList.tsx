@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useState, useEffect } from 'react';
 import { getSharedNotes } from '../useNoteSharing';
+import { Skeleton } from './Skeleton';
 import type { Note } from '../useNotes';
 import { NotesList } from './NotesList';
 

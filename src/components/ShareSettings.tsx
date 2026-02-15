@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useState, useEffect } from 'react';
 import { useNoteShares, updateSharePermission, unshareNote, type SharedNote } from '../useNoteSharing';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
@@ -84,7 +85,11 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
         )}
 
         {isLoading ? (
-          <div className="text-center py-8 text-muted">Loading shares...</div>
+          <div className="py-8" aria-busy>
+            <Skeleton className="mx-auto mb-4 h-4 w-full" />
+            <Skeleton className="mx-auto mb-4 h-4 w-3/4" />
+            <Skeleton className="mx-auto h-4 w-1/2" />
+          </div>
         ) : shares && shares.length > 0 ? (
           <div className="space-y-4">
             {shares.map((share: SharedNote) => (

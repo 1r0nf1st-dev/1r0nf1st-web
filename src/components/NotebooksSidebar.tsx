@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import type { Notebook } from '../useNotes';
 import { useNotebooks, createNotebook } from '../useNotebooks';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
 
@@ -41,7 +42,11 @@ export const NotebooksSidebar = ({
       <article className={cardClasses}>
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Notebooks</h2>
-        <p className={cardBody}>Loading...</p>
+        <div className={cardBody} aria-busy>
+          <Skeleton className="mb-3 h-4 w-full" />
+          <Skeleton className="mb-3 h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
       </article>
     );
   }

@@ -1,6 +1,6 @@
 {
+  "/projects/page": "app/projects/page.js",
+  "/projects/cloud/page": "app/projects/cloud/page.js",
   "/page": "app/page.js",
-  "/login/page": "app/login/page.js",
-  "/notes/page": "app/notes/page.js",
-  "/projects/page": "app/projects/page.js"
+  "/experience/page": "app/experience/page.js"
 }

@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useMediumStories } from '../useMediumStories';
 import { MediumStoryCard } from './MediumStoryCard';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
 const DEFAULT_LIMIT = 6;
@@ -17,7 +18,11 @@ export const MediumStories = (): JSX.Element => {
       <article className={cardClasses} id="medium">
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Latest on Medium</h2>
-        <p className={cardBody}>Loading stories from Medium…</p>
+        <div className={cardBody} aria-busy>
+          <Skeleton className="h-4 w-full mb-3" />
+          <Skeleton className="h-4 w-4/5 mb-3" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
       </article>
     );
   }

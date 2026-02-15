@@ -3,6 +3,7 @@
 import type { JSX, ReactNode } from 'react';
 import { useStravaStats } from '../useStravaStats';
 import type { StravaTotalsPeriod } from '../useStravaStats';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 
 function formatTime(seconds: number): string {
@@ -47,7 +48,16 @@ export const StravaStats = (): JSX.Element | null => {
     </article>
   );
 
-  if (isLoading) return card('strava', 'Strava', 'Loading activity totals…');
+  if (isLoading)
+    return card(
+      'strava',
+      'Strava',
+      <div aria-busy>
+        <Skeleton className="mb-4 h-4 w-full" />
+        <Skeleton className="mb-4 h-4 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+      </div>,
+    );
   if (error) return card('strava', 'Strava', `Error: ${error}`);
   if (!totals) {
     return card(

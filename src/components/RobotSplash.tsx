@@ -84,7 +84,7 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
             <RobotWalkRaiseAnimation width={140} loop className="mb-4" />
             <h1 className={cardTitle}>Hi, I&apos;m 1r0nf1st</h1>
             <p className={cardBody}>I&apos;m here to help. Ready?</p>
-            <button type="button" onClick={() => setStep('cutscene')} className={`${btnBase} ${btnPrimary} mt-4`}>
+            <button type="button" onClick={() => setStep('cutscene')} className={`${btnBase} ${btnPrimary} mt-8`}>
               Continue
             </button>
           </div>

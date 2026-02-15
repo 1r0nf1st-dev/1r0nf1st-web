@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useJoke } from '../useJoke';
+import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost } from '../styles/buttons';
 
@@ -13,7 +14,10 @@ export const Joke = (): JSX.Element | null => {
       <article className={cardClasses} id="joke">
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Joke</h2>
-        <p className={cardBody}>Loading joke…</p>
+        <div className={cardBody} aria-busy>
+          <Skeleton className="mb-4 h-5 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
       </article>
     );
   }

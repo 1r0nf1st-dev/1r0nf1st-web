@@ -4,7 +4,6 @@ import type { JSX } from 'react';
 import Link from 'next/link';
 import { Hero } from '../components/Hero';
 import { InfoCard } from '../components/InfoCard';
-import { GitHubProjects } from '../components/GitHubProjects';
 import { MediumStories } from '../components/MediumStories';
 import { DevToArticles } from '../components/DevToArticles';
 import { ContactUsCard } from '../components/ContactUsCard';
@@ -34,7 +33,7 @@ export const HomePage = (): JSX.Element => {
           </InfoCard>
 
           <InfoCard title="Tech Stack">
-            Built with React, TypeScript, Express.js, and Tailwind CSS. Deployed on Vercel with serverless functions. Integrates with GitHub, Medium, Spotify, Strava, OpenWeather, and more.
+            Next.js, React, TypeScript, Express, Tailwind CSS, and Supabase. Notes with TipTap, auth, and contact via Brevo. Deployed on Vercel. Integrates with GitHub, Medium, Dev.to, Spotify, Strava, OpenWeather, and more.
           </InfoCard>
           <Link
             href="/experience"
@@ -47,7 +46,7 @@ export const HomePage = (): JSX.Element => {
                 <RobotWalkRaiseAnimation width={140} loop />
               </div>
               <h2 className={cardTitle}>Meet 1r0nf1st</h2>
-              <p className={cardBody}>
+              <p className={`${cardBody} mb-6`}>
                 Go through the robot experience: boot sequence, a short cutscene, theme picker, and more. 1r0nf1st is a friendly robot who loves to help.
               </p>
               <span className={`${btnBase} ${btnPrimary} mt-auto self-start pointer-events-none`} aria-hidden>
@@ -59,7 +58,6 @@ export const HomePage = (): JSX.Element => {
           <Joke />
           <ContactUsCard />
           <Weather />
-          <GitHubProjects />
           <MediumStories />
           <DevToArticles />
           <SpotifyListening />

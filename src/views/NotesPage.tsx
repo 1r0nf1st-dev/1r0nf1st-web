@@ -15,6 +15,7 @@ import { useNotes, createNote, type Note } from '../useNotes';
 import { useNotebooks } from '../useNotebooks';
 import { useTags } from '../useTags';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
+import { Skeleton } from '../components/Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { FaLock, FaStickyNote } from 'react-icons/fa';
 
@@ -328,7 +329,11 @@ export const NotesPage = (): JSX.Element => {
                   <article className={cardClasses}>
                     <div className={cardOverlay} aria-hidden />
                     <h2 className={cardTitle}>Notes</h2>
-                    <p className={cardBody}>Loading notes...</p>
+                    <div className={cardBody} aria-busy>
+                      <Skeleton className="mb-3 h-4 w-full" />
+                      <Skeleton className="mb-3 h-4 w-3/4" />
+                      <Skeleton className="h-20 w-full" />
+                    </div>
                   </article>
                 ) : error ? (
                   <article className={cardClasses}>
