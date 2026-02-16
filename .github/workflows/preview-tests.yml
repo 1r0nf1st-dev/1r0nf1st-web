@@ -8,18 +8,57 @@ on:
   workflow_dispatch:
     inputs:
       base_url:
-        description: 'Base URL to test (leave empty to run against local dev server)'
+        description: 'Base URL to test (leave empty for local dev server)'
         required: false
         default: ''
+      environment:
+        description: 'Simulate environment (preview | production)'
+        required: false
+        default: 'preview'
 
 jobs:
-  e2e:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      base_url: ${{ steps.vars.outputs.base_url }}
+      environment: ${{ steps.vars.outputs.environment }}
+      is_production: ${{ steps.vars.outputs.is_production }}
+      project_id: ${{ steps.vars.outputs.project_id }}
+    steps:
+      - name: Determine BASE_URL and environment
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            BASE_URL="${{ github.event.inputs.base_url }}"
+            ENV="${{ github.event.inputs.environment || 'preview' }}"
+            PROJECT_ID=""
+          else
+            BASE_URL="${{ github.event.client_payload.url }}"
+            ENV="${{ github.event.client_payload.environment || 'preview' }}"
+            PROJECT_ID="${{ github.event.client_payload.project.id }}"
+          fi
+          [ -z "$ENV" ] && ENV="preview"
+          if [[ -n "$BASE_URL" && ! "$BASE_URL" =~ ^https?:// ]]; then
+            BASE_URL="https://${BASE_URL}"
+          fi
+          if [ "$ENV" = "production" ]; then
+            IS_PROD="true"
+          else
+            IS_PROD="false"
+          fi
+          echo "base_url=$BASE_URL" >> "$GITHUB_OUTPUT"
+          echo "environment=$ENV" >> "$GITHUB_OUTPUT"
+          echo "is_production=$IS_PROD" >> "$GITHUB_OUTPUT"
+          echo "project_id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+
+  e2e-preview:
+    needs: setup
+    if: needs.setup.outputs.is_production != 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       statuses: write
       checks: write
-    if: github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,23 +80,8 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Determine BASE_URL
-        id: base_url
-        run: |
-          if [ -n "${{ github.event.inputs.base_url }}" ]; then
-            echo "url=${{ github.event.inputs.base_url }}" >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ github.event.client_payload.url }}" ]; then
-            URL="${{ github.event.client_payload.url }}"
-            if [[ ! "$URL" =~ ^https?:// ]]; then
-              URL="https://${URL}"
-            fi
-            echo "url=${URL}" >> "$GITHUB_OUTPUT"
-          else
-            echo "url=" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Check Vercel bypass secret
-        if: steps.base_url.outputs.url != '' && contains(steps.base_url.outputs.url, 'vercel.app')
+        if: needs.setup.outputs.base_url != '' && contains(needs.setup.outputs.base_url, 'vercel.app')
         run: |
           if [ -z "${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}" ]; then
             echo "::error::VERCEL_AUTOMATION_BYPASS_SECRET is not set. Your Vercel deployment has Deployment Protection enabled (401). Add the bypass secret: 1) Vercel Dashboard → Project → Settings → Deployment Protection → Protection Bypass for Automation → create secret. 2) GitHub → Repo Settings → Secrets and variables → Actions → add VERCEL_AUTOMATION_BYPASS_SECRET with the value from Vercel."
@@ -65,12 +89,11 @@ jobs:
           fi
           echo "Vercel bypass secret is configured."
         env:
-          # Required to check emptiness; value itself is masked in logs
           BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
-      - name: Run Playwright tests
+      - name: Run Playwright E2E tests
         env:
-          BASE_URL: ${{ steps.base_url.outputs.url }}
+          BASE_URL: ${{ needs.setup.outputs.base_url }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: pnpm test:e2e
 
@@ -79,3 +102,106 @@ jobs:
         uses: vercel/repository-dispatch/actions/status@v1
         with:
           name: 'playwright-e2e'
+
+  smoke-production:
+    needs: setup
+    if: needs.setup.outputs.is_production == 'true' && needs.setup.outputs.base_url != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.client_payload.git.sha || github.sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run smoke tests
+        id: smoke
+        env:
+          BASE_URL: ${{ needs.setup.outputs.base_url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: pnpm test:e2e:smoke
+        continue-on-error: true
+
+      - name: Report status to Vercel (production)
+        if: always() && github.event_name == 'repository_dispatch'
+        uses: vercel/repository-dispatch/actions/status@v1
+        with:
+          name: 'playwright-smoke'
+
+      - name: Notify on failure (Slack)
+        if: steps.smoke.outcome == 'failure' && secrets.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": ":x: Production smoke tests failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production smoke tests failed*\n• URL: ${{ needs.setup.outputs.base_url }}\n• Commit: ${{ github.event.client_payload.git.shortSha || github.sha }}\n• Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create GitHub issue on failure
+        if: steps.smoke.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Production smoke tests failed',
+              body: `Smoke tests failed after production deployment.\n\n- **URL:** ${{ needs.setup.outputs.base_url }}\n- **Commit:** ${{ github.event.client_payload.git.shortSha || github.sha }}\n- **Workflow:** [View run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+            });
+
+      - name: Rollback Vercel deployment on failure
+        if: steps.smoke.outcome == 'failure' && secrets.VERCEL_TOKEN != '' && needs.setup.outputs.project_id != ''
+        run: |
+          PROJECT_ID="${{ needs.setup.outputs.project_id }}"
+          TEAM_ID="${{ secrets.VERCEL_TEAM_ID }}"
+          TOKEN="${{ secrets.VERCEL_TOKEN }}"
+          PARAMS="projectId=${PROJECT_ID}&limit=2&rollbackCandidate=true&state=READY&target=production"
+          [ -n "$TEAM_ID" ] && PARAMS="${PARAMS}&teamId=${TEAM_ID}"
+          ROLLBACK_ID=$(curl -s "https://api.vercel.com/v6/deployments?${PARAMS}" \
+            -H "Authorization: Bearer ${TOKEN}" | jq -r '.deployments[1].uid // empty')
+          if [ -n "$ROLLBACK_ID" ]; then
+            echo "Rolling back to deployment: $ROLLBACK_ID"
+            QUERY=""
+            [ -n "$TEAM_ID" ] && QUERY="?teamId=${TEAM_ID}"
+            curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
+              "https://api.vercel.com/v9/projects/${PROJECT_ID}/rollback/${ROLLBACK_ID}${QUERY}" \
+              -H "Authorization: Bearer ${TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d '{}' | tail -1
+            echo "Rollback initiated."
+          else
+            echo "::warning::Could not find previous deployment to roll back to."
+          fi
+
+      - name: Fail the job (smoke failed)
+        if: steps.smoke.outcome == 'failure'
+        run: exit 1
