@@ -56,6 +56,18 @@ jobs:
             echo "url=" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Check Vercel bypass secret
+        if: steps.base_url.outputs.url != '' && contains(steps.base_url.outputs.url, 'vercel.app')
+        run: |
+          if [ -z "${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}" ]; then
+            echo "::error::VERCEL_AUTOMATION_BYPASS_SECRET is not set. Your Vercel deployment has Deployment Protection enabled (401). Add the bypass secret: 1) Vercel Dashboard → Project → Settings → Deployment Protection → Protection Bypass for Automation → create secret. 2) GitHub → Repo Settings → Secrets and variables → Actions → add VERCEL_AUTOMATION_BYPASS_SECRET with the value from Vercel."
+            exit 1
+          fi
+          echo "Vercel bypass secret is configured."
+        env:
+          # Required to check emptiness; value itself is masked in logs
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
       - name: Run Playwright tests
         env:
           BASE_URL: ${{ steps.base_url.outputs.url }}
