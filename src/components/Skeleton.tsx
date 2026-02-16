@@ -7,10 +7,7 @@ export interface SkeletonProps {
 }
 
 /** Animated skeleton placeholder. Use instead of "Loading..." text. */
-export const Skeleton = ({
-  className = '',
-  style,
-}: SkeletonProps): JSX.Element => {
+export const Skeleton = ({ className = '', style }: SkeletonProps): JSX.Element => {
   return (
     <div
       role="status"

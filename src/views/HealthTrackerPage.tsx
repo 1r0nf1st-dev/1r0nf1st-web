@@ -13,10 +13,7 @@ export const HealthTrackerPage = (): JSX.Element => {
       </div>
 
       <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section
-          className="w-full max-w-[1080px] mx-auto"
-          aria-label="Health Tracker"
-        >
+        <section className="w-full max-w-[1080px] mx-auto" aria-label="Health Tracker">
           <div className="mb-6">
             <Link
               href="/projects"

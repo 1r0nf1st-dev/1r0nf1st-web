@@ -84,22 +84,22 @@ export const NotesPage = (): JSX.Element => {
         content: emptyContent,
         notebook_id: selectedNotebookId,
       });
-      
+
       // Refetch notes list to include the new note
       await refetch();
-      
+
       // Select the newly created note
       setSelectedNote(newNote);
     } catch (error) {
       console.error('Failed to create note:', error);
       let message = 'Failed to create note. Please try again.';
-      
+
       if (error instanceof Error) {
         message = error.message;
       } else if (typeof error === 'object' && error !== null && 'message' in error) {
         message = String(error.message);
       }
-      
+
       alert(`Failed to create note: ${message}`);
     }
   };
@@ -217,7 +217,9 @@ export const NotesPage = (): JSX.Element => {
                 />
                 <TagsList
                   selectedTagIds={selectedTagId ? [selectedTagId] : []}
-                  onTagToggle={(tagId) => setSelectedTagId(selectedTagId === tagId ? undefined : tagId)}
+                  onTagToggle={(tagId) =>
+                    setSelectedTagId(selectedTagId === tagId ? undefined : tagId)
+                  }
                 />
               </div>
             </aside>
@@ -281,77 +283,84 @@ export const NotesPage = (): JSX.Element => {
                 </button>
               </div>
 
-            {/* Notes list or detail */}
-            {selectedNote ? (
-              <NoteDetail
-                note={selectedNote}
-                tags={tags || []}
-                notebooks={notebooks || []}
-                onSave={handleSave}
-                onDelete={handleDelete}
-                onClose={() => setSelectedNote(null)}
-                onNotesChanged={() => refetch()}
-              />
-            ) : (
-              <>
-                {(selectedTagId || selectedNotebookId) && (
-                  <p className="text-sm text-muted mb-2" aria-live="polite">
-                    {selectedTagId && (
-                      <span>
-                        Tag: <strong>{tags?.find((t) => t.id === selectedTagId)?.name ?? 'Tag'}</strong>
-                        {' · '}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedTagId(undefined)}
-                          className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
-                        >
-                          Clear tag
-                        </button>
-                      </span>
-                    )}
-                    {selectedNotebookId && selectedTagId && ' · '}
-                    {selectedNotebookId && (
-                      <span>
-                        Notebook: <strong>{notebooks?.find((n) => n.id === selectedNotebookId)?.name ?? 'Notebook'}</strong>
-                        {' · '}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedNotebookId(undefined)}
-                          className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
-                        >
-                          Clear notebook
-                        </button>
-                      </span>
-                    )}
-                  </p>
-                )}
-                {isLoading ? (
-                  <article className={cardClasses}>
-                    <div className={cardOverlay} aria-hidden />
-                    <h2 className={cardTitle}>Notes</h2>
-                    <div className={cardBody} aria-busy>
-                      <Skeleton className="mb-3 h-4 w-full" />
-                      <Skeleton className="mb-3 h-4 w-3/4" />
-                      <Skeleton className="h-20 w-full" />
-                    </div>
-                  </article>
-                ) : error ? (
-                  <article className={cardClasses}>
-                    <div className={cardOverlay} aria-hidden />
-                    <h2 className={cardTitle}>Notes</h2>
-                    <p className={cardBody}>Error: {error}</p>
-                  </article>
-                ) : showShared ? (
-                  <SharedNotesList onNoteSelect={handleNoteSelect} />
-                ) : (
-                  <NotesList
-                    notes={notes || []}
-                    onNoteClick={handleNoteClick}
-                    selectedNoteId={undefined}
-                  />
-                )}
-              </>
-            )}
+              {/* Notes list or detail */}
+              {selectedNote ? (
+                <NoteDetail
+                  note={selectedNote}
+                  tags={tags || []}
+                  notebooks={notebooks || []}
+                  onSave={handleSave}
+                  onDelete={handleDelete}
+                  onClose={() => setSelectedNote(null)}
+                  onNotesChanged={() => refetch()}
+                />
+              ) : (
+                <>
+                  {(selectedTagId || selectedNotebookId) && (
+                    <p className="text-sm text-muted mb-2" aria-live="polite">
+                      {selectedTagId && (
+                        <span>
+                          Tag:{' '}
+                          <strong>
+                            {tags?.find((t) => t.id === selectedTagId)?.name ?? 'Tag'}
+                          </strong>
+                          {' · '}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedTagId(undefined)}
+                            className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                          >
+                            Clear tag
+                          </button>
+                        </span>
+                      )}
+                      {selectedNotebookId && selectedTagId && ' · '}
+                      {selectedNotebookId && (
+                        <span>
+                          Notebook:{' '}
+                          <strong>
+                            {notebooks?.find((n) => n.id === selectedNotebookId)?.name ??
+                              'Notebook'}
+                          </strong>
+                          {' · '}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedNotebookId(undefined)}
+                            className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                          >
+                            Clear notebook
+                          </button>
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  {isLoading ? (
+                    <article className={cardClasses}>
+                      <div className={cardOverlay} aria-hidden />
+                      <h2 className={cardTitle}>Notes</h2>
+                      <div className={cardBody} aria-busy>
+                        <Skeleton className="mb-3 h-4 w-full" />
+                        <Skeleton className="mb-3 h-4 w-3/4" />
+                        <Skeleton className="h-20 w-full" />
+                      </div>
+                    </article>
+                  ) : error ? (
+                    <article className={cardClasses}>
+                      <div className={cardOverlay} aria-hidden />
+                      <h2 className={cardTitle}>Notes</h2>
+                      <p className={cardBody}>Error: {error}</p>
+                    </article>
+                  ) : showShared ? (
+                    <SharedNotesList onNoteSelect={handleNoteSelect} />
+                  ) : (
+                    <NotesList
+                      notes={notes || []}
+                      onNoteClick={handleNoteClick}
+                      selectedNoteId={undefined}
+                    />
+                  )}
+                </>
+              )}
             </div>
           </div>
         </section>

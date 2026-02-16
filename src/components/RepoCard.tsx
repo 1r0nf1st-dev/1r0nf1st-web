@@ -14,9 +14,11 @@ export interface RepoCardProps {
 }
 
 export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Element => {
-  const { commits, isLoading: commitsLoading, error: commitsError } = useGitHubCommits(
-    isExpanded ? repo.name : null,
-  );
+  const {
+    commits,
+    isLoading: commitsLoading,
+    error: commitsError,
+  } = useGitHubCommits(isExpanded ? repo.name : null);
 
   return (
     <div className="mb-6 pb-6 border-b border-border/50">
@@ -46,9 +48,7 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
           </a>
         </h3>
       </div>
-      {repo.description && (
-        <p className="mb-4 opacity-80 text-sm ml-6">{repo.description}</p>
-      )}
+      {repo.description && <p className="mb-4 opacity-80 text-sm ml-6">{repo.description}</p>}
       {isExpanded && (
         <div className="ml-6 mt-4">
           {commitsLoading && (
@@ -59,17 +59,12 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
             </div>
           )}
           {commitsError && (
-            <p className="text-[0.85rem] opacity-70 text-red-400">
-              Error: {commitsError}
-            </p>
+            <p className="text-[0.85rem] opacity-70 text-red-400">Error: {commitsError}</p>
           )}
           {!commitsLoading && !commitsError && commits && commits.length > 0 && (
             <ul className="text-[0.85rem] list-none p-0 m-0 max-h-[400px] overflow-y-auto">
               {commits.map((commit) => (
-                <li
-                  key={commit.sha}
-                  className="mb-3 pb-3 border-b border-border/30"
-                >
+                <li key={commit.sha} className="mb-3 pb-3 border-b border-border/30">
                   <a
                     href={commit.html_url}
                     target="_blank"
@@ -79,27 +74,21 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
                     {commit.commit.message.split('\n')[0]}
                   </a>
                   <span className="opacity-60 text-xs block mt-1">
-                    {new Date(commit.commit.author.date).toLocaleDateString(
-                      'en-US',
-                      {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      },
-                    )}
+                    {new Date(commit.commit.author.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                 </li>
               ))}
             </ul>
           )}
-          {!commitsLoading &&
-            !commitsError &&
-            commits &&
-            commits.length === 0 && (
-              <p className="text-[0.85rem] opacity-70">No commits found</p>
-            )}
+          {!commitsLoading && !commitsError && commits && commits.length === 0 && (
+            <p className="text-[0.85rem] opacity-70">No commits found</p>
+          )}
         </div>
       )}
     </div>

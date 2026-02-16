@@ -26,10 +26,9 @@ async function getAccessToken(): Promise<string> {
     refresh_token: spotifyRefreshToken,
   });
 
-  const credentials = Buffer.from(
-    `${spotifyClientId}:${spotifyClientSecret}`,
-    'utf-8',
-  ).toString('base64');
+  const credentials = Buffer.from(`${spotifyClientId}:${spotifyClientSecret}`, 'utf-8').toString(
+    'base64',
+  );
 
   const response = await fetch(`${SPOTIFY_ACCOUNTS}/api/token`, {
     method: 'POST',
@@ -42,9 +41,7 @@ async function getAccessToken(): Promise<string> {
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(
-      text || `Spotify token request failed: ${response.status}`,
-    );
+    throw new Error(text || `Spotify token request failed: ${response.status}`);
   }
 
   const data = (await response.json()) as { access_token: string };
@@ -70,9 +67,7 @@ export function getAuthUrl(): string {
   return `${SPOTIFY_ACCOUNTS}/authorize?${params.toString()}`;
 }
 
-export async function exchangeCodeForTokens(
-  code: string,
-): Promise<{ refreshToken: string }> {
+export async function exchangeCodeForTokens(code: string): Promise<{ refreshToken: string }> {
   const { spotifyClientId, spotifyClientSecret, spotifyRedirectUri } = config;
   if (!spotifyClientId || !spotifyClientSecret || !spotifyRedirectUri) {
     throw new Error(
@@ -86,10 +81,9 @@ export async function exchangeCodeForTokens(
     redirect_uri: spotifyRedirectUri,
   });
 
-  const credentials = Buffer.from(
-    `${spotifyClientId}:${spotifyClientSecret}`,
-    'utf-8',
-  ).toString('base64');
+  const credentials = Buffer.from(`${spotifyClientId}:${spotifyClientSecret}`, 'utf-8').toString(
+    'base64',
+  );
 
   const response = await fetch(`${SPOTIFY_ACCOUNTS}/api/token`, {
     method: 'POST',
@@ -102,9 +96,7 @@ export async function exchangeCodeForTokens(
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(
-      text || `Spotify token exchange failed: ${response.status}`,
-    );
+    throw new Error(text || `Spotify token exchange failed: ${response.status}`);
   }
 
   const data = (await response.json()) as { refresh_token: string };
@@ -121,9 +113,7 @@ interface SpotifyRecentlyPlayedItem {
   played_at: string;
 }
 
-export async function fetchRecentlyPlayed(
-  options?: { limit?: number },
-): Promise<SpotifyTrack[]> {
+export async function fetchRecentlyPlayed(options?: { limit?: number }): Promise<SpotifyTrack[]> {
   const limit = Math.min(Math.max(options?.limit ?? 10, 1), 50);
   const accessToken = await getAccessToken();
 
@@ -136,14 +126,10 @@ export async function fetchRecentlyPlayed(
 
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error(
-        'Spotify token expired or invalid. Re-authorize to get a new refresh token.',
-      );
+      throw new Error('Spotify token expired or invalid. Re-authorize to get a new refresh token.');
     }
     const text = await response.text().catch(() => '');
-    throw new Error(
-      text || `Spotify API request failed: ${response.status}`,
-    );
+    throw new Error(text || `Spotify API request failed: ${response.status}`);
   }
 
   const data = (await response.json()) as {
@@ -155,10 +141,7 @@ export async function fetchRecentlyPlayed(
     trackName: item.track.name,
     artistNames: item.track.artists.map((a) => a.name).join(', '),
     albumName: item.track.album.name,
-    albumImageUrl:
-      item.track.album.images?.[0]?.url ??
-      item.track.album.images?.[1]?.url ??
-      null,
+    albumImageUrl: item.track.album.images?.[0]?.url ?? item.track.album.images?.[1]?.url ?? null,
     trackUrl: item.track.external_urls.spotify,
     playedAt: item.played_at,
   }));

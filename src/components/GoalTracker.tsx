@@ -178,7 +178,9 @@ export const GoalTracker = (): JSX.Element | null => {
         </div>
 
         {isCreating && (
-          <div className={`${cardBody} mb-4 p-4 border-2 border-primary/35 dark:border-border rounded-lg`}>
+          <div
+            className={`${cardBody} mb-4 p-4 border-2 border-primary/35 dark:border-border rounded-lg`}
+          >
             <h3 className="text-lg font-semibold mb-3">Create New Goal</h3>
             {createError && (
               <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-600 dark:text-red-400">

@@ -59,7 +59,7 @@ export function useDevToArticles(
     }
 
     let url = `${getApiBase()}/devto/articles`;
-    
+
     // Determine which endpoint to use
     if (source === 'tag') {
       if (!tag) {

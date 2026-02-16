@@ -32,7 +32,8 @@ emailRouter.get('/domain-auth', authenticateToken, async (req: AuthRequest, res)
   }
 
   const domain = typeof req.query.domain === 'string' ? req.query.domain.trim() : '';
-  const dkimSelector = typeof req.query.dkimSelector === 'string' ? req.query.dkimSelector.trim() : 'mail';
+  const dkimSelector =
+    typeof req.query.dkimSelector === 'string' ? req.query.dkimSelector.trim() : 'mail';
 
   if (!domain) {
     res.status(400).json({ error: 'Query parameter "domain" is required (e.g. example.com).' });
@@ -60,7 +61,12 @@ emailRouter.post('/send', authenticateToken, async (req: AuthRequest, res) => {
     return;
   }
 
-  const { to: toRaw, cc: ccRaw, subject, message } = req.body as {
+  const {
+    to: toRaw,
+    cc: ccRaw,
+    subject,
+    message,
+  } = req.body as {
     to?: string;
     cc?: string;
     subject?: string;

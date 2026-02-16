@@ -204,7 +204,10 @@ export async function deleteGoal(goalId: string, userId: string): Promise<void> 
   }
 }
 
-export async function getMilestonesByGoalId(goalId: string, userId: string): Promise<GoalMilestone[]> {
+export async function getMilestonesByGoalId(
+  goalId: string,
+  userId: string,
+): Promise<GoalMilestone[]> {
   if (!supabase) {
     throw new Error('Database not configured');
   }
@@ -228,7 +231,10 @@ export async function getMilestonesByGoalId(goalId: string, userId: string): Pro
   return (data || []) as GoalMilestone[];
 }
 
-export async function createMilestone(userId: string, input: CreateMilestoneInput): Promise<GoalMilestone> {
+export async function createMilestone(
+  userId: string,
+  input: CreateMilestoneInput,
+): Promise<GoalMilestone> {
   if (!supabase) {
     throw new Error('Database not configured');
   }

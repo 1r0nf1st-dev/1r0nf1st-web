@@ -151,8 +151,7 @@ export const VercelDeployments = (): JSX.Element | null => {
       <article className="card" id="vercel-deployments">
         <h2 className="card-title">Vercel Deployments</h2>
         <p className="card-body">
-          No deployments found. Make sure VERCEL_API_TOKEN is configured in{' '}
-          <code>.env</code>.
+          No deployments found. Make sure VERCEL_API_TOKEN is configured in <code>.env</code>.
         </p>
       </article>
     );
@@ -162,9 +161,7 @@ export const VercelDeployments = (): JSX.Element | null => {
   const latestDeployment = deployments[0];
   const successRate =
     buildStats.totalDeployments > 0
-      ? Math.round(
-          (buildStats.successfulDeployments / buildStats.totalDeployments) * 100,
-        )
+      ? Math.round((buildStats.successfulDeployments / buildStats.totalDeployments) * 100)
       : 0;
 
   return (
@@ -173,15 +170,11 @@ export const VercelDeployments = (): JSX.Element | null => {
       <h2 className={cardTitle}>Vercel Deployments</h2>
       <div className={cardBody}>
         <div className="mb-6">
-          <h3 className="m-0 mb-3 text-[0.95rem] font-medium">
-            Latest Deployment
-          </h3>
+          <h3 className="m-0 mb-3 text-[0.95rem] font-medium">Latest Deployment</h3>
           <DeploymentItem deployment={latestDeployment} />
         </div>
         <div className="pt-4 border-t border-border/50">
-          <h3 className="m-0 mb-3 text-[0.95rem] font-medium">
-            Build Statistics
-          </h3>
+          <h3 className="m-0 mb-3 text-[0.95rem] font-medium">Build Statistics</h3>
           <ul className="m-0 p-0 list-none text-sm opacity-90 grid grid-cols-2 gap-2">
             <li>Total: {buildStats.totalDeployments}</li>
             <li>Success Rate: {successRate}%</li>
@@ -189,9 +182,7 @@ export const VercelDeployments = (): JSX.Element | null => {
             <li>Failed: {buildStats.failedDeployments}</li>
             <li className="col-span-2">
               Avg Build Time:{' '}
-              {buildStats.averageBuildTime
-                ? formatBuildTime(buildStats.averageBuildTime)
-                : 'N/A'}
+              {buildStats.averageBuildTime ? formatBuildTime(buildStats.averageBuildTime) : 'N/A'}
             </li>
           </ul>
         </div>

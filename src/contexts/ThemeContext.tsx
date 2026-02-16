@@ -1,13 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const STORAGE_KEY = 'theme';
 
@@ -23,9 +17,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 function getSystemTheme(): Theme {
   if (typeof window === 'undefined') return 'dark';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function getStoredTheme(): Theme | null {
@@ -44,11 +36,7 @@ function applyTheme(theme: Theme): void {
   }
 }
 
-export const ThemeProvider = ({
-  children,
-}: {
-  children: ReactNode;
-}): ReactNode => {
+export const ThemeProvider = ({ children }: { children: ReactNode }): ReactNode => {
   const [theme, setThemeState] = useState<Theme>(() => {
     return getStoredTheme() ?? getSystemTheme();
   });

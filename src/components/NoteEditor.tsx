@@ -124,7 +124,7 @@ export const NoteEditor = ({
     }
 
     const currentContent = editor.getJSON();
-    
+
     // Only update if content actually changed to avoid unnecessary updates
     if (JSON.stringify(currentContent) !== JSON.stringify(normalizedContent)) {
       editor.commands.setContent(normalizedContent);
@@ -133,10 +133,25 @@ export const NoteEditor = ({
 
   if (!editor) {
     return (
-      <div className="border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface overflow-hidden p-6" aria-busy>
-        <div className="h-4 w-full mb-4 animate-pulse rounded-md bg-muted/40 dark:bg-muted/30" role="status" aria-label="Loading" />
-        <div className="h-4 w-3/4 mb-4 animate-pulse rounded-md bg-muted/40 dark:bg-muted/30" role="status" aria-label="Loading" />
-        <div className="h-32 w-full animate-pulse rounded-md bg-muted/40 dark:bg-muted/30" role="status" aria-label="Loading" />
+      <div
+        className="border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface overflow-hidden p-6"
+        aria-busy
+      >
+        <div
+          className="h-4 w-full mb-4 animate-pulse rounded-md bg-muted/40 dark:bg-muted/30"
+          role="status"
+          aria-label="Loading"
+        />
+        <div
+          className="h-4 w-3/4 mb-4 animate-pulse rounded-md bg-muted/40 dark:bg-muted/30"
+          role="status"
+          aria-label="Loading"
+        />
+        <div
+          className="h-32 w-full animate-pulse rounded-md bg-muted/40 dark:bg-muted/30"
+          role="status"
+          aria-label="Loading"
+        />
       </div>
     );
   }
@@ -253,7 +268,9 @@ export const NoteEditor = ({
           <Tooltip content="Insert Table">
             <button
               type="button"
-              onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+              onClick={() =>
+                editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+              }
               className="px-3 py-1 rounded text-sm font-medium transition-colors bg-white dark:bg-surface text-foreground hover:bg-gray-100 dark:hover:bg-surface-soft"
               aria-label="Insert Table"
             >

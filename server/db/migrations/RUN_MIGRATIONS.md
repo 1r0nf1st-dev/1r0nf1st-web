@@ -77,6 +77,7 @@ After creating the `shared_notes` table in migration 013, you need to disable RL
 3. Click **Run** to execute
 
 Or run directly:
+
 ```sql
 ALTER TABLE shared_notes DISABLE ROW LEVEL SECURITY;
 ```

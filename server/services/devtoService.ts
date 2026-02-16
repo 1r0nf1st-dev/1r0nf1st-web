@@ -62,7 +62,10 @@ function formatArticles(
       tags = article.tags;
     } else if (typeof article.tags === 'string') {
       // Fallback: if tags is a string, split it
-      tags = article.tags.split(',').map((t: string) => t.trim()).filter(Boolean);
+      tags = article.tags
+        .split(',')
+        .map((t: string) => t.trim())
+        .filter(Boolean);
     }
 
     return {
@@ -86,8 +89,7 @@ async function fetchFromDevToApi(
 ): Promise<DevToArticleFormatted[]> {
   const response = await fetch(url, {
     headers: {
-      'User-Agent':
-        'Mozilla/5.0 (compatible; PortfolioBot/1.0; +https://github.com/)',
+      'User-Agent': 'Mozilla/5.0 (compatible; PortfolioBot/1.0; +https://github.com/)',
       Accept: 'application/json',
     },
   });
@@ -108,15 +110,14 @@ async function fetchFromDevToApi(
   return formatArticles(articles, options);
 }
 
-export async function fetchDevToArticles(
-  options?: { limit?: number; onlyWithImages?: boolean },
-): Promise<DevToArticleFormatted[]> {
+export async function fetchDevToArticles(options?: {
+  limit?: number;
+  onlyWithImages?: boolean;
+}): Promise<DevToArticleFormatted[]> {
   const username = config.devToUsername;
 
   if (!username) {
-    throw new Error(
-      'Dev.to username is not configured. Set DEVTO_USERNAME in your .env.',
-    );
+    throw new Error('Dev.to username is not configured. Set DEVTO_USERNAME in your .env.');
   }
 
   const limit = Math.min(Math.max(options?.limit ?? 10, 1), 30);
@@ -147,9 +148,10 @@ export async function fetchDevToArticlesByTag(
   return fetchFromDevToApi(url, { ...options, limit });
 }
 
-export async function fetchDevToLatestArticles(
-  options?: { limit?: number; onlyWithImages?: boolean },
-): Promise<DevToArticleFormatted[]> {
+export async function fetchDevToLatestArticles(options?: {
+  limit?: number;
+  onlyWithImages?: boolean;
+}): Promise<DevToArticleFormatted[]> {
   const limit = Math.min(Math.max(options?.limit ?? 10, 1), 30);
 
   // Fetch more articles if filtering by images to ensure we get enough results
@@ -159,9 +161,11 @@ export async function fetchDevToLatestArticles(
   return fetchFromDevToApi(url, { ...options, limit });
 }
 
-export async function fetchDevToTopArticles(
-  options?: { limit?: number; period?: 'week' | 'month' | 'year' | 'infinity'; onlyWithImages?: boolean },
-): Promise<DevToArticleFormatted[]> {
+export async function fetchDevToTopArticles(options?: {
+  limit?: number;
+  period?: 'week' | 'month' | 'year' | 'infinity';
+  onlyWithImages?: boolean;
+}): Promise<DevToArticleFormatted[]> {
   const limit = Math.min(Math.max(options?.limit ?? 10, 1), 30);
   const period = options?.period || 'week';
 

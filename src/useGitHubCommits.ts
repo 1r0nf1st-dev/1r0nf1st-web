@@ -76,7 +76,8 @@ export function useGitHubCommits(repo: string | null): GitHubCommitsState {
         }
         // Provide more helpful error message for network errors
         if (message === 'Failed to fetch' || message.includes('fetch')) {
-          message = 'Unable to connect to the API server. Please check your connection and try again.';
+          message =
+            'Unable to connect to the API server. Please check your connection and try again.';
         }
         setState({ commits: null, isLoading: false, error: message });
       });

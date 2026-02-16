@@ -17,12 +17,12 @@ export interface CutsceneCodingProblemProps {
   onComplete: () => void;
 }
 
-export const CutsceneCodingProblem = ({
-  onComplete,
-}: CutsceneCodingProblemProps): JSX.Element => {
+export const CutsceneCodingProblem = ({ onComplete }: CutsceneCodingProblemProps): JSX.Element => {
   const [phase, setPhase] = useState<ScenePhase>('problem');
   const [reducedMotion] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
 
   const advance = useCallback(() => {
@@ -43,7 +43,9 @@ export const CutsceneCodingProblem = ({
 
   useEffect(() => {
     if (phase === 'done') return;
-    const duration = reducedMotion ? Math.min(PHASE_DURATIONS_MS[phase], 400) : PHASE_DURATIONS_MS[phase];
+    const duration = reducedMotion
+      ? Math.min(PHASE_DURATIONS_MS[phase], 400)
+      : PHASE_DURATIONS_MS[phase];
     if (duration <= 0) return;
     const t = setTimeout(advance, duration);
     return () => clearTimeout(t);
@@ -54,14 +56,30 @@ export const CutsceneCodingProblem = ({
   };
 
   return (
-    <article className={cardClasses} aria-live="polite" aria-label="1r0nf1st solves a coding problem">
+    <article
+      className={cardClasses}
+      aria-live="polite"
+      aria-label="1r0nf1st solves a coding problem"
+    >
       <div className={cardOverlay} aria-hidden />
-      <div className={`${cardBody} relative z-10 flex flex-col items-center min-h-[280px] justify-center`}>
+      <div
+        className={`${cardBody} relative z-10 flex flex-col items-center min-h-[280px] justify-center`}
+      >
         {/* Code block + error */}
         <div className="w-full max-w-md rounded-lg border-2 border-red-500/50 dark:border-red-400/50 bg-black/10 dark:bg-white/5 p-3 font-mono text-sm mb-4">
           <div className="text-muted">{'// There is a bug in my circuitry'}</div>
-          <div className={phase === 'fixed' || phase === 'done' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-            {phase === 'problem' || phase === 'robot-enter' ? 'Error: Cannot read property of undefined' : phase === 'solving' ? '...' : '✓ Fixed!'}
+          <div
+            className={
+              phase === 'fixed' || phase === 'done'
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
+            }
+          >
+            {phase === 'problem' || phase === 'robot-enter'
+              ? 'Error: Cannot read property of undefined'
+              : phase === 'solving'
+                ? '...'
+                : '✓ Fixed!'}
           </div>
         </div>
 
@@ -96,7 +114,7 @@ export const CutsceneCodingProblem = ({
         )}
 
         <div className="mt-6 flex gap-3">
-          {(phase === 'fixed' || phase === 'done') ? (
+          {phase === 'fixed' || phase === 'done' ? (
             <button type="button" onClick={advance} className={`${btnBase} ${btnPrimary}`}>
               Continue
             </button>

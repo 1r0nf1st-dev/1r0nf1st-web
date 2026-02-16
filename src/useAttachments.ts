@@ -34,7 +34,11 @@ export async function getDownloadUrl(attachmentId: string): Promise<DownloadUrlR
     } catch {
       // keep message as text
     }
-    throw new ApiError(message, response.status, `${getApiBase()}/notes/attachments/${attachmentId}/download`);
+    throw new ApiError(
+      message,
+      response.status,
+      `${getApiBase()}/notes/attachments/${attachmentId}/download`,
+    );
   }
 
   return (await response.json()) as DownloadUrlResponse;
@@ -63,7 +67,11 @@ export async function deleteAttachment(attachmentId: string): Promise<void> {
     } catch {
       // keep message as text
     }
-    throw new ApiError(message, response.status, `${getApiBase()}/notes/attachments/${attachmentId}`);
+    throw new ApiError(
+      message,
+      response.status,
+      `${getApiBase()}/notes/attachments/${attachmentId}`,
+    );
   }
 }
 
@@ -95,7 +103,11 @@ export async function uploadAttachment(noteId: string, file: File): Promise<Atta
     } catch {
       // keep message as text
     }
-    throw new ApiError(message, response.status, `${getApiBase()}/notes/${noteId}/attachments/upload`);
+    throw new ApiError(
+      message,
+      response.status,
+      `${getApiBase()}/notes/${noteId}/attachments/upload`,
+    );
   }
 
   return (await response.json()) as Attachment;

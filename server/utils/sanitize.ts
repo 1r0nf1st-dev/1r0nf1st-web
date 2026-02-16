@@ -79,9 +79,34 @@ export function isAllowedMimeType(mime: string): boolean {
 
 /** Dangerous file extensions that should never be accepted. */
 const DANGEROUS_EXTENSIONS = new Set([
-  'exe', 'bat', 'cmd', 'com', 'msi', 'scr', 'vbs', 'js', 'jse', 'ws', 'wsf', 'ps1', 'sh', 'bash',
-  'php', 'phtml', 'php3', 'php4', 'php5', 'phar', 'asp', 'aspx', 'jsp', 'cgi',
-  'jar', 'dll', 'so', 'dylib',
+  'exe',
+  'bat',
+  'cmd',
+  'com',
+  'msi',
+  'scr',
+  'vbs',
+  'js',
+  'jse',
+  'ws',
+  'wsf',
+  'ps1',
+  'sh',
+  'bash',
+  'php',
+  'phtml',
+  'php3',
+  'php4',
+  'php5',
+  'phar',
+  'asp',
+  'aspx',
+  'jsp',
+  'cgi',
+  'jar',
+  'dll',
+  'so',
+  'dylib',
 ]);
 
 /** Check file name (after sanitizeFileName) for dangerous extension. */

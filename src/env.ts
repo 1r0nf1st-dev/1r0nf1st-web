@@ -4,12 +4,16 @@
  */
 export const isDev =
   (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') ||
-  (typeof import.meta !== 'undefined' && (import.meta as { env?: { DEV?: boolean; MODE?: string } }).env?.DEV);
+  (typeof import.meta !== 'undefined' &&
+    (import.meta as { env?: { DEV?: boolean; MODE?: string } }).env?.DEV);
 
 export function getEnv(key: string): string | undefined {
   if (typeof process !== 'undefined' && process.env[key]) {
     return process.env[key];
   }
-  const meta = typeof import.meta !== 'undefined' ? (import.meta as { env?: Record<string, string> }).env : undefined;
+  const meta =
+    typeof import.meta !== 'undefined'
+      ? (import.meta as { env?: Record<string, string> }).env
+      : undefined;
   return meta?.[key];
 }

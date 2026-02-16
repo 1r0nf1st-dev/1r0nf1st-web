@@ -54,7 +54,7 @@ const FALLBACK_JOKES: JokeData[] = [
   {
     id: 'fb-4',
     setup: 'Why do Java developers wear glasses?',
-    punchline: 'Because they can\'t C#!',
+    punchline: "Because they can't C#!",
     type: 'programming',
   },
   {

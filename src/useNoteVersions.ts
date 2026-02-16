@@ -63,10 +63,7 @@ export function useNoteVersions(noteId: string | null): NoteVersionsState {
   };
 }
 
-export async function getNoteVersion(
-  noteId: string,
-  versionNumber: number,
-): Promise<NoteVersion> {
+export async function getNoteVersion(noteId: string, versionNumber: number): Promise<NoteVersion> {
   const url = `${getApiBase()}/notes/${noteId}/versions/${versionNumber}`;
   return getJson<NoteVersion>(url);
 }

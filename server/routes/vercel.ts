@@ -5,9 +5,7 @@ export const vercelRouter = Router();
 
 vercelRouter.get('/deployments', async (req, res) => {
   try {
-    const limit = req.query.limit
-      ? Number.parseInt(req.query.limit as string, 10)
-      : undefined;
+    const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : undefined;
     const projectId = (req.query.projectId as string) || undefined;
 
     const data = await fetchDeployments({ limit, projectId });

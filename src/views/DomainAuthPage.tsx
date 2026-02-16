@@ -23,10 +23,7 @@ export const DomainAuthPage = (): JSX.Element => {
       </div>
 
       <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section
-          className="w-full max-w-[1080px] mx-auto"
-          aria-label="Domain Auth (DKIM / DMARC)"
-        >
+        <section className="w-full max-w-[1080px] mx-auto" aria-label="Domain Auth (DKIM / DMARC)">
           <div className="mb-6">
             <Link
               href="/projects"

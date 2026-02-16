@@ -44,7 +44,8 @@ export const config = {
     | 'tag'
     | 'latest'
     | 'top',
-  logLevel: (process.env.LOG_LEVEL?.trim() ?? (process.env.NODE_ENV === 'production' ? 'info' : 'debug')) as
+  logLevel: (process.env.LOG_LEVEL?.trim() ??
+    (process.env.NODE_ENV === 'production' ? 'info' : 'debug')) as
     | 'fatal'
     | 'error'
     | 'warn'

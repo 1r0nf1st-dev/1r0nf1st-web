@@ -40,8 +40,8 @@ export const Weather = ({ city = 'London' }: WeatherProps): JSX.Element | null =
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Weather</h2>
         <p className={cardBody}>
-          No weather data. Make sure the API server is running and OpenWeather is
-          configured in <code>.env</code>.
+          No weather data. Make sure the API server is running and OpenWeather is configured in{' '}
+          <code>.env</code>.
         </p>
       </article>
     );
@@ -64,12 +64,8 @@ export const Weather = ({ city = 'London' }: WeatherProps): JSX.Element | null =
             />
           </div>
           <div>
-            <div className="text-2xl font-bold leading-none">
-              {weather.temperature}°C
-            </div>
-            <div className="text-sm opacity-90">
-              Feels like {weather.feelsLike}°C
-            </div>
+            <div className="text-2xl font-bold leading-none">{weather.temperature}°C</div>
+            <div className="text-sm opacity-90">Feels like {weather.feelsLike}°C</div>
           </div>
         </div>
         <div className="text-lg font-medium mb-3">

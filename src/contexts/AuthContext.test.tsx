@@ -146,7 +146,11 @@ describe('AuthContext', () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: 'new@example.com', password: 'password123', username: 'newuser' }),
+        body: JSON.stringify({
+          email: 'new@example.com',
+          password: 'password123',
+          username: 'newuser',
+        }),
       });
     });
 

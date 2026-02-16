@@ -29,11 +29,15 @@ export const HomePage = (): JSX.Element => {
           aria-label="Portfolio content"
         >
           <InfoCard title="About">
-            Welcome to my personal portfolio. Here you&apos;ll find my latest coding projects, blog posts, music I&apos;m listening to, fitness activities, and more. Everything is powered by live data from various APIs.
+            Welcome to my personal portfolio. Here you&apos;ll find my latest coding projects, blog
+            posts, music I&apos;m listening to, fitness activities, and more. Everything is powered
+            by live data from various APIs.
           </InfoCard>
 
           <InfoCard title="Tech Stack">
-            Next.js, React, TypeScript, Express, Tailwind CSS, and Supabase. Notes with TipTap, auth, and contact via Brevo. Deployed on Vercel. Integrates with GitHub, Medium, Dev.to, Spotify, Strava, OpenWeather, and more.
+            Next.js, React, TypeScript, Express, Tailwind CSS, and Supabase. Notes with TipTap,
+            auth, and contact via Brevo. Deployed on Vercel. Integrates with GitHub, Medium, Dev.to,
+            Spotify, Strava, OpenWeather, and more.
           </InfoCard>
           <Link
             href="/experience"
@@ -47,9 +51,13 @@ export const HomePage = (): JSX.Element => {
               </div>
               <h2 className={cardTitle}>Meet 1r0nf1st</h2>
               <p className={`${cardBody} mb-6`}>
-                Go through the robot experience: boot sequence, a short cutscene, theme picker, and more. 1r0nf1st is a friendly robot who loves to help.
+                Go through the robot experience: boot sequence, a short cutscene, theme picker, and
+                more. 1r0nf1st is a friendly robot who loves to help.
               </p>
-              <span className={`${btnBase} ${btnPrimary} mt-auto self-start pointer-events-none`} aria-hidden>
+              <span
+                className={`${btnBase} ${btnPrimary} mt-auto self-start pointer-events-none`}
+                aria-hidden
+              >
                 Start experience
               </span>
             </article>

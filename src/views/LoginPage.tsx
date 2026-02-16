@@ -51,9 +51,7 @@ export const LoginPage = (): JSX.Element => {
         <section className="w-full max-w-[500px] mx-auto">
           <article className={cardClasses}>
             <div className={cardOverlay} aria-hidden />
-            <h2 className={`${cardTitle} mb-6`}>
-              {isRegister ? 'Create Account' : 'Login'}
-            </h2>
+            <h2 className={`${cardTitle} mb-6`}>{isRegister ? 'Create Account' : 'Login'}</h2>
             <form onSubmit={handleSubmit} className="relative z-10">
               {resetSuccess && (
                 <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-600 dark:text-green-400 text-sm">
@@ -66,10 +64,7 @@ export const LoginPage = (): JSX.Element => {
                 </div>
               )}
               <div className="mb-4">
-                <label
-                  htmlFor="email"
-                  className="block mb-2 text-sm font-medium text-foreground"
-                >
+                <label htmlFor="email" className="block mb-2 text-sm font-medium text-foreground">
                   Email
                 </label>
                 <input
@@ -103,10 +98,7 @@ export const LoginPage = (): JSX.Element => {
               )}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-foreground"
-                  >
+                  <label htmlFor="password" className="block text-sm font-medium text-foreground">
                     Password
                   </label>
                   {!isRegister && (
@@ -148,16 +140,13 @@ export const LoginPage = (): JSX.Element => {
                 }}
                 className={`${btnBase} ${btnGhost} w-full text-sm`}
               >
-                {isRegister
-                  ? 'Already have an account? Login'
-                  : "Don't have an account? Register"}
+                {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
               </button>
             </form>
             {!isRegister && (
               <div className="mt-6 p-4 bg-primary/10 rounded-lg text-sm opacity-80 relative z-10">
-                <strong>Note:</strong> Use your email address to login. If you
-                haven&apos;t created an account yet, click &quot;Register&quot;
-                to create one.
+                <strong>Note:</strong> Use your email address to login. If you haven&apos;t created
+                an account yet, click &quot;Register&quot; to create one.
               </div>
             )}
           </article>

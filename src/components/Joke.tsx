@@ -28,9 +28,7 @@ export const Joke = (): JSX.Element | null => {
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Joke</h2>
         <div className={cardBody}>
-          <p className="mb-4">
-            Joke unavailable right now. Try again later.
-          </p>
+          <p className="mb-4">Joke unavailable right now. Try again later.</p>
           {typeof process !== 'undefined' && process.env.NODE_ENV === 'development' && error && (
             <p className="mb-4 text-xs opacity-80" role="status">
               {error}
@@ -56,9 +54,7 @@ export const Joke = (): JSX.Element | null => {
       <article className={cardClasses} id="joke">
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Joke</h2>
-        <p className={cardBody}>
-          No joke available. Make sure the API server is running.
-        </p>
+        <p className={cardBody}>No joke available. Make sure the API server is running.</p>
       </article>
     );
   }
@@ -69,9 +65,7 @@ export const Joke = (): JSX.Element | null => {
       <h2 className={cardTitle}>Joke</h2>
       <div className={cardBody}>
         <div className="mb-4">
-          <p className="m-0 text-[1.05rem] leading-relaxed opacity-95">
-            {joke.setup}
-          </p>
+          <p className="m-0 text-[1.05rem] leading-relaxed opacity-95">{joke.setup}</p>
           {showPunchline && (
             <p className="mt-4 m-0 text-[1.05rem] leading-relaxed font-medium opacity-95">
               {joke.punchline}

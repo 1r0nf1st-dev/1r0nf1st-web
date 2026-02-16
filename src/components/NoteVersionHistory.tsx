@@ -1,6 +1,11 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
-import { useNoteVersions, getNoteVersion, restoreNoteVersion, type NoteVersion } from '../useNoteVersions';
+import {
+  useNoteVersions,
+  getNoteVersion,
+  restoreNoteVersion,
+  type NoteVersion,
+} from '../useNoteVersions';
 import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
@@ -13,7 +18,11 @@ export interface NoteVersionHistoryProps {
   onClose?: () => void;
 }
 
-export const NoteVersionHistory = ({ noteId, onVersionRestored, onClose }: NoteVersionHistoryProps): JSX.Element => {
+export const NoteVersionHistory = ({
+  noteId,
+  onVersionRestored,
+  onClose,
+}: NoteVersionHistoryProps): JSX.Element => {
   const { versions, isLoading, error, refetch } = useNoteVersions(noteId);
   const [selectedVersion, setSelectedVersion] = useState<NoteVersion | null>(null);
   const [previewVersion, setPreviewVersion] = useState<NoteVersion | null>(null);
@@ -76,11 +85,7 @@ export const NoteVersionHistory = ({ noteId, onVersionRestored, onClose }: NoteV
           <h2 className={cardTitle}>Version History</h2>
           <div className="flex items-center gap-2">
             {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className={`${btnBase} ${btnGhost} text-sm`}
-              >
+              <button type="button" onClick={onClose} className={`${btnBase} ${btnGhost} text-sm`}>
                 Back
               </button>
             )}
@@ -106,7 +111,9 @@ export const NoteVersionHistory = ({ noteId, onVersionRestored, onClose }: NoteV
             {error}
           </div>
         ) : !versions || versions.length === 0 ? (
-          <p className={cardBody}>No versions available. Versions are created when you edit a note or share it.</p>
+          <p className={cardBody}>
+            No versions available. Versions are created when you edit a note or share it.
+          </p>
         ) : (
           <div className="space-y-2">
             {versions.map((version) => {

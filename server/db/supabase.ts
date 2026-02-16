@@ -15,7 +15,7 @@ if (config.supabaseUrl && config.supabaseServiceRoleKey) {
         'Please check your Supabase Dashboard → Project Settings → API → service_role key (not the anon key).',
     );
   }
-  
+
   supabase = createClient(config.supabaseUrl, config.supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,

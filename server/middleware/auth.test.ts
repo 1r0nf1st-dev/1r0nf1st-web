@@ -34,11 +34,7 @@ describe('authenticateToken', () => {
   });
 
   it('should return 401 if no authorization header', async () => {
-    await authenticateToken(
-      mockRequest as AuthRequest,
-      mockResponse as Response,
-      mockNext,
-    );
+    await authenticateToken(mockRequest as AuthRequest, mockResponse as Response, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(401);
     expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Access token required' });
@@ -55,11 +51,7 @@ describe('authenticateToken', () => {
       error: { message: 'Invalid token' },
     } as never);
 
-    await authenticateToken(
-      mockRequest as AuthRequest,
-      mockResponse as Response,
-      mockNext,
-    );
+    await authenticateToken(mockRequest as AuthRequest, mockResponse as Response, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(403);
     expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Invalid or expired token' });
@@ -75,11 +67,7 @@ describe('authenticateToken', () => {
       error: { message: 'Invalid token' },
     } as never);
 
-    await authenticateToken(
-      mockRequest as AuthRequest,
-      mockResponse as Response,
-      mockNext,
-    );
+    await authenticateToken(mockRequest as AuthRequest, mockResponse as Response, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(403);
     expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Invalid or expired token' });
@@ -100,11 +88,7 @@ describe('authenticateToken', () => {
       error: null,
     } as never);
 
-    await authenticateToken(
-      mockRequest as AuthRequest,
-      mockResponse as Response,
-      mockNext,
-    );
+    await authenticateToken(mockRequest as AuthRequest, mockResponse as Response, mockNext);
 
     expect(mockNext).toHaveBeenCalled();
     expect(mockRequest.userId).toBe('123');
@@ -119,11 +103,7 @@ describe('authenticateToken', () => {
     };
     vi.mocked(supabase!.auth.getUser).mockRejectedValue(new Error('Network error'));
 
-    await authenticateToken(
-      mockRequest as AuthRequest,
-      mockResponse as Response,
-      mockNext,
-    );
+    await authenticateToken(mockRequest as AuthRequest, mockResponse as Response, mockNext);
 
     expect(mockResponse.status).toHaveBeenCalledWith(403);
     expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Invalid token' });

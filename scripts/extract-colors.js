@@ -2,13 +2,13 @@
 
 /**
  * Color extraction script
- * 
+ *
  * To use:
  * 1. Make sure your dev server is running: pnpm dev
  * 2. Open http://localhost:5173/extract-colors.html in your browser
  * 3. Copy the CSS variables from the page
  * 4. Run this script with the colors: node scripts/extract-colors.js
- * 
+ *
  * Or visit the page and manually update src/index.css with the generated colors
  */
 

@@ -50,7 +50,11 @@ export const NoteDetail = ({
     if (note) {
       setTitle(note.title);
       // Normalize content: ensure it's a valid TipTap document structure
-      if (note.content && typeof note.content === 'object' && Object.keys(note.content).length > 0) {
+      if (
+        note.content &&
+        typeof note.content === 'object' &&
+        Object.keys(note.content).length > 0
+      ) {
         // If content has proper TipTap structure, use it; otherwise use empty doc
         if (note.content.type === 'doc' && Array.isArray(note.content.content)) {
           setContent(note.content);
@@ -121,9 +125,7 @@ export const NoteDetail = ({
       } catch (error) {
         console.error('Failed to create note:', error);
         const message =
-          error instanceof Error
-            ? error.message
-            : 'Failed to create note. Please try again.';
+          error instanceof Error ? error.message : 'Failed to create note. Please try again.';
         alert(`Failed to create note: ${message}`);
       } finally {
         setIsSaving(false);
@@ -146,9 +148,7 @@ export const NoteDetail = ({
     } catch (error) {
       console.error('Failed to save note:', error);
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to save note. Please try again.';
+        error instanceof Error ? error.message : 'Failed to save note. Please try again.';
       alert(`Failed to save note: ${message}`);
     } finally {
       setIsSaving(false);
@@ -164,9 +164,7 @@ export const NoteDetail = ({
     } catch (error) {
       console.error('Failed to delete note:', error);
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to delete note. Please try again.';
+        error instanceof Error ? error.message : 'Failed to delete note. Please try again.';
       alert(`Failed to delete note: ${message}`);
     }
   };
@@ -202,189 +200,191 @@ export const NoteDetail = ({
   return (
     <>
       <article className={cardClasses}>
-      <div className={cardOverlay} aria-hidden />
-      <div className="relative z-10 flex flex-col h-full">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className={cardTitle}>Edit Note</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className={`${btnBase} ${btnGhost} text-sm`}
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <div>
-            <label htmlFor="note-title" className="block text-sm font-medium mb-1 text-foreground">
-              Title
-            </label>
-            <input
-              id="note-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Note title..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1 text-foreground">Notebook</label>
-            <select
-              value={notebookId || ''}
-              onChange={(e) => setNotebookId(e.target.value || null)}
-              className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+        <div className={cardOverlay} aria-hidden />
+        <div className="relative z-10 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className={cardTitle}>Edit Note</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className={`${btnBase} ${btnGhost} text-sm`}
+              aria-label="Close"
             >
-              <option value="">No notebook</option>
-              {notebooks.map((nb) => (
-                <option key={nb.id} value={nb.id}>
-                  {nb.name}
-                </option>
-              ))}
-            </select>
+              ✕
+            </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2 text-foreground">Tags</label>
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => toggleTag(tag.id)}
-                  className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                    selectedTagIds.includes(tag.id)
-                      ? 'bg-primary text-white'
-                      : 'bg-primary/10 dark:bg-primary/20 text-primary-strong dark:text-primary hover:bg-primary/20'
-                  }`}
-                >
-                  {tag.name}
-                </button>
-              ))}
+          <div className="flex flex-col gap-4">
+            <div>
+              <label
+                htmlFor="note-title"
+                className="block text-sm font-medium mb-1 text-foreground"
+              >
+                Title
+              </label>
+              <input
+                id="note-title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Note title..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-foreground">Notebook</label>
+              <select
+                value={notebookId || ''}
+                onChange={(e) => setNotebookId(e.target.value || null)}
+                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">No notebook</option>
+                {notebooks.map((nb) => (
+                  <option key={nb.id} value={nb.id}>
+                    {nb.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-foreground">Tags</label>
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleTag(tag.id)}
+                    className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                      selectedTagIds.includes(tag.id)
+                        ? 'bg-primary text-white'
+                        : 'bg-primary/10 dark:bg-primary/20 text-primary-strong dark:text-primary hover:bg-primary/20'
+                    }`}
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-foreground">Content</label>
+              <NoteEditor content={content} onChange={setContent} />
+            </div>
+
+            {note && (
+              <>
+                <div>
+                  <FileUpload
+                    noteId={note.id}
+                    onUploadComplete={handleAttachmentUploadComplete}
+                    onError={(error) => {
+                      setAttachmentError(error);
+                      setTimeout(() => setAttachmentError(null), 5000);
+                    }}
+                  />
+                  {attachmentError && (
+                    <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded text-sm">
+                      {attachmentError}
+                    </div>
+                  )}
+                </div>
+                <AttachmentsList
+                  attachments={attachments || []}
+                  onDelete={handleAttachmentDelete}
+                />
+              </>
+            )}
+
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPinned}
+                  onChange={(e) => setIsPinned(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm text-foreground">Pin note</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isArchived}
+                  onChange={(e) => setIsArchived(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm text-foreground">Archive</span>
+              </label>
+            </div>
+
+            <div className="flex gap-2 pt-4 border-t border-primary/20 dark:border-border">
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`${btnBase} ${btnPrimary} flex-1`}
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowVersionHistory(true)}
+                className={`${btnBase} ${btnGhost}`}
+                title="View version history"
+              >
+                History
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowShareModal(true)}
+                className={`${btnBase} ${btnGhost}`}
+              >
+                Share
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowShareSettings(true)}
+                className={`${btnBase} ${btnGhost}`}
+              >
+                Share Settings
+              </button>
+              <button type="button" onClick={handleDelete} className={`${btnBase} ${btnGhost}`}>
+                Delete
+              </button>
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2 text-foreground">Content</label>
-            <NoteEditor content={content} onChange={setContent} />
-          </div>
-
-          {note && (
-            <>
-              <div>
-                <FileUpload
-                  noteId={note.id}
-                  onUploadComplete={handleAttachmentUploadComplete}
-                  onError={(error) => {
-                    setAttachmentError(error);
-                    setTimeout(() => setAttachmentError(null), 5000);
-                  }}
-                />
-                {attachmentError && (
-                  <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded text-sm">
-                    {attachmentError}
-                  </div>
-                )}
-              </div>
-              <AttachmentsList attachments={attachments || []} onDelete={handleAttachmentDelete} />
-            </>
-          )}
-
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isPinned}
-                onChange={(e) => setIsPinned(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm text-foreground">Pin note</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isArchived}
-                onChange={(e) => setIsArchived(e.target.checked)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm text-foreground">Archive</span>
-            </label>
-          </div>
-
-          <div className="flex gap-2 pt-4 border-t border-primary/20 dark:border-border">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`${btnBase} ${btnPrimary} flex-1`}
-            >
-              {isSaving ? 'Saving...' : 'Save'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowVersionHistory(true)}
-              className={`${btnBase} ${btnGhost}`}
-              title="View version history"
-            >
-              History
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowShareModal(true)}
-              className={`${btnBase} ${btnGhost}`}
-            >
-              Share
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowShareSettings(true)}
-              className={`${btnBase} ${btnGhost}`}
-            >
-              Share Settings
-            </button>
-            <button
-              type="button"
-              onClick={handleDelete}
-              className={`${btnBase} ${btnGhost}`}
-            >
-              Delete
-            </button>
-          </div>
         </div>
-      </div>
-      <SaveConfirmationModal
-        isOpen={showSaveModal}
-        onReturnToDashboard={() => {
-          setShowSaveModal(false);
-          onClose();
-        }}
-        onContinueEditing={() => {
-          setShowSaveModal(false);
-        }}
-      />
-      {showShareModal && (
-        <ShareNoteModal
-          noteId={note.id}
-          isOpen={showShareModal}
-          onClose={() => setShowShareModal(false)}
-          onShareCreated={() => {
-            setShowShareModal(false);
-            setShowShareSettings(true);
-            onNotesChanged?.();
+        <SaveConfirmationModal
+          isOpen={showSaveModal}
+          onReturnToDashboard={() => {
+            setShowSaveModal(false);
+            onClose();
+          }}
+          onContinueEditing={() => {
+            setShowSaveModal(false);
           }}
         />
-      )}
-      {showShareSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70">
-          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <ShareSettings noteId={note.id} onClose={() => setShowShareSettings(false)} />
+        {showShareModal && (
+          <ShareNoteModal
+            noteId={note.id}
+            isOpen={showShareModal}
+            onClose={() => setShowShareModal(false)}
+            onShareCreated={() => {
+              setShowShareModal(false);
+              setShowShareSettings(true);
+              onNotesChanged?.();
+            }}
+          />
+        )}
+        {showShareSettings && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70">
+            <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <ShareSettings noteId={note.id} onClose={() => setShowShareSettings(false)} />
+            </div>
           </div>
-        </div>
-      )}
-    </article>
+        )}
+      </article>
     </>
   );
 };

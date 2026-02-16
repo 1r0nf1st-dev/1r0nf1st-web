@@ -164,7 +164,9 @@ logsRouter.post('/analytics', async (req, res) => {
       source: 'client-analytics',
       event: stripHtmlAndScripts(event).substring(0, 100),
       timestamp: timestamp || new Date().toISOString(),
-      url: req.get('referer') ? stripHtmlAndScripts(req.get('referer')!).substring(0, 500) : undefined,
+      url: req.get('referer')
+        ? stripHtmlAndScripts(req.get('referer')!).substring(0, 500)
+        : undefined,
     };
 
     if (data && typeof data === 'object') {

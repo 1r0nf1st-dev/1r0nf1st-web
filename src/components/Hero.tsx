@@ -38,16 +38,10 @@ export const Hero = (): JSX.Element => {
               <button
                 type="button"
                 onClick={toggleTheme}
-                aria-label={
-                  theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
-                }
+                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                 className={`${btnBase} ${btnGhost} p-2 min-w-0 text-xl leading-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-full`}
               >
-                {theme === 'dark' ? (
-                  <HiSun aria-hidden />
-                ) : (
-                  <HiMoon aria-hidden />
-                )}
+                {theme === 'dark' ? <HiSun aria-hidden /> : <HiMoon aria-hidden />}
               </button>
               {user && (
                 <span className="text-sm opacity-80 text-muted">
@@ -67,7 +61,9 @@ export const Hero = (): JSX.Element => {
             </h1>
           </Link>
           <p className="mb-6 max-w-md text-muted leading-relaxed">
-            A dynamic portfolio showcasing my latest projects, writing, and activity across GitHub, Medium, Spotify, and Strava. Built with Next.js, React, TypeScript, and real-time API integrations.
+            A dynamic portfolio showcasing my latest projects, writing, and activity across GitHub,
+            Medium, Spotify, and Strava. Built with Next.js, React, TypeScript, and real-time API
+            integrations.
           </p>
           <div className="flex flex-wrap gap-3">
             {isProjectsPage || isLoginPage || isChangePasswordPage ? (
@@ -82,18 +78,11 @@ export const Hero = (): JSX.Element => {
             {user ? (
               <>
                 {!isChangePasswordPage && (
-                  <Link
-                    href="/change-password"
-                    className={`${btnBase} ${btnGhost}`}
-                  >
+                  <Link href="/change-password" className={`${btnBase} ${btnGhost}`}>
                     Change Password
                   </Link>
                 )}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className={`${btnBase} ${btnGhost}`}
-                >
+                <button type="button" onClick={handleLogout} className={`${btnBase} ${btnGhost}`}>
                   Logout
                 </button>
               </>

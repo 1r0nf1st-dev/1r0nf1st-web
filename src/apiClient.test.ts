@@ -92,7 +92,9 @@ describe('getJson', () => {
     });
 
     await expect(getJson('/api/test')).rejects.toThrow(ApiError);
-    await expect(getJson('/api/test')).rejects.toThrow('Request to /api/test failed with status 500');
+    await expect(getJson('/api/test')).rejects.toThrow(
+      'Request to /api/test failed with status 500',
+    );
   });
 
   it('should handle network errors', async () => {

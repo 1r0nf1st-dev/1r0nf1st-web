@@ -26,9 +26,7 @@ export const Quote = (): JSX.Element | null => {
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Quote</h2>
         <div className={cardBody}>
-          <p className="mb-4">
-            Quote unavailable right now. Try again later.
-          </p>
+          <p className="mb-4">Quote unavailable right now. Try again later.</p>
           {typeof process !== 'undefined' && process.env.NODE_ENV === 'development' && error && (
             <p className="mb-4 text-xs opacity-80" role="status">
               {error}
@@ -51,9 +49,7 @@ export const Quote = (): JSX.Element | null => {
       <article className={cardClasses} id="quote">
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Quote</h2>
-        <p className={cardBody}>
-          No quote available. Make sure the API server is running.
-        </p>
+        <p className={cardBody}>No quote available. Make sure the API server is running.</p>
       </article>
     );
   }
@@ -65,9 +61,7 @@ export const Quote = (): JSX.Element | null => {
       <div className={cardBody}>
         <blockquote className="m-0 p-0 border-none text-[1.05rem] leading-relaxed opacity-95">
           <p className="m-0 mb-4">&quot;{quote.content}&quot;</p>
-          <footer className="text-[0.95rem] font-medium opacity-90">
-            — {quote.author}
-          </footer>
+          <footer className="text-[0.95rem] font-medium opacity-90">— {quote.author}</footer>
         </blockquote>
         {quote.tags.length > 0 && (
           <p className="mt-4 text-sm opacity-80">{quote.tags.join(' · ')}</p>

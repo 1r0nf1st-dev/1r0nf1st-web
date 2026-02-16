@@ -93,12 +93,15 @@ authRouter.post('/login', async (req, res) => {
       return;
     }
 
-    logger.info({ 
-      email,
-      supabaseUrl: config.supabaseUrl,
-      hasServiceRoleKey: !!config.supabaseServiceRoleKey,
-      serviceRoleKeyPrefix: config.supabaseServiceRoleKey?.substring(0, 20) + '...'
-    }, 'Attempting login');
+    logger.info(
+      {
+        email,
+        supabaseUrl: config.supabaseUrl,
+        hasServiceRoleKey: !!config.supabaseServiceRoleKey,
+        serviceRoleKeyPrefix: config.supabaseServiceRoleKey?.substring(0, 20) + '...',
+      },
+      'Attempting login',
+    );
 
     // Sign in with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -107,14 +110,17 @@ authRouter.post('/login', async (req, res) => {
     });
 
     if (error) {
-      logger.error({ 
-        error: error.message, 
-        errorCode: error.status,
-        errorName: error.name,
-        email,
-        supabaseUrl: config.supabaseUrl,
-        hasServiceRoleKey: !!config.supabaseServiceRoleKey
-      }, 'Login failed');
+      logger.error(
+        {
+          error: error.message,
+          errorCode: error.status,
+          errorName: error.name,
+          email,
+          supabaseUrl: config.supabaseUrl,
+          hasServiceRoleKey: !!config.supabaseServiceRoleKey,
+        },
+        'Login failed',
+      );
       // Surface helpful Supabase messages (e.g. "Email not confirmed") while keeping generic for invalid credentials
       const message =
         error.message === 'Email not confirmed'
@@ -261,19 +267,28 @@ authRouter.post('/forgot-password', async (req, res) => {
     const { config } = await import('../config.js');
     const redirectTo = `${config.siteUrl}/change-password`;
 
-    logger.debug({ email: email.trim(), redirectTo, path: '/forgot-password' }, 'Sending password reset email');
+    logger.debug(
+      { email: email.trim(), redirectTo, path: '/forgot-password' },
+      'Sending password reset email',
+    );
 
     const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo,
     });
 
     if (error) {
-      logger.error({ error: error.message, email: email.trim(), path: '/forgot-password' }, 'Failed to send reset email');
+      logger.error(
+        { error: error.message, email: email.trim(), path: '/forgot-password' },
+        'Failed to send reset email',
+      );
       res.status(400).json({ error: error.message });
       return;
     }
 
-    logger.debug({ email: email.trim(), path: '/forgot-password' }, 'Password reset email sent successfully');
+    logger.debug(
+      { email: email.trim(), path: '/forgot-password' },
+      'Password reset email sent successfully',
+    );
 
     res.json({
       message:

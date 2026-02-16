@@ -53,12 +53,7 @@ function sanitizeObject(obj: unknown, depth = 0): unknown {
   return sanitized;
 }
 
-
-export function requestLogger(
-  req: RequestWithMetadata,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requestLogger(req: RequestWithMetadata, res: Response, next: NextFunction): void {
   // Skip logging for health check endpoints
   if (req.path === '/health' || req.path === '/api/health') {
     return next();

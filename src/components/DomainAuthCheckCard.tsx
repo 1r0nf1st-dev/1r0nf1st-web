@@ -28,8 +28,7 @@ interface DomainAuthResult {
 /** True if the current user is the admin (same as SendEmailCard). */
 function useIsAdmin(): boolean {
   const { user } = useAuth();
-  const clientIsAdmin =
-    !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const clientIsAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
   return clientIsAdmin;
 }
 
@@ -68,11 +67,7 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
       setResult(data);
     } catch (err) {
       const msg =
-        err instanceof ApiError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : 'Check failed';
+        err instanceof ApiError ? err.message : err instanceof Error ? err.message : 'Check failed';
       setError(msg);
     } finally {
       setLoading(false);
@@ -85,7 +80,11 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
       {r.present && (
         <>
           {' · '}
-          <span className={r.valid ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}>
+          <span
+            className={
+              r.valid ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'
+            }
+          >
             {r.valid ? 'Valid' : 'Invalid'}
           </span>
         </>
@@ -95,13 +94,10 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
           Looked up: <code className="break-all bg-muted/50 px-1 rounded">{r.lookupHostname}</code>
         </p>
       )}
-      {r.error && (
-        <p className="text-sm text-red-500 dark:text-red-400 mt-0.5">{r.error}</p>
-      )}
+      {r.error && <p className="text-sm text-red-500 dark:text-red-400 mt-0.5">{r.error}</p>}
       {r.suggestion && (
         <p className="text-sm text-foreground/90 mt-1 p-2 rounded bg-primary/10 dark:bg-primary/5 border border-primary/20">
-          <span className="font-medium text-foreground">Suggestion:</span>{' '}
-          {r.suggestion}
+          <span className="font-medium text-foreground">Suggestion:</span> {r.suggestion}
         </p>
       )}
       {r.record && (
@@ -117,11 +113,15 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
       <div className={cardOverlay} aria-hidden />
       <h2 className={cardTitle}>Domain auth (DKIM / DMARC)</h2>
       <p className={cardBody}>
-        Check DNS for DMARC and DKIM on a domain. Only visible to admin. Use the DKIM selector from your provider (e.g. Brevo).
+        Check DNS for DMARC and DKIM on a domain. Only visible to admin. Use the DKIM selector from
+        your provider (e.g. Brevo).
       </p>
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
         <div>
-          <label htmlFor="domain-auth-domain" className="block text-sm font-medium text-foreground mb-1">
+          <label
+            htmlFor="domain-auth-domain"
+            className="block text-sm font-medium text-foreground mb-1"
+          >
             Domain <span className="text-red-500">*</span>
           </label>
           <input
@@ -136,7 +136,10 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
           />
         </div>
         <div>
-          <label htmlFor="domain-auth-selector" className="block text-sm font-medium text-foreground mb-1">
+          <label
+            htmlFor="domain-auth-selector"
+            className="block text-sm font-medium text-foreground mb-1"
+          >
             DKIM selector
           </label>
           <input

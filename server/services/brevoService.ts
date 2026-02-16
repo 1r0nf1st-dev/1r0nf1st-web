@@ -10,7 +10,10 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Returns array of invalid entries for error reporting.
  */
 export function parseEmails(value: string): { emails: string[]; invalid: string[] } {
-  const parts = value.split(',').map((s) => s.trim()).filter(Boolean);
+  const parts = value
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   const emails: string[] = [];
   const invalid: string[] = [];
   for (const p of parts) {

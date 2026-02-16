@@ -1,6 +1,11 @@
 import type { JSX } from 'react';
 import { useState, useEffect } from 'react';
-import { useNoteShares, updateSharePermission, unshareNote, type SharedNote } from '../useNoteSharing';
+import {
+  useNoteShares,
+  updateSharePermission,
+  unshareNote,
+  type SharedNote,
+} from '../useNoteSharing';
 import { Skeleton } from './Skeleton';
 import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';

@@ -23,9 +23,7 @@ interface StravaActivityTotals {
   elevation_gain: number;
 }
 
-function isActivityTotals(
-  v: unknown,
-): v is StravaActivityTotals {
+function isActivityTotals(v: unknown): v is StravaActivityTotals {
   return (
     typeof v === 'object' &&
     v !== null &&
@@ -34,16 +32,9 @@ function isActivityTotals(
   );
 }
 
-function sumTotals(
-  ride: unknown,
-  run: unknown,
-): StravaTotalsPeriod {
-  const r = isActivityTotals(ride)
-    ? ride
-    : { distance: 0, moving_time: 0, elevation_gain: 0 };
-  const u = isActivityTotals(run)
-    ? run
-    : { distance: 0, moving_time: 0, elevation_gain: 0 };
+function sumTotals(ride: unknown, run: unknown): StravaTotalsPeriod {
+  const r = isActivityTotals(ride) ? ride : { distance: 0, moving_time: 0, elevation_gain: 0 };
+  const u = isActivityTotals(run) ? run : { distance: 0, moving_time: 0, elevation_gain: 0 };
   // Convert meters to miles (1 meter = 0.000621371 miles)
   const distanceMeters = r.distance + u.distance;
   const distanceMiles = distanceMeters * 0.000621371;
@@ -59,11 +50,7 @@ async function getAccessTokenAndAthleteId(): Promise<{
   accessToken: string;
   athleteId: number;
 }> {
-  const {
-    stravaClientId,
-    stravaClientSecret,
-    stravaRefreshToken,
-  } = config;
+  const { stravaClientId, stravaClientSecret, stravaRefreshToken } = config;
 
   if (!stravaClientId || !stravaClientSecret || !stravaRefreshToken) {
     throw new Error(
@@ -86,9 +73,7 @@ async function getAccessTokenAndAthleteId(): Promise<{
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(
-      text || `Strava token request failed: ${response.status}`,
-    );
+    throw new Error(text || `Strava token request failed: ${response.status}`);
   }
 
   const data = (await response.json()) as {
@@ -111,9 +96,7 @@ async function getAccessTokenAndAthleteId(): Promise<{
   }
 
   if (athleteId == null) {
-    throw new Error(
-      'Could not get Strava athlete ID. Re-authorize at /api/strava/auth.',
-    );
+    throw new Error('Could not get Strava athlete ID. Re-authorize at /api/strava/auth.');
   }
 
   return {
@@ -134,32 +117,22 @@ interface StravaActivityStats {
 export async function fetchTotals(): Promise<StravaTotals> {
   const { accessToken, athleteId } = await getAccessTokenAndAthleteId();
 
-  const response = await fetch(
-    `${STRAVA_API}/athletes/${athleteId}/stats`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    },
-  );
+  const response = await fetch(`${STRAVA_API}/athletes/${athleteId}/stats`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
 
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error(
-        'Strava token expired or invalid. Re-authorize to get a new refresh token.',
-      );
+      throw new Error('Strava token expired or invalid. Re-authorize to get a new refresh token.');
     }
     const text = await response.text().catch(() => '');
-    throw new Error(
-      text || `Strava API request failed: ${response.status}`,
-    );
+    throw new Error(text || `Strava API request failed: ${response.status}`);
   }
 
   const stats = (await response.json()) as StravaActivityStats;
 
   return {
-    recent: sumTotals(
-      stats.recent_ride_totals,
-      stats.recent_run_totals,
-    ),
+    recent: sumTotals(stats.recent_ride_totals, stats.recent_run_totals),
     ytd: sumTotals(stats.ytd_ride_totals, stats.ytd_run_totals),
     allTime: sumTotals(stats.all_ride_totals, stats.all_run_totals),
   };
@@ -182,14 +155,8 @@ export function getAuthUrl(): string {
   return `${STRAVA_OAUTH}/authorize?${params.toString()}`;
 }
 
-export async function exchangeCodeForTokens(
-  code: string,
-): Promise<{ refreshToken: string }> {
-  const {
-    stravaClientId,
-    stravaClientSecret,
-    stravaRedirectUri,
-  } = config;
+export async function exchangeCodeForTokens(code: string): Promise<{ refreshToken: string }> {
+  const { stravaClientId, stravaClientSecret, stravaRedirectUri } = config;
   if (!stravaClientId || !stravaClientSecret || !stravaRedirectUri) {
     throw new Error(
       'Strava is not configured. Set STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, and STRAVA_REDIRECT_URI in your .env.',
@@ -212,9 +179,7 @@ export async function exchangeCodeForTokens(
 
   if (!response.ok) {
     const text = await response.text().catch(() => '');
-    throw new Error(
-      text || `Strava token exchange failed: ${response.status}`,
-    );
+    throw new Error(text || `Strava token exchange failed: ${response.status}`);
   }
 
   const data = (await response.json()) as { refresh_token: string };

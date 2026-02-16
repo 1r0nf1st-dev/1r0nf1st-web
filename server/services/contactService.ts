@@ -101,15 +101,18 @@ function buildNoteContent(
  */
 export function validateContactSubmission(body: unknown): ContactValidationError[] {
   const errors: ContactValidationError[] = [];
-  const name = typeof (body as Record<string, unknown>).name === 'string'
-    ? (body as Record<string, unknown>).name as string
-    : '';
-  const email = typeof (body as Record<string, unknown>).email === 'string'
-    ? (body as Record<string, unknown>).email as string
-    : '';
-  const message = typeof (body as Record<string, unknown>).message === 'string'
-    ? (body as Record<string, unknown>).message as string
-    : '';
+  const name =
+    typeof (body as Record<string, unknown>).name === 'string'
+      ? ((body as Record<string, unknown>).name as string)
+      : '';
+  const email =
+    typeof (body as Record<string, unknown>).email === 'string'
+      ? ((body as Record<string, unknown>).email as string)
+      : '';
+  const message =
+    typeof (body as Record<string, unknown>).message === 'string'
+      ? ((body as Record<string, unknown>).message as string)
+      : '';
 
   const nameTrim = name.trim();
   if (!nameTrim) {
@@ -129,7 +132,10 @@ export function validateContactSubmission(body: unknown): ContactValidationError
   if (!messageTrim) {
     errors.push({ field: 'message', message: 'Message is required.' });
   } else if (messageTrim.length > MESSAGE_MAX_LENGTH) {
-    errors.push({ field: 'message', message: `Message must be at most ${MESSAGE_MAX_LENGTH} characters.` });
+    errors.push({
+      field: 'message',
+      message: `Message must be at most ${MESSAGE_MAX_LENGTH} characters.`,
+    });
   }
 
   return errors;

@@ -56,11 +56,5 @@ export const SharedNotesList = ({ onNoteSelect }: SharedNotesListProps): JSX.Ele
     );
   }
 
-  return (
-    <NotesList
-      notes={sharedNotes}
-      onNoteClick={onNoteSelect}
-      selectedNoteId={undefined}
-    />
-  );
+  return <NotesList notes={sharedNotes} onNoteClick={onNoteSelect} selectedNoteId={undefined} />;
 };

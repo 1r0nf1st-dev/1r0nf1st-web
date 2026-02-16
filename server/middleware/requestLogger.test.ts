@@ -30,7 +30,9 @@ describe('requestLogger', () => {
       path: '/api/test',
       query: {},
       ip: '127.0.0.1',
-      get: vi.fn((name: string) => (name === 'user-agent' ? 'TestAgent' : undefined)) as Request['get'],
+      get: vi.fn((name: string) =>
+        name === 'user-agent' ? 'TestAgent' : undefined,
+      ) as Request['get'],
       socket: { remoteAddress: '127.0.0.1' } as Request['socket'],
     };
     mockResponse = {
@@ -48,22 +50,14 @@ describe('requestLogger', () => {
   it('should skip logging for /health and call next()', () => {
     const healthRequest = { ...mockRequest, path: '/health' };
 
-    requestLogger(
-      healthRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction,
-    );
+    requestLogger(healthRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     expect(logger.info).not.toHaveBeenCalled();
     expect(mockNext).toHaveBeenCalledWith();
   });
 
   it('should attach requestId and startTime, log request, and call next()', () => {
-    requestLogger(
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction,
-    );
+    requestLogger(mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     expect(mockRequest.requestId).toBe('test-request-id');
     expect(mockRequest.startTime).toBeDefined();
@@ -80,11 +74,7 @@ describe('requestLogger', () => {
   });
 
   it('should log response when res.send is called', () => {
-    requestLogger(
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction,
-    );
+    requestLogger(mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     const sentBody = { data: 'ok' };
     mockResponse.send!.call(mockResponse, sentBody);
@@ -106,11 +96,7 @@ describe('requestLogger', () => {
   it('should sanitize sensitive fields in request body', () => {
     mockRequest.body = { email: 'u@x.com', password: 'secret123', name: 'User' };
 
-    requestLogger(
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction,
-    );
+    requestLogger(mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     expect(logger.info).toHaveBeenCalledWith(
       expect.objectContaining({

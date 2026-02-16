@@ -34,8 +34,7 @@ goalsRouter.get('/', async (req: AuthRequest, res) => {
     const goals = await getGoalsByUserId(req.userId);
     res.json(goals);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch goals';
+    const message = error instanceof Error ? error.message : 'Failed to fetch goals';
     res.status(500).json({ error: message });
   }
 });
@@ -57,8 +56,7 @@ goalsRouter.get('/:id', async (req: AuthRequest, res) => {
 
     res.json(goal);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch goal';
+    const message = error instanceof Error ? error.message : 'Failed to fetch goal';
     res.status(500).json({ error: message });
   }
 });
@@ -91,8 +89,7 @@ goalsRouter.post('/', async (req: AuthRequest, res) => {
 
     res.status(201).json(goal);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to create goal';
+    const message = error instanceof Error ? error.message : 'Failed to create goal';
     res.status(500).json({ error: message });
   }
 });
@@ -109,7 +106,10 @@ goalsRouter.put('/:id', async (req: AuthRequest, res) => {
     const { title, description, target_date, progress_percentage, status } = req.body;
 
     const goal = await updateGoal(goalId, req.userId, {
-      title: title != null && typeof title === 'string' ? sanitizeFreeText(title.trim(), GOAL_TITLE_MAX_LENGTH) : undefined,
+      title:
+        title != null && typeof title === 'string'
+          ? sanitizeFreeText(title.trim(), GOAL_TITLE_MAX_LENGTH)
+          : undefined,
       description:
         description != null && typeof description === 'string'
           ? sanitizeFreeText(description.trim(), GOAL_DESCRIPTION_MAX_LENGTH)
@@ -121,10 +121,8 @@ goalsRouter.put('/:id', async (req: AuthRequest, res) => {
 
     res.json(goal);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to update goal';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const message = error instanceof Error ? error.message : 'Failed to update goal';
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -141,10 +139,8 @@ goalsRouter.delete('/:id', async (req: AuthRequest, res) => {
     await deleteGoal(goalId, req.userId);
     res.status(204).send();
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to delete goal';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const message = error instanceof Error ? error.message : 'Failed to delete goal';
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -161,8 +157,7 @@ goalsRouter.get('/:id/milestones', async (req: AuthRequest, res) => {
     const milestones = await getMilestonesByGoalId(goalId, req.userId);
     res.json(milestones);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch milestones';
+    const message = error instanceof Error ? error.message : 'Failed to fetch milestones';
     res.status(500).json({ error: message });
   }
 });
@@ -194,8 +189,7 @@ goalsRouter.post('/:id/milestones', async (req: AuthRequest, res) => {
 
     res.status(201).json(milestone);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to create milestone';
+    const message = error instanceof Error ? error.message : 'Failed to create milestone';
     res.status(500).json({ error: message });
   }
 });
@@ -214,7 +208,10 @@ goalsRouter.put('/milestones/:milestoneId', async (req: AuthRequest, res) => {
     const { title, description, completed } = req.body;
 
     const milestone = await updateMilestone(milestoneId, req.userId, {
-      title: title != null && typeof title === 'string' ? sanitizeFreeText(title.trim(), MILESTONE_TITLE_MAX_LENGTH) : undefined,
+      title:
+        title != null && typeof title === 'string'
+          ? sanitizeFreeText(title.trim(), MILESTONE_TITLE_MAX_LENGTH)
+          : undefined,
       description:
         description != null && typeof description === 'string'
           ? sanitizeFreeText(description.trim(), MILESTONE_DESCRIPTION_MAX_LENGTH)
@@ -224,10 +221,8 @@ goalsRouter.put('/milestones/:milestoneId', async (req: AuthRequest, res) => {
 
     res.json(milestone);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to update milestone';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const message = error instanceof Error ? error.message : 'Failed to update milestone';
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -246,10 +241,8 @@ goalsRouter.delete('/milestones/:milestoneId', async (req: AuthRequest, res) => 
     await deleteMilestone(milestoneId, req.userId);
     res.status(204).send();
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to delete milestone';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const message = error instanceof Error ? error.message : 'Failed to delete milestone';
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
