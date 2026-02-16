@@ -12,8 +12,7 @@ spotifyRouter.get('/auth', (_req, res) => {
     const url = getAuthUrl();
     res.redirect(url);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Spotify auth not configured';
+    const message = error instanceof Error ? error.message : 'Spotify auth not configured';
     res.status(500).json({ error: message });
   }
 });
@@ -23,16 +22,20 @@ spotifyRouter.get('/callback', async (req, res) => {
   const errorParam = req.query.error as string | undefined;
 
   if (errorParam) {
-    res.status(400).send(
-      `<p>Spotify authorization failed: ${errorParam}</p><p><a href="/api/spotify/auth">Try again</a></p>`,
-    );
+    res
+      .status(400)
+      .send(
+        `<p>Spotify authorization failed: ${errorParam}</p><p><a href="/api/spotify/auth">Try again</a></p>`,
+      );
     return;
   }
 
   if (!code) {
-    res.status(400).send(
-      '<p>Missing authorization code.</p><p><a href="/api/spotify/auth">Authorize with Spotify</a></p>',
-    );
+    res
+      .status(400)
+      .send(
+        '<p>Missing authorization code.</p><p><a href="/api/spotify/auth">Authorize with Spotify</a></p>',
+      );
     return;
   }
 
@@ -49,17 +52,13 @@ spotifyRouter.get('/callback', async (req, res) => {
 
 spotifyRouter.get('/recently-played', async (req, res) => {
   try {
-    const limit = req.query.limit
-      ? Number.parseInt(req.query.limit as string, 10)
-      : undefined;
+    const limit = req.query.limit ? Number.parseInt(req.query.limit as string, 10) : undefined;
 
     const tracks = await fetchRecentlyPlayed({ limit });
     res.json(tracks);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch Spotify data';
-    const status =
-      error instanceof Error && 'status' in error ? (error.status as number) : 500;
+    const message = error instanceof Error ? error.message : 'Failed to fetch Spotify data';
+    const status = error instanceof Error && 'status' in error ? (error.status as number) : 500;
     res.status(status).json({ error: message });
   }
 });

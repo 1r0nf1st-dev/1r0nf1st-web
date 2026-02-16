@@ -17,8 +17,7 @@ export function errorLogger(
 
   // Determine log level based on status code (error.status, or res if already set, else 500)
   const errStatus = (err as Error & { status?: number }).status;
-  const statusCode =
-    errStatus ?? (res.statusCode >= 400 ? res.statusCode : undefined) ?? 500;
+  const statusCode = errStatus ?? (res.statusCode >= 400 ? res.statusCode : undefined) ?? 500;
   const isClientError = statusCode >= 400 && statusCode < 500;
   const logLevel = isClientError ? 'warn' : 'error';
 

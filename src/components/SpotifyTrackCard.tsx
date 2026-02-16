@@ -17,10 +17,7 @@ function formatPlayedAt(iso: string): string {
   });
 }
 
-export const SpotifyTrackCard = ({
-  track,
-  id,
-}: SpotifyTrackCardProps): JSX.Element => {
+export const SpotifyTrackCard = ({ track, id }: SpotifyTrackCardProps): JSX.Element => {
   return (
     <article className={cardClasses} id={id}>
       <div className={cardOverlay} aria-hidden />
@@ -58,9 +55,7 @@ export const SpotifyTrackCard = ({
             <p className="m-0 opacity-70 text-xs">{track.albumName}</p>
           </div>
         </div>
-        <p className="m-0 opacity-70 text-xs mt-auto pt-2">
-          {formatPlayedAt(track.playedAt)}
-        </p>
+        <p className="m-0 opacity-70 text-xs mt-auto pt-2">{formatPlayedAt(track.playedAt)}</p>
         <div className="mt-2">
           <a
             href={track.trackUrl}

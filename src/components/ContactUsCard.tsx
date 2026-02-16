@@ -88,7 +88,9 @@ export const ContactUsCard = (): JSX.Element => {
         setSuccess(true);
         setForm({ name: '', email: '', message: '' });
       } catch (err) {
-        setSubmitError(err instanceof ApiError ? err.message : 'Something went wrong. Please try again.');
+        setSubmitError(
+          err instanceof ApiError ? err.message : 'Something went wrong. Please try again.',
+        );
       } finally {
         setSubmitting(false);
       }
@@ -102,8 +104,8 @@ export const ContactUsCard = (): JSX.Element => {
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Contact us</h2>
         <p className={cardBody}>
-          Thanks for your message. We&apos;ve received it and will get back to you soon. Check your email for a
-          confirmation.
+          Thanks for your message. We&apos;ve received it and will get back to you soon. Check your
+          email for a confirmation.
         </p>
       </article>
     );
@@ -133,7 +135,11 @@ export const ContactUsCard = (): JSX.Element => {
             aria-describedby={fieldErrors.name ? 'contact-name-error' : undefined}
           />
           {fieldErrors.name && (
-            <p id="contact-name-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+            <p
+              id="contact-name-error"
+              className="mt-1 text-sm text-red-600 dark:text-red-400"
+              role="alert"
+            >
               {fieldErrors.name}
             </p>
           )}
@@ -154,7 +160,11 @@ export const ContactUsCard = (): JSX.Element => {
             aria-describedby={fieldErrors.email ? 'contact-email-error' : undefined}
           />
           {fieldErrors.email && (
-            <p id="contact-email-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+            <p
+              id="contact-email-error"
+              className="mt-1 text-sm text-red-600 dark:text-red-400"
+              role="alert"
+            >
               {fieldErrors.email}
             </p>
           )}
@@ -175,7 +185,11 @@ export const ContactUsCard = (): JSX.Element => {
             maxLength={MESSAGE_MAX_LENGTH}
           />
           {fieldErrors.message && (
-            <p id="contact-message-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+            <p
+              id="contact-message-error"
+              className="mt-1 text-sm text-red-600 dark:text-red-400"
+              role="alert"
+            >
               {fieldErrors.message}
             </p>
           )}

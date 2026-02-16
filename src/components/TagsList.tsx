@@ -27,9 +27,7 @@ export const TagsList = ({ selectedTagIds, onTagToggle }: TagsListProps): JSX.El
     } catch (error) {
       console.error('Failed to create tag:', error);
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to create tag. It may already exist.';
+        error instanceof Error ? error.message : 'Failed to create tag. It may already exist.';
       alert(`Failed to create tag: ${message}`);
     }
   };

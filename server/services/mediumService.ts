@@ -4,8 +4,7 @@ import { config } from '../config.js';
 // Use a browser-like User-Agent so Medium (and other sites) don't block the request
 const parser = new Parser({
   headers: {
-    'User-Agent':
-      'Mozilla/5.0 (compatible; FeedReader/1.0; +https://github.com/)',
+    'User-Agent': 'Mozilla/5.0 (compatible; FeedReader/1.0; +https://github.com/)',
     Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
   },
 });
@@ -24,9 +23,7 @@ function extractFirstImageUrl(html: string): string | null {
   return match ? match[1] : null;
 }
 
-export async function fetchMediumStories(
-  options?: { limit?: number },
-): Promise<MediumStory[]> {
+export async function fetchMediumStories(options?: { limit?: number }): Promise<MediumStory[]> {
   const feedUrl = config.mediumFeedUrl;
 
   if (!feedUrl) {

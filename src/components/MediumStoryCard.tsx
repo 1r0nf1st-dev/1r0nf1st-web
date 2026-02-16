@@ -20,24 +20,14 @@ function formatPubDate(iso: string): string {
   });
 }
 
-export const MediumStoryCard = ({
-  story,
-  isExpanded,
-  id,
-}: MediumStoryCardProps): JSX.Element => {
+export const MediumStoryCard = ({ story, isExpanded, id }: MediumStoryCardProps): JSX.Element => {
   return (
     <article className={cardClasses} id={id}>
       <div className={cardOverlay} aria-hidden />
       <div className={`${cardBody} flex flex-col h-full`}>
         <div className="flex items-start gap-3 mb-2">
           {story.thumbnailUrl && (
-            <a
-              href={story.link}
-              target="_blank"
-              rel="noreferrer"
-              className="shrink-0"
-              aria-hidden
-            >
+            <a href={story.link} target="_blank" rel="noreferrer" className="shrink-0" aria-hidden>
               <img
                 src={story.thumbnailUrl}
                 alt=""
@@ -68,7 +58,18 @@ export const MediumStoryCard = ({
             className="mt-3 text-sm leading-relaxed max-h-[300px] overflow-y-auto flex-1 min-h-0 [&_img]:max-w-full [&_a]:text-primary [&_a]:no-underline [&_a:hover]:underline"
             dangerouslySetInnerHTML={{
               __html: DOMPurify.sanitize(story.description, {
-                ALLOWED_TAGS: ['p', 'br', 'a', 'strong', 'em', 'ul', 'ol', 'li', 'img', 'blockquote'],
+                ALLOWED_TAGS: [
+                  'p',
+                  'br',
+                  'a',
+                  'strong',
+                  'em',
+                  'ul',
+                  'ol',
+                  'li',
+                  'img',
+                  'blockquote',
+                ],
                 ALLOWED_ATTR: ['href', 'src', 'alt', 'title'],
               }),
             }}

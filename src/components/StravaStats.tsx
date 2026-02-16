@@ -36,11 +36,7 @@ function TotalsSection({
 export const StravaStats = (): JSX.Element | null => {
   const { totals, isLoading, error } = useStravaStats();
 
-  const card = (
-    id: string,
-    title: string,
-    body: ReactNode,
-  ): JSX.Element => (
+  const card = (id: string, title: string, body: ReactNode): JSX.Element => (
     <article className={cardClasses} id={id}>
       <div className={cardOverlay} aria-hidden />
       <h2 className={cardTitle}>{title}</h2>
@@ -64,8 +60,8 @@ export const StravaStats = (): JSX.Element | null => {
       'strava',
       'Strava',
       <>
-        No totals. Make sure the API server is running and Strava is configured
-        in <code>.env</code>.
+        No totals. Make sure the API server is running and Strava is configured in <code>.env</code>
+        .
       </>,
     );
   }

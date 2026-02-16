@@ -35,10 +35,7 @@ describe('Authentication patterns', () => {
 
   describe('Token structure', () => {
     it('should expect Bearer token format in Authorization header', () => {
-      const validHeaders = [
-        'Bearer token123',
-        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-      ];
+      const validHeaders = ['Bearer token123', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'];
       const invalidHeaders = ['token123', 'Basic token123', ''];
 
       validHeaders.forEach((header) => {

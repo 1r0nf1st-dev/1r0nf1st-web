@@ -30,9 +30,7 @@ export const NotebooksSidebar = ({
     } catch (error) {
       console.error('Failed to create notebook:', error);
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to create notebook. Please try again.';
+        error instanceof Error ? error.message : 'Failed to create notebook. Please try again.';
       alert(`Failed to create notebook: ${message}`);
     }
   };

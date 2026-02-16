@@ -45,9 +45,7 @@ export const ShareNoteModal = ({
         ...(shareType === 'public' ? {} : { shared_with_user_email: userEmail.trim() }),
         ...(expiresInDays && typeof expiresInDays === 'number' && expiresInDays > 0
           ? {
-              expires_at: new Date(
-                Date.now() + expiresInDays * 24 * 60 * 60 * 1000,
-              ).toISOString(),
+              expires_at: new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString(),
             }
           : {}),
       };
@@ -55,8 +53,8 @@ export const ShareNoteModal = ({
       const share = await shareNote(noteId, input);
       setSuccess(
         shareType === 'public'
-          ? 'Public share link created! Copy the link from Share Settings. Share added to this note\'s version history.'
-          : 'Note shared. If they have an account they\'ll get login instructions; otherwise they\'ll receive a link to view without signing up. Share added to this note\'s version history.',
+          ? "Public share link created! Copy the link from Share Settings. Share added to this note's version history."
+          : "Note shared. If they have an account they'll get login instructions; otherwise they'll receive a link to view without signing up. Share added to this note's version history.",
       );
       setUserEmail('');
       setExpiresInDays('');
@@ -80,10 +78,7 @@ export const ShareNoteModal = ({
       aria-modal="true"
       aria-labelledby="share-modal-title"
     >
-      <article
-        className={`${cardClasses} max-w-md w-full`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <article className={`${cardClasses} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
         <div className={cardOverlay} aria-hidden />
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
@@ -113,9 +108,7 @@ export const ShareNoteModal = ({
             )}
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-foreground">
-                Share Type
-              </label>
+              <label className="block text-sm font-medium mb-2 text-foreground">Share Type</label>
               <div className="flex gap-3">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -144,7 +137,10 @@ export const ShareNoteModal = ({
 
             {shareType === 'user' && (
               <div className="mb-4">
-                <label htmlFor="user-email" className="block text-sm font-medium mb-1 text-foreground">
+                <label
+                  htmlFor="user-email"
+                  className="block text-sm font-medium mb-1 text-foreground"
+                >
                   User Email
                 </label>
                 <input
@@ -162,9 +158,7 @@ export const ShareNoteModal = ({
             )}
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-foreground">
-                Permission
-              </label>
+              <label className="block text-sm font-medium mb-2 text-foreground">Permission</label>
               <select
                 value={permission}
                 onChange={(e) => setPermission(e.target.value as 'view' | 'edit')}

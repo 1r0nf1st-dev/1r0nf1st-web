@@ -43,9 +43,8 @@ export const MediumStories = (): JSX.Element => {
         <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Latest on Medium</h2>
         <p className={cardBody}>
-          No stories found. Make sure the API server is running and{' '}
-          <code>MEDIUM_FEED_URL</code> or <code>MEDIUM_USERNAME</code> is set in{' '}
-          <code>.env</code>.
+          No stories found. Make sure the API server is running and <code>MEDIUM_FEED_URL</code> or{' '}
+          <code>MEDIUM_USERNAME</code> is set in <code>.env</code>.
         </p>
       </article>
     );

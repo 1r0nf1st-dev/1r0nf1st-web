@@ -42,11 +42,16 @@ async function resolveTxt(hostname: string): Promise<ResolveTxtResult> {
       return { value: null, dnsErrorCode: 'ENODATA' };
     }
     // Each result is string[]; join with no space per RFC (multiple strings are concatenated)
-    const combined = results.map((arr) => (Array.isArray(arr) ? arr.join('') : String(arr))).join('');
+    const combined = results
+      .map((arr) => (Array.isArray(arr) ? arr.join('') : String(arr)))
+      .join('');
     const value = combined.trim() || null;
     return { value, dnsErrorCode: value ? null : 'ENODATA' };
   } catch (err: unknown) {
-    const code = err && typeof err === 'object' && 'code' in err ? String((err as { code: string }).code) : null;
+    const code =
+      err && typeof err === 'object' && 'code' in err
+        ? String((err as { code: string }).code)
+        : null;
     return { value: null, dnsErrorCode: code || 'UNKNOWN' };
   }
 }
@@ -101,10 +106,16 @@ function validateDkimRecord(record: string | null): { valid: boolean; error: str
   if (hasDkim1 || hasK || hasP) {
     return { valid: true, error: null };
   }
-  return { valid: false, error: 'Record does not look like a valid DKIM key (expect v=DKIM1, k=, or p=).' };
+  return {
+    valid: false,
+    error: 'Record does not look like a valid DKIM key (expect v=DKIM1, k=, or p=).',
+  };
 }
 
-function buildDmarcMissingDetail(hostname: string, dnsErrorCode: string | null): {
+function buildDmarcMissingDetail(
+  hostname: string,
+  dnsErrorCode: string | null,
+): {
   error: string;
   suggestion: string;
 } {
@@ -112,12 +123,14 @@ function buildDmarcMissingDetail(hostname: string, dnsErrorCode: string | null):
   const error = reason
     ? `No DMARC record found at ${hostname}. ${reason}`
     : `No DMARC record found at ${hostname}.`;
-  const suggestion =
-    `Add a TXT record at ${hostname} with v=DMARC1 and a policy (e.g. p=none, p=quarantine, or p=reject). Example: v=DMARC1; p=none;`;
+  const suggestion = `Add a TXT record at ${hostname} with v=DMARC1 and a policy (e.g. p=none, p=quarantine, or p=reject). Example: v=DMARC1; p=none;`;
   return { error, suggestion };
 }
 
-function buildDkimMissingDetail(hostname: string, dnsErrorCode: string | null): {
+function buildDkimMissingDetail(
+  hostname: string,
+  dnsErrorCode: string | null,
+): {
   error: string;
   suggestion: string;
 } {
@@ -125,8 +138,7 @@ function buildDkimMissingDetail(hostname: string, dnsErrorCode: string | null): 
   const error = reason
     ? `No DKIM record found at ${hostname}. ${reason}`
     : `No DKIM record found at ${hostname}.`;
-  const suggestion =
-    `Add a TXT record at ${hostname} with your provider's DKIM public key (e.g. copy the value from Brevo, SendGrid, or your ESP). The record should contain v=DKIM1 and p= (public key).`;
+  const suggestion = `Add a TXT record at ${hostname} with your provider's DKIM public key (e.g. copy the value from Brevo, SendGrid, or your ESP). The record should contain v=DKIM1 and p= (public key).`;
   return { error, suggestion };
 }
 
@@ -185,19 +197,27 @@ export async function checkDomainAuth(
       present: dmarcPresent,
       valid: dmarcValidation.valid,
       record: dmarcResult.value,
-      error: dmarcPresent ? dmarcValidation.error : buildDmarcMissingDetail(dmarcHost, dmarcResult.dnsErrorCode).error,
+      error: dmarcPresent
+        ? dmarcValidation.error
+        : buildDmarcMissingDetail(dmarcHost, dmarcResult.dnsErrorCode).error,
       lookupHostname: dmarcHost,
       dnsErrorCode: dmarcPresent ? null : dmarcResult.dnsErrorCode,
-      suggestion: dmarcPresent ? null : buildDmarcMissingDetail(dmarcHost, dmarcResult.dnsErrorCode).suggestion,
+      suggestion: dmarcPresent
+        ? null
+        : buildDmarcMissingDetail(dmarcHost, dmarcResult.dnsErrorCode).suggestion,
     },
     dkim: {
       present: dkimPresent,
       valid: dkimValidation.valid,
       record: dkimResult.value,
-      error: dkimPresent ? dkimValidation.error : buildDkimMissingDetail(dkimHost, dkimResult.dnsErrorCode).error,
+      error: dkimPresent
+        ? dkimValidation.error
+        : buildDkimMissingDetail(dkimHost, dkimResult.dnsErrorCode).error,
       lookupHostname: dkimHost,
       dnsErrorCode: dkimPresent ? null : dkimResult.dnsErrorCode,
-      suggestion: dkimPresent ? null : buildDkimMissingDetail(dkimHost, dkimResult.dnsErrorCode).suggestion,
+      suggestion: dkimPresent
+        ? null
+        : buildDkimMissingDetail(dkimHost, dkimResult.dnsErrorCode).suggestion,
     },
   };
 }

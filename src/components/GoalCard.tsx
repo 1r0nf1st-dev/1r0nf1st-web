@@ -49,12 +49,7 @@ function getStatusLabel(status: Goal['status']): string {
   }
 }
 
-export const GoalCard = ({
-  goal,
-  onUpdate,
-  onDelete,
-  id,
-}: GoalCardProps): JSX.Element => {
+export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.Element => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(goal.title);
@@ -105,9 +100,7 @@ export const GoalCard = ({
       await onUpdate(goal.id, { status: newStatus });
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to update goal status. Please try again.';
+        error instanceof Error ? error.message : 'Failed to update goal status. Please try again.';
       setError(message);
       logger.error('Failed to update goal status', { error, goalId: goal.id, newStatus });
     }
@@ -174,10 +167,7 @@ export const GoalCard = ({
               />
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                className={`${btnBase} ${btnGhost} text-sm py-2 px-4`}
-              >
+              <button onClick={handleSave} className={`${btnBase} ${btnGhost} text-sm py-2 px-4`}>
                 Save
               </button>
               <button
@@ -231,9 +221,7 @@ export const GoalCard = ({
               <div className="flex-1 min-w-0">
                 <h3 className={`${cardTitle} text-lg mb-1`}>{goal.title}</h3>
                 <div className="flex items-center gap-2 text-xs opacity-70 mb-2">
-                  <span className={getStatusColor(goal.status)}>
-                    {getStatusLabel(goal.status)}
-                  </span>
+                  <span className={getStatusColor(goal.status)}>{getStatusLabel(goal.status)}</span>
                   {goal.target_date && (
                     <>
                       <span>•</span>
@@ -264,9 +252,7 @@ export const GoalCard = ({
               </div>
             </div>
 
-            {goal.description && (
-              <p className="text-sm opacity-80 mb-3">{goal.description}</p>
-            )}
+            {goal.description && <p className="text-sm opacity-80 mb-3">{goal.description}</p>}
 
             <div className="mb-3">
               <div className="flex items-center justify-between text-xs mb-1">
@@ -299,9 +285,7 @@ export const GoalCard = ({
                     ) : (
                       <FaCircle className="text-muted shrink-0" />
                     )}
-                    <span
-                      className={milestone.completed ? 'line-through opacity-60' : ''}
-                    >
+                    <span className={milestone.completed ? 'line-through opacity-60' : ''}>
                       {milestone.title}
                     </span>
                   </div>

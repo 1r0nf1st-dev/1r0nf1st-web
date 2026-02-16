@@ -57,24 +57,17 @@ interface VercelApiResponse {
   };
 }
 
-function calculateBuildTime(
-  buildingAt: number | null,
-  readyAt: number | null,
-): number | null {
+function calculateBuildTime(buildingAt: number | null, readyAt: number | null): number | null {
   if (!buildingAt || !readyAt) {
     return null;
   }
   return readyAt - buildingAt; // Returns milliseconds
 }
 
-function calculateBuildStats(
-  deployments: VercelDeployment[],
-): BuildStats {
+function calculateBuildStats(deployments: VercelDeployment[]): BuildStats {
   const total = deployments.length;
   const successful = deployments.filter((d) => d.state === 'READY').length;
-  const failed = deployments.filter(
-    (d) => d.state === 'ERROR' || d.state === 'CANCELED',
-  ).length;
+  const failed = deployments.filter((d) => d.state === 'ERROR' || d.state === 'CANCELED').length;
 
   const buildTimes = deployments
     .map((d) => calculateBuildTime(d.buildingAt, d.readyAt))
@@ -93,15 +86,14 @@ function calculateBuildStats(
   };
 }
 
-export async function fetchDeployments(
-  options?: { limit?: number; projectId?: string },
-): Promise<VercelDeploymentsData> {
+export async function fetchDeployments(options?: {
+  limit?: number;
+  projectId?: string;
+}): Promise<VercelDeploymentsData> {
   const apiToken = config.vercelApiToken;
 
   if (!apiToken || apiToken.trim() === '') {
-    throw new Error(
-      'Vercel API token is not configured. Set VERCEL_API_TOKEN in your .env file.',
-    );
+    throw new Error('Vercel API token is not configured. Set VERCEL_API_TOKEN in your .env file.');
   }
 
   const limit = options?.limit ?? 5;
@@ -131,9 +123,7 @@ export async function fetchDeployments(
       );
     }
     const text = await response.text().catch(() => '');
-    throw new Error(
-      text || `Vercel API request failed: ${response.status}`,
-    );
+    throw new Error(text || `Vercel API request failed: ${response.status}`);
   }
 
   const data = (await response.json()) as VercelApiResponse;

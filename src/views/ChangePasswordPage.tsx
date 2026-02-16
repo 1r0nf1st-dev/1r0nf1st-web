@@ -29,25 +29,29 @@ export const ChangePasswordPage = (): JSX.Element => {
     // Check both hash and query params (Supabase might use either)
     const hash = window.location.hash;
     const search = window.location.search;
-    
+
     let params: URLSearchParams | null = null;
     if (hash) {
       params = new URLSearchParams(hash.replace(/^#/, ''));
     } else if (search) {
       params = new URLSearchParams(search.replace(/^\?/, ''));
     }
-    
+
     if (!params) return;
-    
+
     const type = params.get('type');
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
-    
+
     // Log for debugging (remove in production if needed)
     if (type === 'recovery' || accessToken) {
-      console.log('[Password Reset] Detected recovery link:', { type, hasAccessToken: !!accessToken, hasRefreshToken: !!refreshToken });
+      console.log('[Password Reset] Detected recovery link:', {
+        type,
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+      });
     }
-    
+
     if (type === 'recovery' && accessToken) {
       setRecoveryToken(accessToken);
       setRecoveryRefreshToken(refreshToken || null);
@@ -158,9 +162,7 @@ export const ChangePasswordPage = (): JSX.Element => {
                   minLength={6}
                   className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
-                <p className="mt-2 text-[0.85rem] opacity-70">
-                  Must be at least 6 characters
-                </p>
+                <p className="mt-2 text-[0.85rem] opacity-70">Must be at least 6 characters</p>
               </div>
               <div className="mb-6">
                 <label
@@ -184,7 +186,11 @@ export const ChangePasswordPage = (): JSX.Element => {
                 className={`${btnBase} ${btnPrimary} w-full mb-4`}
                 disabled={isLoading}
               >
-                {isLoading ? 'Changing password...' : recoveryToken ? 'Set password' : 'Change Password'}
+                {isLoading
+                  ? 'Changing password...'
+                  : recoveryToken
+                    ? 'Set password'
+                    : 'Change Password'}
               </button>
             </form>
           </article>

@@ -9,11 +9,7 @@ export interface FileUploadProps {
   onError: (error: string) => void;
 }
 
-export const FileUpload = ({
-  noteId,
-  onUploadComplete,
-  onError,
-}: FileUploadProps): JSX.Element => {
+export const FileUpload = ({ noteId, onUploadComplete, onError }: FileUploadProps): JSX.Element => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,7 +21,9 @@ export const FileUpload = ({
     // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      onError(`File size exceeds 10MB limit. Selected file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      onError(
+        `File size exceeds 10MB limit. Selected file: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      );
       return;
     }
 
@@ -42,9 +40,7 @@ export const FileUpload = ({
       }
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to upload file. Please try again.';
+        error instanceof Error ? error.message : 'Failed to upload file. Please try again.';
       onError(message);
     } finally {
       setIsUploading(false);

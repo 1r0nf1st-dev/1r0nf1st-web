@@ -30,7 +30,9 @@ describe('contactService', () => {
         message: 'Hi',
       };
       const errors = validateContactSubmission(body);
-      expect(errors.some((e) => e.field === 'name' && e.message.includes('at most 200'))).toBe(true);
+      expect(errors.some((e) => e.field === 'name' && e.message.includes('at most 200'))).toBe(
+        true,
+      );
     });
 
     it('returns error when email is missing', () => {

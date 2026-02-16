@@ -50,7 +50,13 @@ export default [
   },
   prettierConfig,
   {
-    files: ['server/**/*.ts', 'api/**/*.ts', 'scripts/**/*.js', '*.config.{ts,js}', 'vitest.config.ts'],
+    files: [
+      'server/**/*.ts',
+      'api/**/*.ts',
+      'scripts/**/*.js',
+      '*.config.{ts,js}',
+      'vitest.config.ts',
+    ],
     languageOptions: {
       parser: tsParser,
       parserOptions: {

@@ -38,6 +38,7 @@ This migration document describes how to set up Supabase Storage for file attach
 ## Environment Variables
 
 No additional environment variables are needed. The existing Supabase configuration is used:
+
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
@@ -46,6 +47,7 @@ No additional environment variables are needed. The existing Supabase configurat
 If you get "new row violates row-level security policy" errors:
 
 **Option 1: Disable RLS on Bucket (Recommended)**
+
 1. Go to **Storage** → **Buckets** → `note-attachments`
 2. Click **Settings** (gear icon)
 3. **Uncheck "Enable RLS"** or set it to **Disabled**
@@ -53,11 +55,13 @@ If you get "new row violates row-level security policy" errors:
 
 **Option 2: Create Storage RLS Policies**
 If you need to keep RLS enabled, run the SQL migration `011_create_storage_policies.sql`:
+
 1. Go to **SQL Editor** in Supabase Dashboard
 2. Copy and paste the contents of `011_create_storage_policies.sql`
 3. Click **Run**
 
 **Additional Checks:**
+
 - Verify you're using the **service role key** (not anon key) in your `.env`
 - Restart your server after changing environment variables
 - Ensure the bucket name is exactly `note-attachments` (case-sensitive)
@@ -65,6 +69,7 @@ If you need to keep RLS enabled, run the SQL migration `011_create_storage_polic
 ## Testing
 
 After setup, test file upload:
+
 1. Create a note
 2. Upload a file attachment
 3. Verify the file appears in the attachments list

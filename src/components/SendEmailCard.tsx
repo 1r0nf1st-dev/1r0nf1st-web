@@ -16,8 +16,7 @@ function useCanSendEmail(): boolean {
   const { user } = useAuth();
   const [serverAllowed, setServerAllowed] = useState<boolean | null>(null);
 
-  const clientIsAdmin =
-    !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const clientIsAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   useEffect(() => {
     if (!user) {
@@ -68,7 +67,11 @@ export const SendEmailCard = (): JSX.Element | null => {
     }
     const { emails: toEmails, invalid: toInvalid } = parseEmailsClient(toTrim);
     if (toEmails.length === 0) {
-      setError(toInvalid.length ? `Invalid To email(s): ${toInvalid.join(', ')}` : 'At least one valid To email is required.');
+      setError(
+        toInvalid.length
+          ? `Invalid To email(s): ${toInvalid.join(', ')}`
+          : 'At least one valid To email is required.',
+      );
       return;
     }
     if (toInvalid.length > 0) {

@@ -113,8 +113,7 @@ notesRouter.get('/', async (req: AuthRequest, res) => {
         typeof req.query.search === 'string'
           ? sanitizePlainText(req.query.search, NOTE_SEARCH_MAX_LENGTH)
           : undefined,
-      archived:
-        typeof req.query.archived === 'string' ? req.query.archived === 'true' : undefined,
+      archived: typeof req.query.archived === 'string' ? req.query.archived === 'true' : undefined,
       pinned: typeof req.query.pinned === 'string' ? req.query.pinned === 'true' : undefined,
     };
 
@@ -241,7 +240,10 @@ notesRouter.put('/notebooks/:id', async (req: AuthRequest, res) => {
     const { name, parent_id, color } = req.body;
 
     const notebook = await updateNotebook(notebookId, req.userId, {
-      name: name != null && typeof name === 'string' ? sanitizeFreeText(name.trim(), NOTEBOOK_NAME_MAX_LENGTH) : undefined,
+      name:
+        name != null && typeof name === 'string'
+          ? sanitizeFreeText(name.trim(), NOTEBOOK_NAME_MAX_LENGTH)
+          : undefined,
       parent_id,
       color,
     });
@@ -249,8 +251,7 @@ notesRouter.put('/notebooks/:id', async (req: AuthRequest, res) => {
     res.json(notebook);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update notebook';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -268,8 +269,7 @@ notesRouter.delete('/notebooks/:id', async (req: AuthRequest, res) => {
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete notebook';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -337,8 +337,7 @@ notesRouter.post('/tags', async (req: AuthRequest, res) => {
     res.status(201).json(tag);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create tag';
-    const status =
-      error instanceof Error && message.includes('already exists') ? 409 : 500;
+    const status = error instanceof Error && message.includes('already exists') ? 409 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -355,7 +354,10 @@ notesRouter.put('/tags/:id', async (req: AuthRequest, res) => {
     const { name, color } = req.body;
 
     const tag = await updateTag(tagId, req.userId, {
-      name: name != null && typeof name === 'string' ? sanitizeFreeText(name.trim(), TAG_NAME_MAX_LENGTH) : undefined,
+      name:
+        name != null && typeof name === 'string'
+          ? sanitizeFreeText(name.trim(), TAG_NAME_MAX_LENGTH)
+          : undefined,
       color,
     });
 
@@ -363,7 +365,8 @@ notesRouter.put('/tags/:id', async (req: AuthRequest, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update tag';
     const status =
-      error instanceof Error && (message.includes('not found') || message.includes('already exists'))
+      error instanceof Error &&
+      (message.includes('not found') || message.includes('already exists'))
         ? message.includes('not found')
           ? 404
           : 409
@@ -385,8 +388,7 @@ notesRouter.delete('/tags/:id', async (req: AuthRequest, res) => {
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete tag';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -460,8 +462,7 @@ notesRouter.put('/:id', async (req: AuthRequest, res) => {
     res.json(note);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update note';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -479,8 +480,7 @@ notesRouter.delete('/:id', async (req: AuthRequest, res) => {
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete note';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -498,8 +498,7 @@ notesRouter.post('/:id/restore', async (req: AuthRequest, res) => {
     res.json(note);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to restore note';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -519,8 +518,7 @@ notesRouter.get('/:id/versions', async (req: AuthRequest, res) => {
     res.json(versions);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch note versions';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -553,8 +551,7 @@ notesRouter.get('/:id/versions/:versionNumber', async (req: AuthRequest, res) =>
     res.json(version);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch note version';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -582,8 +579,7 @@ notesRouter.post('/:id/versions/:versionNumber/restore', async (req: AuthRequest
     res.json(note);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to restore version';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -603,123 +599,126 @@ notesRouter.get('/:id/attachments', async (req: AuthRequest, res) => {
     res.json(attachments);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch attachments';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
 
 // POST /api/notes/:id/attachments/upload - Upload file directly (server-side)
-notesRouter.post('/:id/attachments/upload', upload.single('file'), async (req: AuthRequest, res) => {
-  try {
-    if (!req.userId) {
-      res.status(401).json({ error: 'User not authenticated' });
-      return;
-    }
+notesRouter.post(
+  '/:id/attachments/upload',
+  upload.single('file'),
+  async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
 
-    const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const file = req.file;
+      const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const file = req.file;
 
-    if (!file) {
-      res.status(400).json({ error: 'No file provided' });
-      return;
-    }
+      if (!file) {
+        res.status(400).json({ error: 'No file provided' });
+        return;
+      }
 
-    if (!isAllowedMimeType(file.mimetype || '')) {
-      res.status(400).json({
-        error: 'File type not allowed. Allowed: images, PDF, text, CSV, JSON.',
-      });
-      return;
-    }
+      if (!isAllowedMimeType(file.mimetype || '')) {
+        res.status(400).json({
+          error: 'File type not allowed. Allowed: images, PDF, text, CSV, JSON.',
+        });
+        return;
+      }
 
-    const sanitizedFileName = sanitizeFileName(file.originalname);
-    if (hasDangerousExtension(sanitizedFileName)) {
-      res.status(400).json({ error: 'File type not allowed for security reasons.' });
-      return;
-    }
+      const sanitizedFileName = sanitizeFileName(file.originalname);
+      if (hasDangerousExtension(sanitizedFileName)) {
+        res.status(400).json({ error: 'File type not allowed for security reasons.' });
+        return;
+      }
 
-    // Verify note belongs to user
-    const { getNoteById, createAttachment } = await import('../services/noteService.js');
-    const note = await getNoteById(noteId, req.userId);
-    if (!note) {
-      res.status(404).json({ error: 'Note not found or access denied' });
-      return;
-    }
+      // Verify note belongs to user
+      const { getNoteById, createAttachment } = await import('../services/noteService.js');
+      const note = await getNoteById(noteId, req.userId);
+      if (!note) {
+        res.status(404).json({ error: 'Note not found or access denied' });
+        return;
+      }
 
-    // Generate file path: notes/{userId}/{noteId}/{timestamp}-{filename}
-    const timestamp = Date.now();
-    const filePath = `notes/${req.userId}/${noteId}/${timestamp}-${sanitizedFileName}`;
+      // Generate file path: notes/{userId}/{noteId}/{timestamp}-{filename}
+      const timestamp = Date.now();
+      const filePath = `notes/${req.userId}/${noteId}/${timestamp}-${sanitizedFileName}`;
 
-    // Upload file directly to Supabase Storage using service role key (bypasses RLS)
-    const { supabase } = await import('../db/supabase.js');
-    const { logger } = await import('../utils/logger.js');
-    if (!supabase) {
-      res.status(503).json({ error: 'Storage not configured' });
-      return;
-    }
+      // Upload file directly to Supabase Storage using service role key (bypasses RLS)
+      const { supabase } = await import('../db/supabase.js');
+      const { logger } = await import('../utils/logger.js');
+      if (!supabase) {
+        res.status(503).json({ error: 'Storage not configured' });
+        return;
+      }
 
-    // Log upload attempt for debugging
-    logger.debug(
-      {
-        filePath,
-        fileSize: file.size,
-        contentType: file.mimetype,
-        bucket: 'note-attachments',
-      },
-      'Attempting to upload file to Supabase Storage',
-    );
-
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('note-attachments')
-      .upload(filePath, file.buffer, {
-        contentType: file.mimetype || 'application/octet-stream',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      logger.error(
+      // Log upload attempt for debugging
+      logger.debug(
         {
-          error: uploadError.message,
-          code: uploadError.statusCode,
           filePath,
+          fileSize: file.size,
+          contentType: file.mimetype,
           bucket: 'note-attachments',
         },
-        'Failed to upload file to Supabase Storage',
+        'Attempting to upload file to Supabase Storage',
       );
-      
-      // Provide helpful error message for RLS policy violations
-      let errorMessage = `Failed to upload file: ${uploadError.message}`;
-      const isRlsOrForbidden =
-        uploadError.message.includes('row-level security') ||
-        String(uploadError.statusCode) === '403';
-      if (isRlsOrForbidden) {
-        errorMessage +=
-          ' This is likely an RLS issue. Try: (A) Storage → Buckets → note-attachments → disable RLS; ' +
-          'or (B) run 012_storage_service_role_policy.sql or 013_storage_service_role_jwt_policy.sql in Supabase SQL Editor. ' +
-          'See server/db/migrations/RUN_MIGRATIONS.md.';
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('note-attachments')
+        .upload(filePath, file.buffer, {
+          contentType: file.mimetype || 'application/octet-stream',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        logger.error(
+          {
+            error: uploadError.message,
+            code: uploadError.statusCode,
+            filePath,
+            bucket: 'note-attachments',
+          },
+          'Failed to upload file to Supabase Storage',
+        );
+
+        // Provide helpful error message for RLS policy violations
+        let errorMessage = `Failed to upload file: ${uploadError.message}`;
+        const isRlsOrForbidden =
+          uploadError.message.includes('row-level security') ||
+          String(uploadError.statusCode) === '403';
+        if (isRlsOrForbidden) {
+          errorMessage +=
+            ' This is likely an RLS issue. Try: (A) Storage → Buckets → note-attachments → disable RLS; ' +
+            'or (B) run 012_storage_service_role_policy.sql or 013_storage_service_role_jwt_policy.sql in Supabase SQL Editor. ' +
+            'See server/db/migrations/RUN_MIGRATIONS.md.';
+        }
+
+        res.status(500).json({ error: errorMessage });
+        return;
       }
-      
-      res.status(500).json({ error: errorMessage });
-      return;
+
+      logger.debug({ filePath, uploadData }, 'File uploaded successfully');
+
+      // Create attachment metadata (use sanitized name for display/storage)
+      const attachment = await createAttachment(noteId, req.userId, {
+        file_name: sanitizedFileName,
+        file_path: filePath,
+        file_type: file.mimetype || 'application/octet-stream',
+        file_size: file.size,
+        mime_type: file.mimetype || undefined,
+      });
+
+      res.status(201).json(attachment);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to upload file';
+      res.status(500).json({ error: message });
     }
-
-    logger.debug({ filePath, uploadData }, 'File uploaded successfully');
-
-    // Create attachment metadata (use sanitized name for display/storage)
-    const attachment = await createAttachment(noteId, req.userId, {
-      file_name: sanitizedFileName,
-      file_path: filePath,
-      file_type: file.mimetype || 'application/octet-stream',
-      file_size: file.size,
-      mime_type: file.mimetype || undefined,
-    });
-
-    res.status(201).json(attachment);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to upload file';
-    res.status(500).json({ error: message });
-  }
-});
+  },
+);
 
 // POST /api/notes/:id/attachments - Create attachment metadata after upload
 notesRouter.post('/:id/attachments', async (req: AuthRequest, res) => {
@@ -733,7 +732,9 @@ notesRouter.post('/:id/attachments', async (req: AuthRequest, res) => {
     let { file_name, file_path, file_type, file_size, mime_type } = req.body;
 
     if (!file_name || !file_path || !file_type || file_size === undefined) {
-      res.status(400).json({ error: 'file_name, file_path, file_type, and file_size are required' });
+      res
+        .status(400)
+        .json({ error: 'file_name, file_path, file_type, and file_size are required' });
       return;
     }
 
@@ -767,8 +768,7 @@ notesRouter.post('/:id/attachments', async (req: AuthRequest, res) => {
     res.status(201).json(attachment);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create attachment';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -786,7 +786,7 @@ notesRouter.get('/attachments/:id/download', async (req: AuthRequest, res) => {
     // Get attachment to verify ownership
     const { getNoteById } = await import('../services/noteService.js');
     const { supabase } = await import('../db/supabase.js');
-    
+
     if (!supabase) {
       res.status(503).json({ error: 'Storage not configured' });
       return;
@@ -817,7 +817,11 @@ notesRouter.get('/attachments/:id/download', async (req: AuthRequest, res) => {
       .createSignedUrl(attachment.file_path, 3600);
 
     if (signedUrlError || !signedUrlData) {
-      res.status(500).json({ error: `Failed to create download URL: ${signedUrlError?.message || 'Unknown error'}` });
+      res
+        .status(500)
+        .json({
+          error: `Failed to create download URL: ${signedUrlError?.message || 'Unknown error'}`,
+        });
       return;
     }
 
@@ -876,7 +880,10 @@ notesRouter.post('/:id/share', async (req: AuthRequest, res) => {
           });
         } catch (emailErr) {
           const { logger } = await import('../utils/logger.js');
-          logger.warn({ err: emailErr, recipientEmail, noteId }, 'Failed to send share notification email');
+          logger.warn(
+            { err: emailErr, recipientEmail, noteId },
+            'Failed to send share notification email',
+          );
         }
       } else if (
         !share.shared_with_user_id &&
@@ -906,8 +913,9 @@ notesRouter.post('/:id/share', async (req: AuthRequest, res) => {
         : typeof shared_with_user_email === 'string' && shared_with_user_email.trim()
           ? `${shared_with_user_email.trim()} (link)`
           : 'public link';
-    const viewLink =
-      share.share_token ? `${config.siteUrl}/notes/shared/${share.share_token}` : null;
+    const viewLink = share.share_token
+      ? `${config.siteUrl}/notes/shared/${share.share_token}`
+      : null;
     try {
       await addShareToNoteHistory(noteId, req.userId, {
         recipientLabel,
@@ -916,14 +924,16 @@ notesRouter.post('/:id/share', async (req: AuthRequest, res) => {
       });
     } catch (historyErr) {
       const { logger } = await import('../utils/logger.js');
-      logger.warn({ err: historyErr, noteId, ownerId: req.userId }, 'Failed to add share to note history');
+      logger.warn(
+        { err: historyErr, noteId, ownerId: req.userId },
+        'Failed to add share to note history',
+      );
     }
 
     res.status(201).json(share);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to share note';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -941,8 +951,7 @@ notesRouter.get('/:id/shares', async (req: AuthRequest, res) => {
     res.json(shares);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch note shares';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -967,8 +976,7 @@ notesRouter.put('/shares/:shareId', async (req: AuthRequest, res) => {
     res.json(share);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update share permission';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -986,8 +994,7 @@ notesRouter.delete('/shares/:shareId', async (req: AuthRequest, res) => {
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to unshare note';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });
@@ -1005,7 +1012,7 @@ notesRouter.delete('/attachments/:id', async (req: AuthRequest, res) => {
     // Get attachment info before deletion to delete file from storage
     const { supabase } = await import('../db/supabase.js');
     const { getNoteById } = await import('../services/noteService.js');
-    
+
     if (supabase) {
       // Get attachment to get file path
       const { data: attachment } = await supabase
@@ -1028,8 +1035,7 @@ notesRouter.delete('/attachments/:id', async (req: AuthRequest, res) => {
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete attachment';
-    const status =
-      error instanceof Error && message.includes('not found') ? 404 : 500;
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });

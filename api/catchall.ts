@@ -17,7 +17,11 @@ const MAX_LOAD_ATTEMPTS = 3;
 /**
  * Structured logging utility for Vercel function logs
  */
-function log(level: 'info' | 'error' | 'warn', message: string, data?: Record<string, unknown>): void {
+function log(
+  level: 'info' | 'error' | 'warn',
+  message: string,
+  data?: Record<string, unknown>,
+): void {
   const timestamp = new Date().toISOString();
   const logEntry = {
     timestamp,
@@ -80,7 +84,8 @@ function normalizePath(req: IncomingMessage): string | null {
 
       // Ensure path starts with /api
       if (!normalizedPath.startsWith('/api')) {
-        normalizedPath = '/api' + (normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`);
+        normalizedPath =
+          '/api' + (normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`);
       }
 
       // Reconstruct full URL with query string
@@ -100,7 +105,10 @@ function normalizePath(req: IncomingMessage): string | null {
 
     return url;
   } catch (error) {
-    log('error', 'Failed to normalize path', { url, error: error instanceof Error ? error.message : String(error) });
+    log('error', 'Failed to normalize path', {
+      url,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return '/api';
   }
 }
@@ -177,10 +185,7 @@ async function getApp(): Promise<ExpressApp> {
 /**
  * Vercel serverless function handler
  */
-export default async function handler(
-  req: IncomingMessage,
-  res: ServerResponse,
-): Promise<void> {
+export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const startTime = Date.now();
   const method = req.method || 'UNKNOWN';
   const originalUrl = req.url || '/';
@@ -197,10 +202,16 @@ export default async function handler(
           handler: 'catchall',
         }),
       );
-      log('info', 'Health check handled', { method, url: originalUrl, duration: Date.now() - startTime });
+      log('info', 'Health check handled', {
+        method,
+        url: originalUrl,
+        duration: Date.now() - startTime,
+      });
       return;
     } catch (error) {
-      log('error', 'Health check failed', { error: error instanceof Error ? error.message : String(error) });
+      log('error', 'Health check failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       sendErrorResponse(res, 500, 'Health check failed');
       return;
     }
@@ -236,7 +247,11 @@ export default async function handler(
     // Set timeout to prevent hanging (Vercel functions have max duration)
     timeout = setTimeout(() => {
       if (!res.headersSent) {
-        log('error', 'Request timeout', { method, url: normalizedUrl, duration: Date.now() - startTime });
+        log('error', 'Request timeout', {
+          method,
+          url: normalizedUrl,
+          duration: Date.now() - startTime,
+        });
         sendErrorResponse(res, 504, 'Request timeout');
       }
     }, 25000); // 25 seconds (Vercel free tier is 10s, but allow buffer)
@@ -277,15 +292,10 @@ export default async function handler(
 
     if (!res.headersSent) {
       if (errorMessage.includes('Cannot find module') || errorMessage.includes('ENOENT')) {
-        sendErrorResponse(
-          res,
-          503,
-          'Service temporarily unavailable',
-          {
-            message: 'Express app not found. Ensure server/dist/app.js exists.',
-            retry: loadAttempts < MAX_LOAD_ATTEMPTS,
-          },
-        );
+        sendErrorResponse(res, 503, 'Service temporarily unavailable', {
+          message: 'Express app not found. Ensure server/dist/app.js exists.',
+          retry: loadAttempts < MAX_LOAD_ATTEMPTS,
+        });
       } else {
         sendErrorResponse(res, 500, 'Internal server error', {
           message: process.env.NODE_ENV === 'development' ? errorMessage : undefined,

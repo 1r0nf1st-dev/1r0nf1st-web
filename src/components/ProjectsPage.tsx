@@ -54,42 +54,48 @@ export const ProjectsPage = (): JSX.Element => {
       id: 9,
       icon: FaBullseye,
       title: 'Goal Tracker',
-      description: "Precision goal-setting and tracking application that helps users achieve their objectives with detailed progress monitoring and milestones.",
+      description:
+        'Precision goal-setting and tracking application that helps users achieve their objectives with detailed progress monitoring and milestones.',
       link: '/projects/goal-tracker',
     },
     {
       id: 21,
       icon: FaStickyNote,
       title: 'Notes',
-      description: "A powerful note-taking application with rich text editing, notebooks, tags, and full-text search. Organize your thoughts and ideas effortlessly.",
+      description:
+        'A powerful note-taking application with rich text editing, notebooks, tags, and full-text search. Organize your thoughts and ideas effortlessly.',
       link: '/notes',
     },
     {
       id: 19,
       icon: FaSun,
       title: 'Weather Dashboard',
-      description: "Beautiful weather application with detailed forecasts, interactive maps, and location-based recommendations.",
+      description:
+        'Beautiful weather application with detailed forecasts, interactive maps, and location-based recommendations.',
       link: '/projects/weather',
     },
     {
       id: 17,
       icon: FaHeart,
       title: 'Health Tracker',
-      description: "Personal health and wellness application with activity tracking, goal setting, and progress visualization.",
+      description:
+        'Personal health and wellness application with activity tracking, goal setting, and progress visualization.',
       link: '/projects/health-tracker',
     },
     {
       id: 11,
       icon: FaCloud,
       title: 'Cloud Infrastructure',
-      description: "A scalable cloud-based solution designed for modern applications. Features include automated deployment and resource management.",
+      description:
+        'A scalable cloud-based solution designed for modern applications. Features include automated deployment and resource management.',
       link: '/projects/cloud',
     },
     {
       id: 10,
       icon: FaStar,
       title: 'Featured Showcase',
-      description: "A curated collection platform that highlights top-rated content, products, and services with user reviews and recommendations.",
+      description:
+        'A curated collection platform that highlights top-rated content, products, and services with user reviews and recommendations.',
       link: '/projects/showcase',
     },
     // Placeholder projects
@@ -97,105 +103,120 @@ export const ProjectsPage = (): JSX.Element => {
       id: 1,
       icon: FaRocket,
       title: 'Launch Platform',
-      description: "A powerful deployment and launch management system that streamlines the process of releasing applications to production environments.",
+      description:
+        'A powerful deployment and launch management system that streamlines the process of releasing applications to production environments.',
       link: '#project-1',
     },
     {
       id: 2,
       icon: FaCode,
       title: 'Code Editor Pro',
-      description: "An advanced code editor with syntax highlighting, intelligent autocomplete, and seamless integration with version control systems.",
+      description:
+        'An advanced code editor with syntax highlighting, intelligent autocomplete, and seamless integration with version control systems.',
       link: '#project-2',
     },
     {
       id: 3,
       icon: FaPalette,
       title: 'Design Studio',
-      description: "A comprehensive design tool for creating beautiful interfaces, mockups, and prototypes with collaborative features for teams.",
+      description:
+        'A comprehensive design tool for creating beautiful interfaces, mockups, and prototypes with collaborative features for teams.',
       link: '#project-3',
     },
     {
       id: 4,
       icon: FaMobileAlt,
       title: 'Mobile App Builder',
-      description: "Cross-platform mobile application development framework that enables rapid prototyping and deployment for iOS and Android.",
+      description:
+        'Cross-platform mobile application development framework that enables rapid prototyping and deployment for iOS and Android.',
       link: '#project-4',
     },
     {
       id: 5,
       icon: FaTools,
       title: 'DevOps Toolkit',
-      description: "A collection of essential development and operations tools for automating workflows, managing infrastructure, and improving productivity.",
+      description:
+        'A collection of essential development and operations tools for automating workflows, managing infrastructure, and improving productivity.',
       link: '#project-5',
     },
     {
       id: 6,
       icon: FaBolt,
       title: 'Speed Optimizer',
-      description: "Performance enhancement tool that accelerates application load times and optimizes resource usage for maximum efficiency.",
+      description:
+        'Performance enhancement tool that accelerates application load times and optimizes resource usage for maximum efficiency.',
       link: '#project-6',
     },
     {
       id: 7,
       icon: FaGlobe,
       title: 'Global Network',
-      description: "Worldwide connectivity platform that enables seamless communication and data exchange across international boundaries.",
+      description:
+        'Worldwide connectivity platform that enables seamless communication and data exchange across international boundaries.',
       link: '#project-7',
     },
     {
       id: 8,
       icon: FaChartBar,
       title: 'Analytics Dashboard',
-      description: "Comprehensive analytics platform with real-time data visualization, custom reports, and actionable insights for business intelligence.",
+      description:
+        'Comprehensive analytics platform with real-time data visualization, custom reports, and actionable insights for business intelligence.',
       link: '#project-8',
     },
     {
       id: 12,
       icon: FaShieldAlt,
       title: 'Security Platform',
-      description: "Enterprise-grade security system with advanced threat detection and real-time monitoring capabilities.",
+      description:
+        'Enterprise-grade security system with advanced threat detection and real-time monitoring capabilities.',
       link: '#project-12',
     },
     {
       id: 13,
       icon: FaDatabase,
       title: 'Data Analytics',
-      description: "Powerful data processing and visualization tool that transforms raw data into actionable insights.",
+      description:
+        'Powerful data processing and visualization tool that transforms raw data into actionable insights.',
       link: '#project-13',
     },
     {
       id: 14,
       icon: FaServer,
       title: 'Server Management',
-      description: "Comprehensive server monitoring and management platform with automated scaling and health checks.",
+      description:
+        'Comprehensive server monitoring and management platform with automated scaling and health checks.',
       link: '#project-14',
     },
     {
       id: 15,
       icon: FaLock,
       title: 'Authentication System',
-      description: "Secure authentication and authorization framework with multi-factor support and session management.",
+      description:
+        'Secure authentication and authorization framework with multi-factor support and session management.',
       link: '#project-15',
     },
     {
       id: 16,
       icon: FaBell,
       title: 'Notification Service',
-      description: "Real-time notification system supporting multiple channels including email, SMS, and push notifications.",
+      description:
+        'Real-time notification system supporting multiple channels including email, SMS, and push notifications.',
       link: '#project-16',
     },
     {
       id: 18,
       icon: FaFire,
       title: 'Performance Optimizer',
-      description: "Advanced performance optimization tool that identifies bottlenecks and suggests improvements for faster execution.",
+      description:
+        'Advanced performance optimization tool that identifies bottlenecks and suggests improvements for faster execution.',
       link: '#project-18',
     },
     {
       id: 20,
       icon: FaLeaf,
       title: 'Eco Tracker',
-      description: "Sustainability tracking application that helps users monitor their environmental impact and reduce their carbon footprint.",
+      description:
+        'Sustainability tracking application that helps users monitor their environmental impact and reduce their carbon footprint.',
       link: '#project-20',
     },
   ];
@@ -207,10 +228,7 @@ export const ProjectsPage = (): JSX.Element => {
       </div>
 
       <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section
-          className="w-full max-w-[1080px] mx-auto"
-          aria-label="Projects"
-        >
+        <section className="w-full max-w-[1080px] mx-auto" aria-label="Projects">
           <article className={cardClasses}>
             <div className={cardOverlay} aria-hidden />
             <div className="flex justify-between items-center mb-4 relative z-10">
@@ -276,9 +294,7 @@ export const ProjectsPage = (): JSX.Element => {
                     <>
                       <div className="flex items-center gap-4 mb-3">
                         <IconComponent className="text-3xl text-primary shrink-0" />
-                        <h3 className="m-0 text-xl font-semibold">
-                          {project.title}
-                        </h3>
+                        <h3 className="m-0 text-xl font-semibold">{project.title}</h3>
                       </div>
                       <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
                         {project.description}
@@ -289,7 +305,7 @@ export const ProjectsPage = (): JSX.Element => {
                       </div>
                     </>
                   );
-                  
+
                   return isInternalLink ? (
                     <Link
                       key={project.id}

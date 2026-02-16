@@ -10,9 +10,7 @@ export const Footer = (): JSX.Element => {
     <footer className="mt-8 text-center text-muted text-sm">
       <p>
         Portfolio powered by Next.js · React · TypeScript · Supabase · Tailwind · Version:{' '}
-        <span className="font-mono font-semibold text-muted opacity-90">
-          {buildVersion}
-        </span>
+        <span className="font-mono font-semibold text-muted opacity-90">{buildVersion}</span>
       </p>
     </footer>
   );

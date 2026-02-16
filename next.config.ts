@@ -6,9 +6,7 @@ import { join } from 'path';
 function getBuildVersion(): string {
   let version = '0.1.0';
   try {
-    const pkg = JSON.parse(
-      readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
-    );
+    const pkg = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
     version = pkg.version || version;
   } catch {
     // ignore

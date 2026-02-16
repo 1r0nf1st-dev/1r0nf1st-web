@@ -39,12 +39,7 @@ describe('errorLogger', () => {
     const err = Object.assign(new Error('Not found'), { status: 404 });
     mockRequest.requestId = 'req-1';
 
-    errorLogger(
-      err,
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction,
-    );
+    errorLogger(err, mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -64,12 +59,7 @@ describe('errorLogger', () => {
   it('should log at error level for 5xx and use error.status when set', () => {
     const err = Object.assign(new Error('Server error'), { status: 503 });
 
-    errorLogger(
-      err,
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction,
-    );
+    errorLogger(err, mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -86,12 +76,7 @@ describe('errorLogger', () => {
     const err = new Error('Internal');
     mockResponse.statusCode = 200;
 
-    errorLogger(
-      err,
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction,
-    );
+    errorLogger(err, mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({ statusCode: 500 }),
@@ -104,12 +89,7 @@ describe('errorLogger', () => {
     const err = new Error('Unauthorized');
     (mockRequest as { userId?: string }).userId = 'user-123';
 
-    errorLogger(
-      err,
-      mockRequest as Request,
-      mockResponse as Response,
-      mockNext as NextFunction,
-    );
+    errorLogger(err, mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     expect(logger.error).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-123' }),

@@ -33,10 +33,7 @@ export const RestoreVersionModal = ({
       aria-modal="true"
       aria-labelledby="restore-modal-title"
     >
-      <article
-        className={`${cardClasses} max-w-md w-full`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <article className={`${cardClasses} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
         <div className={cardOverlay} aria-hidden />
         <div className="relative z-10">
           <h2 id="restore-modal-title" className={cardTitle}>
@@ -44,22 +41,14 @@ export const RestoreVersionModal = ({
           </h2>
           <p className={cardBody}>
             This will restore the note content from{' '}
-            <strong>{formatDate(version.created_at)}</strong>. The current version will be saved
-            as a new version, so you can always go back.
+            <strong>{formatDate(version.created_at)}</strong>. The current version will be saved as
+            a new version, so you can always go back.
           </p>
           <div className="mt-6 flex gap-3">
-            <button
-              type="button"
-              onClick={onConfirm}
-              className={`${btnBase} ${btnPrimary} flex-1`}
-            >
+            <button type="button" onClick={onConfirm} className={`${btnBase} ${btnPrimary} flex-1`}>
               Restore Version
             </button>
-            <button
-              type="button"
-              onClick={onCancel}
-              className={`${btnBase} ${btnGhost} flex-1`}
-            >
+            <button type="button" onClick={onCancel} className={`${btnBase} ${btnGhost} flex-1`}>
               Cancel
             </button>
           </div>

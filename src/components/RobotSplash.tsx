@@ -18,9 +18,15 @@ export interface RobotSplashProps {
 export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null => {
   const { setTheme } = useTheme();
   const [reducedMotion] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    () =>
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
-  const [step, setStep] = useState<Step>(() => (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'intro' : 'boot'));
+  const [step, setStep] = useState<Step>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'intro'
+      : 'boot',
+  );
   const [bootPercent, setBootPercent] = useState(0);
 
   useEffect(() => {
@@ -33,7 +39,7 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
           setStep('intro');
           return 100;
         }
-        return p + (100 / (BOOT_DURATION_MS / BOOT_TICK_MS));
+        return p + 100 / (BOOT_DURATION_MS / BOOT_TICK_MS);
       });
     }, BOOT_TICK_MS);
     return () => clearInterval(interval);
@@ -66,7 +72,9 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
         <article className={cardClasses} style={{ maxWidth: '420px' }}>
           <div className={cardOverlay} aria-hidden />
           <div className="relative z-10">
-            <h1 className={cardTitle}>Initializing 1r0nf1st... {Math.min(100, Math.round(bootPercent))}%</h1>
+            <h1 className={cardTitle}>
+              Initializing 1r0nf1st... {Math.min(100, Math.round(bootPercent))}%
+            </h1>
             <p className={cardBody}>Booting up systems.</p>
           </div>
         </article>
@@ -84,7 +92,11 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
             <RobotWalkRaiseAnimation width={140} loop className="mb-4" />
             <h1 className={cardTitle}>Hi, I&apos;m 1r0nf1st</h1>
             <p className={cardBody}>I&apos;m here to help. Ready?</p>
-            <button type="button" onClick={() => setStep('cutscene')} className={`${btnBase} ${btnPrimary} mt-8`}>
+            <button
+              type="button"
+              onClick={() => setStep('cutscene')}
+              className={`${btnBase} ${btnPrimary} mt-8`}
+            >
               Continue
             </button>
           </div>
@@ -142,4 +154,4 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
   }
 
   return null;
-}
+};

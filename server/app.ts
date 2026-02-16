@@ -46,10 +46,7 @@ const app = express();
 
 // Configure CORS based on environment
 const corsOptions: cors.CorsOptions = {
-  origin:
-    config.nodeEnv === 'production' && config.allowedOrigins
-      ? config.allowedOrigins
-      : true, // Allow all origins in development
+  origin: config.nodeEnv === 'production' && config.allowedOrigins ? config.allowedOrigins : true, // Allow all origins in development
   credentials: true,
 };
 

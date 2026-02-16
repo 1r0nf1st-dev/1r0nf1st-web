@@ -133,19 +133,12 @@ export interface NotesFilters {
 
 // ========== Notes CRUD ==========
 
-export async function getNotesByUserId(
-  userId: string,
-  filters?: NotesFilters,
-): Promise<Note[]> {
+export async function getNotesByUserId(userId: string, filters?: NotesFilters): Promise<Note[]> {
   if (!supabase) {
     throw new Error('Database not configured');
   }
 
-  let query = supabase
-    .from('notes')
-    .select('*')
-    .eq('user_id', userId)
-    .is('deleted_at', null);
+  let query = supabase.from('notes').select('*').eq('user_id', userId).is('deleted_at', null);
 
   if (filters?.notebook_id) {
     query = query.eq('notebook_id', filters.notebook_id);
@@ -190,7 +183,7 @@ export async function getNotesByUserId(
     const noteIdsWithTag = new Set((noteTags || []).map((nt) => nt.note_id));
     const originalCount = notes.length;
     notes = notes.filter((note) => noteIdsWithTag.has(note.id));
-    
+
     // Log for debugging
     const { logger } = await import('../utils/logger.js');
     logger.debug(
@@ -250,7 +243,9 @@ export async function getNotesByUserId(
           // Attach tags to each note
           for (const note of notes) {
             const tagIds = tagsByNoteId.get(note.id) || [];
-            note.tags = tagIds.map((tid) => tagsMap.get(tid)).filter((t): t is Tag => t !== undefined);
+            note.tags = tagIds
+              .map((tid) => tagsMap.get(tid))
+              .filter((t): t is Tag => t !== undefined);
           }
         }
       }
@@ -556,7 +551,10 @@ export async function getNotebooksByUserId(userId: string): Promise<Notebook[]> 
   return (data || []) as Notebook[];
 }
 
-export async function getNotebookById(notebookId: string, userId: string): Promise<Notebook | null> {
+export async function getNotebookById(
+  notebookId: string,
+  userId: string,
+): Promise<Notebook | null> {
   if (!supabase) {
     throw new Error('Database not configured');
   }
@@ -578,7 +576,10 @@ export async function getNotebookById(notebookId: string, userId: string): Promi
   return data as Notebook;
 }
 
-export async function createNotebook(userId: string, input: CreateNotebookInput): Promise<Notebook> {
+export async function createNotebook(
+  userId: string,
+  input: CreateNotebookInput,
+): Promise<Notebook> {
   if (!supabase) {
     throw new Error('Database not configured');
   }
@@ -683,7 +684,11 @@ export async function deleteNotebook(notebookId: string, userId: string): Promis
     throw new Error('Cannot delete notebook that contains notes');
   }
 
-  const { error } = await supabase.from('notebooks').delete().eq('id', notebookId).eq('user_id', userId);
+  const { error } = await supabase
+    .from('notebooks')
+    .delete()
+    .eq('id', notebookId)
+    .eq('user_id', userId);
 
   if (error) {
     throw new Error(`Failed to delete notebook: ${error.message}`);
@@ -758,7 +763,11 @@ export async function createTag(userId: string, input: CreateTagInput): Promise<
   return data as Tag;
 }
 
-export async function updateTag(tagId: string, userId: string, input: UpdateTagInput): Promise<Tag> {
+export async function updateTag(
+  tagId: string,
+  userId: string,
+  input: UpdateTagInput,
+): Promise<Tag> {
   if (!supabase) {
     throw new Error('Database not configured');
   }
@@ -999,7 +1008,9 @@ export async function shareNoteWithUser(
     if (listError) {
       throw new Error(`Failed to look up user: ${listError.message}`);
     }
-    const user = users?.users.find((u) => u.email?.toLowerCase() === input.shared_with_user_email?.toLowerCase());
+    const user = users?.users.find(
+      (u) => u.email?.toLowerCase() === input.shared_with_user_email?.toLowerCase(),
+    );
     if (user) {
       resolvedUserId = user.id;
     }
@@ -1010,13 +1021,17 @@ export async function shareNoteWithUser(
     if (uuidRegex.test(input.shared_with_user_id)) {
       // It's a UUID, verify user exists
       try {
-        const { data: user, error: userError } = await supabase.auth.admin.getUserById(input.shared_with_user_id);
+        const { data: user, error: userError } = await supabase.auth.admin.getUserById(
+          input.shared_with_user_id,
+        );
         if (userError || !user) {
           throw new Error('User not found');
         }
         resolvedUserId = input.shared_with_user_id;
       } catch (err) {
-        throw new Error(`Failed to verify user: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        throw new Error(
+          `Failed to verify user: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        );
       }
     } else {
       // It's an email, look it up
@@ -1038,7 +1053,9 @@ export async function shareNoteWithUser(
         if (err instanceof Error && err.message.includes('not found')) {
           throw err;
         }
-        throw new Error(`Failed to look up user by email: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        throw new Error(
+          `Failed to look up user by email: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        );
       }
     }
   }
@@ -1057,11 +1074,7 @@ export async function shareNoteWithUser(
     expires_at: input.expires_at || null,
   };
 
-  const { data, error } = await supabase
-    .from('shared_notes')
-    .insert(shareData)
-    .select()
-    .single();
+  const { data, error } = await supabase.from('shared_notes').insert(shareData).select().single();
 
   if (error) {
     // Handle unique constraint violation (already shared with this user)
@@ -1122,7 +1135,9 @@ export async function getNoteShares(noteId: string, ownerId: string): Promise<Sh
   for (const share of shares) {
     if (share.shared_with_user_id) {
       try {
-        const { data: user, error: userError } = await supabase.auth.admin.getUserById(share.shared_with_user_id);
+        const { data: user, error: userError } = await supabase.auth.admin.getUserById(
+          share.shared_with_user_id,
+        );
         if (!userError && user?.user) {
           share.shared_with_user = {
             id: user.user.id,
@@ -1311,7 +1326,10 @@ export async function unshareNote(shareId: string, ownerId: string): Promise<voi
 
 // ========== Attachments ==========
 
-export async function getAttachmentsByNoteId(noteId: string, userId: string): Promise<Attachment[]> {
+export async function getAttachmentsByNoteId(
+  noteId: string,
+  userId: string,
+): Promise<Attachment[]> {
   if (!supabase) {
     throw new Error('Database not configured');
   }

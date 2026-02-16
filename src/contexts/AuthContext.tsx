@@ -83,22 +83,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }): ReactNode =
     }
   };
 
-  const register = async (
-    email: string,
-    password: string,
-    username?: string,
-  ): Promise<void> => {
+  const register = async (email: string, password: string, username?: string): Promise<void> => {
     try {
-      const response = await getJson<{ token?: string; refreshToken?: string; user: User; message?: string }>(
-        '/api/auth/register',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password, username }),
+      const response = await getJson<{
+        token?: string;
+        refreshToken?: string;
+        user: User;
+        message?: string;
+      }>('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({ email, password, username }),
+      });
 
       // If email confirmation is required, token might not be present
       if (response.token) {

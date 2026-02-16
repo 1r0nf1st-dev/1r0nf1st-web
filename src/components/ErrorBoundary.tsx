@@ -83,12 +83,14 @@ function DefaultErrorFallback({
         <h2 className={cardTitle}>Something went wrong</h2>
         <div className={cardBody}>
           <p className="mb-4">
-            We&apos;re sorry, but something unexpected happened. The error has been logged and we&apos;ll
-            look into it.
+            We&apos;re sorry, but something unexpected happened. The error has been logged and
+            we&apos;ll look into it.
           </p>
           {process.env.NODE_ENV === 'development' && (
             <details className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm">
-              <summary className="cursor-pointer font-medium mb-2">Error details (dev only)</summary>
+              <summary className="cursor-pointer font-medium mb-2">
+                Error details (dev only)
+              </summary>
               <pre className="whitespace-pre-wrap text-xs overflow-auto">
                 {error.message}
                 {error.stack && `\n\n${error.stack}`}

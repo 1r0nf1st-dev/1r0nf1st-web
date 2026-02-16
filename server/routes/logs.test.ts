@@ -17,11 +17,7 @@ function createApp(): express.Application {
   return app;
 }
 
-function mockRequest(
-  method: string,
-  path: string,
-  body?: unknown,
-): express.Request {
+function mockRequest(method: string, path: string, body?: unknown): express.Request {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
   const req = {
     method,

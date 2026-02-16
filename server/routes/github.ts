@@ -29,7 +29,9 @@ githubRouter.get('/commits', async (req, res) => {
       : undefined;
 
     if (!owner) {
-      res.status(400).json({ error: 'GitHub username is not configured. Set GITHUB_USERNAME in your .env.' });
+      res
+        .status(400)
+        .json({ error: 'GitHub username is not configured. Set GITHUB_USERNAME in your .env.' });
       return;
     }
 

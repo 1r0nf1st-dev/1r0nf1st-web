@@ -7,11 +7,7 @@ export interface TooltipProps {
   position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
-export const Tooltip = ({
-  content,
-  children,
-  position = 'top',
-}: TooltipProps): JSX.Element => {
+export const Tooltip = ({ content, children, position = 'top' }: TooltipProps): JSX.Element => {
   const [isVisible, setIsVisible] = useState(false);
 
   const positionClasses = {

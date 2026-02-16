@@ -30,9 +30,7 @@ export const AttachmentsList = ({
       document.body.removeChild(link);
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to download file. Please try again.';
+        error instanceof Error ? error.message : 'Failed to download file. Please try again.';
       alert(`Failed to download: ${message}`);
     } finally {
       setDownloadingId(null);
@@ -50,9 +48,7 @@ export const AttachmentsList = ({
       onDelete();
     } catch (error) {
       const message =
-        error instanceof Error
-          ? error.message
-          : 'Failed to delete attachment. Please try again.';
+        error instanceof Error ? error.message : 'Failed to delete attachment. Please try again.';
       alert(`Failed to delete: ${message}`);
     } finally {
       setDeletingId(null);

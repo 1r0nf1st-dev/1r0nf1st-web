@@ -54,11 +54,12 @@ export const ForgotPasswordPage = (): JSX.Element => {
             {sent ? (
               <div className="relative z-10 space-y-4">
                 <p className={cardBody}>
-                  If an account exists for that email, we&apos;ve sent a link to reset your password. Check your
-                  inbox and spam folder.
+                  If an account exists for that email, we&apos;ve sent a link to reset your
+                  password. Check your inbox and spam folder.
                 </p>
                 <p className="text-sm opacity-80">
-                  The link expires in about an hour. If you don&apos;t see it, request a new one below.
+                  The link expires in about an hour. If you don&apos;t see it, request a new one
+                  below.
                 </p>
                 <Link href="/login" className={`${btnBase} ${btnPrimary} inline-block`}>
                   Back to login
@@ -92,7 +93,10 @@ export const ForgotPasswordPage = (): JSX.Element => {
                 >
                   {isLoading ? 'Sending…' : 'Send reset link'}
                 </button>
-                <Link href="/login" className={`${btnBase} ${btnGhost} w-full block text-center text-sm`}>
+                <Link
+                  href="/login"
+                  className={`${btnBase} ${btnGhost} w-full block text-center text-sm`}
+                >
                   Back to login
                 </Link>
               </form>

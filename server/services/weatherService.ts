@@ -34,9 +34,7 @@ interface OpenWeatherResponse {
   visibility: number;
 }
 
-export async function fetchCurrentWeather(
-  city: string = 'London',
-): Promise<WeatherData> {
+export async function fetchCurrentWeather(city: string = 'London'): Promise<WeatherData> {
   const apiKey = config.openWeatherApiKey?.trim();
 
   if (!apiKey || apiKey === '') {
@@ -74,9 +72,7 @@ export async function fetchCurrentWeather(
     if (response.status === 404) {
       throw new Error(`City "${city}" not found${errorMessage ? `: ${errorMessage}` : ''}`);
     }
-    throw new Error(
-      errorMessage || `OpenWeather API request failed: ${response.status}`,
-    );
+    throw new Error(errorMessage || `OpenWeather API request failed: ${response.status}`);
   }
 
   const data = (await response.json()) as OpenWeatherResponse;
@@ -87,8 +83,7 @@ export async function fetchCurrentWeather(
     location: data.name,
     temperature: Math.round(data.main.temp),
     feelsLike: Math.round(data.main.feels_like),
-    description:
-      weather.description.charAt(0).toUpperCase() + weather.description.slice(1),
+    description: weather.description.charAt(0).toUpperCase() + weather.description.slice(1),
     icon: weather.icon,
     humidity: data.main.humidity,
     windSpeed: Math.round(data.wind.speed * 10) / 10, // Keep in m/s (metric)

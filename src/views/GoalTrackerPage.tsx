@@ -13,12 +13,12 @@ export const GoalTrackerPage = (): JSX.Element => {
       </div>
 
       <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section
-          className="w-full max-w-[1080px] mx-auto"
-          aria-label="Goal Tracker"
-        >
+        <section className="w-full max-w-[1080px] mx-auto" aria-label="Goal Tracker">
           <div className="mb-6">
-            <Link href="/projects" className={`${btnBase} ${btnGhost} text-sm py-2 px-4 inline-flex items-center gap-2`}>
+            <Link
+              href="/projects"
+              className={`${btnBase} ${btnGhost} text-sm py-2 px-4 inline-flex items-center gap-2`}
+            >
               ← Back to Projects
             </Link>
           </div>

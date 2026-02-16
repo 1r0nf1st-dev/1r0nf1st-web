@@ -60,12 +60,8 @@ export const DevToArticleCard = ({
             </p>
             <div className="flex flex-wrap gap-2 items-center text-xs opacity-70">
               <span>{article.readingTime} min read</span>
-              {article.reactions > 0 && (
-                <span>❤️ {article.reactions}</span>
-              )}
-              {article.comments > 0 && (
-                <span>💬 {article.comments}</span>
-              )}
+              {article.reactions > 0 && <span>❤️ {article.reactions}</span>}
+              {article.comments > 0 && <span>💬 {article.comments}</span>}
             </div>
             {(() => {
               // Ensure tags is always an array
@@ -75,9 +71,12 @@ export const DevToArticleCard = ({
               if (Array.isArray(articleTags)) {
                 tags = articleTags;
               } else if (typeof articleTags === 'string') {
-                tags = articleTags.split(',').map((t: string) => t.trim()).filter(Boolean);
+                tags = articleTags
+                  .split(',')
+                  .map((t: string) => t.trim())
+                  .filter(Boolean);
               }
-              
+
               return tags.length > 0 ? (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {tags.slice(0, 3).map((tag) => (

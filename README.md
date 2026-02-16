@@ -116,7 +116,6 @@ Tests live next to source files with `.test.ts` or `.test.tsx` extensions.
    The Express server loads environment variables via `dotenv`.
 
 2. **Server-side configuration** (Express API):
-
    - `GITHUB_USERNAME` – GitHub username for public repos (used on Cloud Infrastructure page).
    - `GITHUB_TOKEN` (optional) – Personal access token for higher GitHub rate limits.
    - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` – Supabase project credentials (required for auth and notes).
@@ -130,7 +129,6 @@ Tests live next to source files with `.test.ts` or `.test.tsx` extensions.
    See `.env.example` for the full list, including Medium, Dev.to, Spotify, Strava, OpenWeather, and optional integrations.
 
 3. **Frontend configuration**:
-
    - `NEXT_PUBLIC_API_BASE_URL` (optional) – API base URL. Leave empty in development and on Vercel (uses relative `/api`). Set only if the API is on a different origin.
 
 ### Supabase setup

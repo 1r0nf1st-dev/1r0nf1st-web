@@ -14,10 +14,7 @@ export const CloudInfrastructurePage = (): JSX.Element => {
       </div>
 
       <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section
-          className="w-full max-w-[1080px] mx-auto"
-          aria-label="Cloud Infrastructure"
-        >
+        <section className="w-full max-w-[1080px] mx-auto" aria-label="Cloud Infrastructure">
           <div className="mb-6">
             <Link
               href="/projects"

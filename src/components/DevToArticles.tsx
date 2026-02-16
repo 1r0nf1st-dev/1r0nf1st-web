@@ -12,22 +12,25 @@ const DEFAULT_LIMIT = 6;
 // You can configure the source here or via environment variable
 // Options: 'username' (your articles), 'tag' (articles by tag), 'latest' (latest articles), 'top' (top articles)
 const DEVTO_SOURCE =
-  ((typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_DEVTO_SOURCE : (import.meta as { env?: Record<string, string> }).env?.VITE_DEVTO_SOURCE) as
+  ((typeof process !== 'undefined'
+    ? process.env.NEXT_PUBLIC_DEVTO_SOURCE
+    : (import.meta as { env?: Record<string, string> }).env?.VITE_DEVTO_SOURCE) as
     | 'username'
     | 'tag'
     | 'latest'
     | 'top') || 'latest';
 const DEVTO_TAG =
-  (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_DEVTO_TAG : (import.meta as { env?: Record<string, string> }).env?.VITE_DEVTO_TAG) ||
-  'javascript';
+  (typeof process !== 'undefined'
+    ? process.env.NEXT_PUBLIC_DEVTO_TAG
+    : (import.meta as { env?: Record<string, string> }).env?.VITE_DEVTO_TAG) || 'javascript';
 
 export const DevToArticles = (): JSX.Element | null => {
   // Only pass tag if source is 'tag' and tag is provided
   const tagToUse = DEVTO_SOURCE === 'tag' && DEVTO_TAG ? DEVTO_TAG : undefined;
-  
+
   // Only show articles with images
   const onlyWithImages = true;
-  
+
   const { articles, isLoading, error } = useDevToArticles(
     DEFAULT_LIMIT,
     DEVTO_SOURCE,
@@ -35,7 +38,7 @@ export const DevToArticles = (): JSX.Element | null => {
     onlyWithImages,
   );
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  
+
   const getTitle = (): string => {
     if (DEVTO_SOURCE === 'tag') {
       return `Dev.to: #${DEVTO_TAG}`;
