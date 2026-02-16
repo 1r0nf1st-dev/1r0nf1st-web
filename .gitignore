@@ -7,6 +7,7 @@ node_modules
 .pnpm-store
 
 # Build output
+.next
 dist
 server/dist
 
@@ -15,8 +16,16 @@ server/dist
 .env.*
 !.env.example
 
+# Playwright
+test-results
+playwright-report
+blob-report
+playwright/.cache
+
 # Test coverage
 coverage
 *.lcov
 .nyc_output
 
+# Cursor
+.cursor
