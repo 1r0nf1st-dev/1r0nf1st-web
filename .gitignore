@@ -26,6 +26,3 @@ playwright/.cache
 coverage
 *.lcov
 .nyc_output
-
-# Cursor
-.cursor

@@ -1,9 +1,27 @@
 import { test, expect } from '@playwright/test';
 
+async function parseJsonOrFail(
+  res: { headers: () => Record<string, string>; status: () => number; text: () => Promise<string> },
+): Promise<unknown> {
+  const contentType = res.headers()['content-type'] ?? '';
+  const text = await res.text();
+  if (!contentType.includes('application/json') && text.trimStart().startsWith('<')) {
+    throw new Error(
+      `Expected JSON but got HTML (status ${res.status()}). ` +
+        'If using Vercel Deployment Protection, add VERCEL_AUTOMATION_BYPASS_SECRET to GitHub secrets and enable Protection Bypass for Automation in Vercel.',
+    );
+  }
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    throw new Error(`Invalid JSON response (status ${res.status()}): ${text.slice(0, 200)}`);
+  }
+}
+
 test.describe('API', () => {
   test('GET /api/quote/random returns JSON', async ({ request }) => {
     const res = await request.get('/api/quote/random');
-    const data = await res.json();
+    const data = (await parseJsonOrFail(res)) as Record<string, unknown>;
 
     if (res.ok()) {
       expect(data).toHaveProperty('content');
@@ -16,7 +34,7 @@ test.describe('API', () => {
 
   test('GET /api/joke/random returns JSON', async ({ request }) => {
     const res = await request.get('/api/joke/random');
-    const data = await res.json();
+    const data = (await parseJsonOrFail(res)) as Record<string, unknown>;
 
     if (res.ok()) {
       expect(data).toMatchObject({
@@ -39,7 +57,7 @@ test.describe('API', () => {
       },
       headers: { 'Content-Type': 'application/json' },
     });
-    const data = await res.json();
+    const data = (await parseJsonOrFail(res)) as Record<string, unknown>;
 
     expect([200, 503]).toContain(res.status());
     if (res.ok()) {
@@ -54,7 +72,7 @@ test.describe('API', () => {
       data: { name: '', email: 'invalid', message: '' },
       headers: { 'Content-Type': 'application/json' },
     });
-    const data = await res.json();
+    const data = (await parseJsonOrFail(res)) as Record<string, unknown>;
 
     expect(res.status()).toBe(400);
     expect(data).toHaveProperty('error');
