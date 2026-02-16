@@ -18,6 +18,7 @@ jobs:
     permissions:
       contents: read
       statuses: write
+      checks: write
     if: github.event_name == 'repository_dispatch' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout
@@ -58,6 +59,7 @@ jobs:
       - name: Run Playwright tests
         env:
           BASE_URL: ${{ steps.base_url.outputs.url }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: pnpm test:e2e
 
       - name: Report status to Vercel

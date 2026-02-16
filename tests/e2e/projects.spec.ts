@@ -17,7 +17,7 @@ test.describe('Projects page', () => {
 
   test('navigates to project sub-routes', async ({ page }) => {
     await page.goto('/projects');
-    await page.getByRole('link', { name: /goal tracker/i }).first().click();
+    await page.locator('a[href*="/projects/goal-tracker"]').first().click();
 
     await expect(page).toHaveURL(/\/projects\/goal-tracker/);
     await expect(page.getByRole('heading', { name: /goal tracker/i })).toBeVisible();
