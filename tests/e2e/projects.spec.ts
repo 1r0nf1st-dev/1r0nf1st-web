@@ -5,7 +5,7 @@ test.describe('Projects page', () => {
     await page.goto('/projects');
 
     await expect(page.getByRole('heading', { name: /1r0nf1st/i, level: 1 })).toBeVisible();
-    await expect(page.getByRole('link', { name: /back to home/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /back to home/i }).first()).toBeVisible();
   });
 
   test('shows Goal Tracker and Notes project cards', async ({ page }) => {
