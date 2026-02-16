@@ -146,9 +146,36 @@ jobs:
         with:
           name: 'playwright-smoke'
 
+      - name: Check failure-handler secrets
+        if: steps.smoke.outcome == 'failure'
+        id: secrets_check
+        run: |
+          SLACK_OK="false"
+          ROLLBACK_OK="false"
+          [ -n "$SLACK_WEBHOOK_URL" ] && SLACK_OK="true"
+          [ -n "$VERCEL_TOKEN" ] && ROLLBACK_OK="true"
+          ANY_OK="false"
+          [ "$SLACK_OK" = "true" ] || [ "$ROLLBACK_OK" = "true" ] && ANY_OK="true"
+          echo "slack_ok=$SLACK_OK" >> "$GITHUB_OUTPUT"
+          echo "rollback_ok=$ROLLBACK_OK" >> "$GITHUB_OUTPUT"
+          echo "any_ok=$ANY_OK" >> "$GITHUB_OUTPUT"
+          if [ "$SLACK_OK" = "false" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL is not set. Add it to GitHub Secrets for Slack notifications on smoke test failure."
+          fi
+          if [ "$ROLLBACK_OK" = "false" ]; then
+            echo "::warning::VERCEL_TOKEN is not set. Add it to GitHub Secrets for automatic Vercel rollback on smoke test failure."
+          fi
+          if [ "$ANY_OK" = "false" ]; then
+            echo "::warning::Neither SLACK_WEBHOOK_URL nor VERCEL_TOKEN is set. Add at least one to GitHub Secrets for failure handling."
+          fi
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
       - name: Notify on failure (Slack)
-        if: steps.smoke.outcome == 'failure' && secrets.SLACK_WEBHOOK_URL != ''
+        if: steps.smoke.outcome == 'failure' && steps.secrets_check.outputs.slack_ok == 'true'
         uses: slackapi/slack-github-action@v1.27.0
+        continue-on-error: true
         with:
           payload: |
             {
@@ -179,7 +206,8 @@ jobs:
             });
 
       - name: Rollback Vercel deployment on failure
-        if: steps.smoke.outcome == 'failure' && secrets.VERCEL_TOKEN != '' && needs.setup.outputs.project_id != ''
+        if: steps.smoke.outcome == 'failure' && needs.setup.outputs.project_id != '' && steps.secrets_check.outputs.rollback_ok == 'true'
+        continue-on-error: true
         run: |
           PROJECT_ID="${{ needs.setup.outputs.project_id }}"
           TEAM_ID="${{ secrets.VERCEL_TEAM_ID }}"
