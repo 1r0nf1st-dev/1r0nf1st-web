@@ -105,6 +105,19 @@ The project uses **Vitest** with **React Testing Library** for component and hoo
 
 Tests live next to source files with `.test.ts` or `.test.tsx` extensions.
 
+### Playwright E2E tests
+
+- **Run E2E tests** (against local dev server or a deployed URL):
+
+  ```bash
+  pnpm test:e2e
+  ```
+
+- **With a specific URL**: `BASE_URL=https://your-preview.vercel.app pnpm test:e2e`
+- **UI mode**: `pnpm test:e2e:ui`
+
+E2E tests run automatically in GitHub Actions when Vercel deploys. **If your Vercel project has Deployment Protection enabled**, add `VERCEL_AUTOMATION_BYPASS_SECRET` to GitHub repository secrets (Settings → Secrets and variables → Actions): create the bypass secret in Vercel (Project → Settings → Deployment Protection → Protection Bypass for Automation), then add it as a GitHub secret with that exact name.
+
 ### Environment and API configuration
 
 1. **Create `.env`** in the project root:
