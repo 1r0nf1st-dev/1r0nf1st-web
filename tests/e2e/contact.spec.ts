@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Contact form', () => {
   test('displays contact form on homepage', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('heading', { name: /contact us/i })).toBeVisible();
     await expect(page.getByPlaceholder(/your name/i)).toBeVisible();
@@ -12,7 +12,7 @@ test.describe('Contact form', () => {
   });
 
   test('submits form with valid data', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     await page.getByPlaceholder(/your name/i).fill('Test User');
     await page.getByPlaceholder(/your email/i).fill('test@example.com');
