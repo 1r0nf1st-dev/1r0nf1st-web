@@ -11,6 +11,10 @@ export default defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Increase navigation timeout for CI (Vercel preview deployments can be slow)
+    navigationTimeout: process.env.CI ? 60000 : 30000,
+    // Use domcontentloaded instead of load for faster navigation in CI
+    actionTimeout: process.env.CI ? 30000 : 15000,
     ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET && {
       extraHTTPHeaders: {
         'x-vercel-protection-bypass': process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
@@ -29,5 +33,6 @@ export default defineConfig({
         timeout: 180000,
       }
     : undefined,
-  timeout: 15000,
+  // Increase test timeout for CI (Vercel preview deployments can be slow)
+  timeout: process.env.CI ? 60000 : 15000,
 });
