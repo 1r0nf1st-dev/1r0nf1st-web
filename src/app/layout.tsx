@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { JSX } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Providers } from './providers';
 import { AuthHashErrorHandler } from '../components/AuthHashErrorHandler';
@@ -51,6 +52,7 @@ export default function RootLayout({
             <div className="min-h-screen relative z-[1]">{children}</div>
           </Providers>
         </ErrorBoundary>
+        <SpeedInsights />
       </body>
     </html>
   );
