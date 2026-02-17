@@ -5,6 +5,7 @@ on:
     types:
       - 'vercel.deployment.ready'
       - 'vercel.deployment.success'
+      - 'vercel.deployment.promoted'
   workflow_dispatch:
     inputs:
       base_url:
@@ -53,7 +54,10 @@ jobs:
 
   e2e-preview:
     needs: setup
-    if: needs.setup.outputs.is_production != 'true'
+    # Run full E2E on preview deployments and on production builds awaiting checks (deployment.ready)
+    if: |
+      (github.event_name == 'workflow_dispatch' && needs.setup.outputs.is_production != 'true') ||
+      (github.event_name == 'repository_dispatch' && github.event.action == 'vercel.deployment.ready')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -105,7 +109,10 @@ jobs:
 
   smoke-production:
     needs: setup
-    if: needs.setup.outputs.is_production == 'true' && needs.setup.outputs.base_url != ''
+    # Run smoke only after deployment is promoted/success (post-production), or when manually testing production
+    if: |
+      (github.event_name == 'workflow_dispatch' && needs.setup.outputs.is_production == 'true' && needs.setup.outputs.base_url != '') ||
+      (github.event_name == 'repository_dispatch' && (github.event.action == 'vercel.deployment.success' || github.event.action == 'vercel.deployment.promoted') && needs.setup.outputs.base_url != '')
     runs-on: ubuntu-latest
     permissions:
       contents: read

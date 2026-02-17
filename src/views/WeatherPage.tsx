@@ -31,7 +31,7 @@ export const WeatherPage = (): JSX.Element => {
               <input
                 type="text"
                 value={city}
-                onChange={(e) => setCity(e.target.value.trim() || 'London')}
+                onChange={(e) => setCity(e.target.value.trim())}
                 onBlur={(e) => !e.target.value.trim() && setCity('London')}
                 placeholder="e.g. London"
                 className="px-3 py-2 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent w-40"
