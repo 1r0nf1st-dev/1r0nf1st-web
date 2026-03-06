@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
-import { ProjectsPage } from '../../components/ProjectsPage';
+import { ProjectsPageWrapper } from '../../components/ProjectsPageWrapper';
 
 export default function Page(): JSX.Element {
-  return <ProjectsPage />;
+  return <ProjectsPageWrapper />;
 }

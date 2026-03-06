@@ -7,7 +7,9 @@ import {
   type SharedNote,
 } from '../useNoteSharing';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { useAlert } from '../contexts/AlertContext';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 export interface ShareSettingsProps {
@@ -17,9 +19,12 @@ export interface ShareSettingsProps {
 
 export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Element => {
   const { shares, isLoading, error, refetch } = useNoteShares(noteId);
+  const { showAlert } = useAlert();
   const [updating, setUpdating] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [pendingUnshare, setPendingUnshare] = useState<SharedNote | null>(null);
+  const [unshareError, setUnshareError] = useState<string | null>(null);
 
   useEffect(() => {
     if (noteId) {
@@ -34,23 +39,30 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
       await updateSharePermission(shareId, permission);
       await refetch();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to update permission');
+      showAlert(
+        err instanceof Error ? err.message : 'Failed to update permission',
+        'Error',
+      );
     } finally {
       setUpdating(null);
     }
   };
 
-  const handleUnshare = async (shareId: string) => {
-    if (!confirm('Are you sure you want to remove this share?')) {
-      return;
-    }
+  const handleUnshareClick = (share: SharedNote) => {
+    setUnshareError(null);
+    setPendingUnshare(share);
+  };
 
-    setDeleting(shareId);
+  const handleUnshareConfirm = async () => {
+    if (!pendingUnshare) return;
+    setDeleting(pendingUnshare.id);
+    setUnshareError(null);
     try {
-      await unshareNote(shareId);
+      await unshareNote(pendingUnshare.id);
+      setPendingUnshare(null);
       await refetch();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to remove share');
+      setUnshareError(err instanceof Error ? err.message : 'Failed to remove share');
     } finally {
       setDeleting(null);
     }
@@ -69,7 +81,7 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
 
   return (
     <div className={cardClasses}>
-      <div className={cardOverlay} aria-hidden />
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className={cardTitle}>Share Settings</h2>
@@ -84,7 +96,7 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
         </div>
 
         {error && (
-          <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+          <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
             {error}
           </div>
         )}
@@ -100,7 +112,7 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
             {shares.map((share: SharedNote) => (
               <div
                 key={share.id}
-                className="p-4 border-2 border-primary/40 dark:border-border rounded-lg bg-white/50 dark:bg-surface/50"
+                className="p-4 border-2 border-primary/40 dark:border-border rounded-xl bg-white/50 dark:bg-surface/50"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
@@ -120,7 +132,7 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
                             type="text"
                             readOnly
                             value={getShareUrl(share.share_token)}
-                            className="flex-1 px-2 py-1 text-xs border border-primary/20 dark:border-border rounded bg-white dark:bg-surface text-foreground"
+                            className="flex-1 px-2 py-1 text-xs border border-primary/20 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground"
                           />
                           <button
                             type="button"
@@ -141,7 +153,7 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
                           handlePermissionChange(share.id, e.target.value as 'view' | 'edit')
                         }
                         disabled={updating === share.id}
-                        className="px-2 py-1 text-xs border border-primary/20 dark:border-border rounded bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="px-2 py-1 text-xs border border-primary/20 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                       >
                         <option value="view">View Only</option>
                         <option value="edit">Can Edit</option>
@@ -157,7 +169,7 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
 
                   <button
                     type="button"
-                    onClick={() => handleUnshare(share.id)}
+                    onClick={() => handleUnshareClick(share)}
                     disabled={deleting === share.id}
                     className={`${btnBase} ${btnGhost} text-xs px-2 py-1 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20`}
                   >
@@ -178,6 +190,25 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
             Close
           </button>
         </div>
+        <ConfirmDeleteModal
+          isOpen={!!pendingUnshare}
+          title="Remove share"
+          message={
+            pendingUnshare
+              ? pendingUnshare.shared_with_user_id
+                ? `Remove access for ${pendingUnshare.shared_with_user?.email ?? pendingUnshare.shared_with_user_id}?`
+                : 'Remove this public share link? Anyone with the link will no longer have access.'
+              : ''
+          }
+          confirmLabel="Remove"
+          onConfirm={handleUnshareConfirm}
+          onCancel={() => {
+            setPendingUnshare(null);
+            setUnshareError(null);
+          }}
+          isLoading={!!pendingUnshare && deleting === pendingUnshare.id}
+          errorMessage={unshareError}
+        />
       </div>
     </div>
   );

@@ -64,4 +64,6 @@ export const config = {
   brevoFromEmail: process.env.BREVO_FROM_EMAIL?.trim() ?? '',
   /** Optional sender name for Brevo. */
   brevoFromName: process.env.BREVO_FROM_NAME?.trim() ?? '1r0nf1st',
+  /** Gemini API key for transcription (image OCR, audio). Get from https://aistudio.google.com */
+  geminiApiKey: process.env.GEMINI_API_KEY?.trim() ?? '',
 };

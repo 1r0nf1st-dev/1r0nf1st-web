@@ -1,7 +1,18 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
+import {
+  Image as ImageIcon,
+  Video,
+  Music,
+  FileText,
+  BarChart3,
+  Archive,
+  Paperclip,
+} from 'lucide-react';
 import type { Attachment } from '../useNotes';
 import { getDownloadUrl, deleteAttachment } from '../useAttachments';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { useAlert } from '../contexts/AlertContext';
 import { btnBase, btnGhost } from '../styles/buttons';
 
 export interface AttachmentsListProps {
@@ -13,8 +24,11 @@ export const AttachmentsList = ({
   attachments,
   onDelete,
 }: AttachmentsListProps): JSX.Element | null => {
+  const { showAlert } = useAlert();
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Attachment | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDownload = async (attachment: Attachment) => {
     setDownloadingId(attachment.id);
@@ -31,25 +45,29 @@ export const AttachmentsList = ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to download file. Please try again.';
-      alert(`Failed to download: ${message}`);
+      showAlert(`Failed to download: ${message}`, 'Error');
     } finally {
       setDownloadingId(null);
     }
   };
 
-  const handleDelete = async (attachmentId: string) => {
-    if (!confirm('Are you sure you want to delete this attachment?')) {
-      return;
-    }
+  const handleDeleteClick = (attachment: Attachment) => {
+    setDeleteError(null);
+    setPendingDelete(attachment);
+  };
 
-    setDeletingId(attachmentId);
+  const handleDeleteConfirm = async () => {
+    if (!pendingDelete) return;
+    setDeletingId(pendingDelete.id);
+    setDeleteError(null);
     try {
-      await deleteAttachment(attachmentId);
+      await deleteAttachment(pendingDelete.id);
+      setPendingDelete(null);
       onDelete();
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to delete attachment. Please try again.';
-      alert(`Failed to delete: ${message}`);
+      setDeleteError(
+        error instanceof Error ? error.message : 'Failed to delete attachment. Please try again.',
+      );
     } finally {
       setDeletingId(null);
     }
@@ -63,15 +81,18 @@ export const AttachmentsList = ({
     return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
   };
 
-  const getFileIcon = (fileType: string): string => {
-    if (fileType.startsWith('image/')) return '🖼️';
-    if (fileType.startsWith('video/')) return '🎥';
-    if (fileType.startsWith('audio/')) return '🎵';
-    if (fileType.includes('pdf')) return '📄';
-    if (fileType.includes('word') || fileType.includes('document')) return '📝';
-    if (fileType.includes('spreadsheet') || fileType.includes('excel')) return '📊';
-    if (fileType.includes('zip') || fileType.includes('archive')) return '📦';
-    return '📎';
+  const getFileIcon = (fileType: string): React.ReactNode => {
+    if (fileType.startsWith('image/')) return <ImageIcon className="w-5 h-5 shrink-0" />;
+    if (fileType.startsWith('video/')) return <Video className="w-5 h-5 shrink-0" />;
+    if (fileType.startsWith('audio/')) return <Music className="w-5 h-5 shrink-0" />;
+    if (fileType.includes('pdf')) return <FileText className="w-5 h-5 shrink-0" />;
+    if (fileType.includes('word') || fileType.includes('document'))
+      return <FileText className="w-5 h-5 shrink-0" />;
+    if (fileType.includes('spreadsheet') || fileType.includes('excel'))
+      return <BarChart3 className="w-5 h-5 shrink-0" />;
+    if (fileType.includes('zip') || fileType.includes('archive'))
+      return <Archive className="w-5 h-5 shrink-0" />;
+    return <Paperclip className="w-5 h-5 shrink-0" />;
   };
 
   if (attachments.length === 0) {
@@ -85,7 +106,7 @@ export const AttachmentsList = ({
         {attachments.map((attachment) => (
           <div
             key={attachment.id}
-            className="flex items-center justify-between p-2 bg-gray-50 dark:bg-surface-soft rounded-lg hover:bg-gray-100 dark:hover:bg-surface transition-colors"
+            className="flex items-center justify-between p-2 bg-gray-50 dark:bg-surface-soft rounded-xl hover:bg-gray-100 dark:hover:bg-surface transition-colors"
           >
             <button
               type="button"
@@ -93,7 +114,7 @@ export const AttachmentsList = ({
               disabled={downloadingId === attachment.id}
               className="flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors disabled:opacity-50"
             >
-              <span className="text-lg">{getFileIcon(attachment.file_type)}</span>
+              {getFileIcon(attachment.file_type)}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground truncate">
                   {attachment.file_name}
@@ -106,7 +127,7 @@ export const AttachmentsList = ({
             </button>
             <button
               type="button"
-              onClick={() => handleDelete(attachment.id)}
+              onClick={() => handleDeleteClick(attachment)}
               disabled={deletingId === attachment.id}
               className={`${btnBase} ${btnGhost} text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50`}
               aria-label={`Delete ${attachment.file_name}`}
@@ -116,6 +137,23 @@ export const AttachmentsList = ({
           </div>
         ))}
       </div>
+      <ConfirmDeleteModal
+        isOpen={!!pendingDelete}
+        title="Delete attachment"
+        message={
+          pendingDelete
+            ? `Are you sure you want to delete "${pendingDelete.file_name}"? This cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
+        isLoading={!!pendingDelete && deletingId === pendingDelete.id}
+        errorMessage={deleteError}
+      />
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { env } from './config';
 import { getJson, ApiError } from './apiClient';
+import { useAuth } from './contexts/AuthContext';
 import type { Tag } from './useNotes';
 
 interface TagsState {
@@ -25,6 +26,7 @@ function getApiBase(): string {
 }
 
 export function useTags(): TagsState {
+  const { user, isLoading: authLoading } = useAuth();
   const [state, setState] = useState<Omit<TagsState, 'refetch'>>({
     tags: null,
     isLoading: true,
@@ -32,6 +34,12 @@ export function useTags(): TagsState {
   });
 
   useEffect(() => {
+    // Don't make API calls if auth is still loading or user is not authenticated
+    if (authLoading || !user) {
+      setState({ tags: null, isLoading: authLoading, error: null });
+      return;
+    }
+
     let isCancelled = false;
     // Initialize loading state before async fetch
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Setting initial loading state before async operation is necessary
@@ -65,9 +73,14 @@ export function useTags(): TagsState {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [authLoading, user]);
 
   const fetchTags = async () => {
+    if (!user) {
+      setState({ tags: null, isLoading: false, error: 'Please log in to view your tags.' });
+      return;
+    }
+
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {

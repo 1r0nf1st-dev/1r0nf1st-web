@@ -4,7 +4,7 @@ import type { JSX, ReactNode } from 'react';
 import { useStravaStats } from '../useStravaStats';
 import type { StravaTotalsPeriod } from '../useStravaStats';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 
 function formatTime(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)}s`;
@@ -38,7 +38,7 @@ export const StravaStats = (): JSX.Element | null => {
 
   const card = (id: string, title: string, body: ReactNode): JSX.Element => (
     <article className={cardClasses} id={id}>
-      <div className={cardOverlay} aria-hidden />
+
       <h2 className={cardTitle}>{title}</h2>
       <div className={cardBody}>{body}</div>
     </article>
@@ -68,7 +68,7 @@ export const StravaStats = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses} id="strava">
-      <div className={cardOverlay} aria-hidden />
+
       <h2 className={cardTitle}>Strava</h2>
       <div className={cardBody}>
         <TotalsSection title="Last 4 weeks" period={totals.recent} />

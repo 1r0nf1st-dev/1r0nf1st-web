@@ -13,7 +13,7 @@ import { Quote } from '../components/Quote';
 import { Joke } from '../components/Joke';
 import { Footer } from '../components/Footer';
 import { RobotWalkRaiseAnimation } from '../components/RobotWalkRaiseAnimation';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
 
 export const HomePage = (): JSX.Element => {
@@ -23,7 +23,7 @@ export const HomePage = (): JSX.Element => {
         <Hero />
       </div>
 
-      <main className="flex-1 flex items-stretch justify-center pt-7">
+      <main id="main-content" className="flex-1 flex items-stretch justify-center pt-7" tabIndex={-1}>
         <section
           className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-[1080px]"
           aria-label="Portfolio content"
@@ -45,7 +45,7 @@ export const HomePage = (): JSX.Element => {
             aria-label="Go to Meet 1r0nf1st experience"
           >
             <article className={`${cardClasses} h-full flex flex-col`} id="meet-1r0nf1st">
-              <div className={cardOverlay} aria-hidden />
+
               <div className="flex justify-center mb-3">
                 <RobotWalkRaiseAnimation width={140} loop />
               </div>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>1r0nf1st Notes Clipper</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="header">
+        <h1 class="logo">1r0nf1st Notes Clipper</h1>
+      </header>
+
+      <div id="setup" class="panel hidden">
+        <div class="help-block mb-4">
+          <strong>What it does</strong>
+          <p>Save any webpage to 1r0nf1st Notes in one click. (This is the 1r0nf1st extension—not Evernote or others.)</p>
+          <strong>Setup (in order)</strong>
+          <ol>
+            <li>Log in at your site</li>
+            <li>Go to <a href="#" id="settings-link" class="link" target="_blank" rel="noopener">Notes → open Tools sidebar → Web Clipper</a></li>
+            <li>Generate token and copy it (starts with <code>nc_</code>)</li>
+            <li>Paste below, enter Site URL, then Save</li>
+          </ol>
+        </div>
+        <label for="site-url" class="label">Site URL</label>
+        <input
+          type="text"
+          id="site-url"
+          placeholder="https://yoursite.com"
+          class="input mb-3"
+        />
+        <label for="token-input" class="label">Token</label>
+        <input
+          type="password"
+          id="token-input"
+          placeholder="nc_..."
+          class="input mb-4"
+          autocomplete="off"
+        />
+        <button type="button" id="save-token" class="btn btn-primary w-full">
+          Save &amp; continue
+        </button>
+      </div>
+
+      <div id="clip" class="panel clip-panel hidden">
+        <div class="clip-card">
+          <label for="title-input" class="label">Title</label>
+          <input type="text" id="title-input" class="input mb-3" placeholder="Page title" />
+          <label for="notebook-select" class="label">Notebook</label>
+          <select id="notebook-select" class="input mb-4">
+            <option value="">— No notebook —</option>
+          </select>
+          <button type="button" id="clip-btn" class="btn btn-primary w-full clip-btn">
+            Clip page
+          </button>
+        </div>
+        <div class="clip-footer">
+          <button type="button" id="logout-token" class="btn btn-ghost btn-sm">
+            Change token
+          </button>
+        </div>
+      </div>
+
+      <div id="status" class="status hidden"></div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

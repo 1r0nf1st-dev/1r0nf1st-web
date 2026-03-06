@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { useGitHubRepos } from '../useGitHubRepos';
 import { RepoCard } from './RepoCard';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { ErrorDisplay } from './ErrorDisplay';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 
 export const GitHubProjects = (): JSX.Element => {
   const { repos, isLoading, error } = useGitHubRepos();
@@ -13,7 +14,7 @@ export const GitHubProjects = (): JSX.Element => {
 
   return (
     <article className={cardClasses} id="projects">
-      <div className={cardOverlay} aria-hidden="true" />
+
       <h2 className={cardTitle}>GitHub projects</h2>
       {isLoading && (
         <div className={cardBody} aria-busy>
@@ -22,7 +23,11 @@ export const GitHubProjects = (): JSX.Element => {
           <Skeleton className="h-4 w-5/6" />
         </div>
       )}
-      {error && !isLoading && <p className={cardBody}>Error: {error}</p>}
+      {error && !isLoading && (
+        <div className={cardBody}>
+          <ErrorDisplay error={error} title="GitHub Projects" announce={false} />
+        </div>
+      )}
       {!isLoading && !error && repos && repos.length === 0 && (
         <p className={cardBody}>
           No repositories found. Make sure the API server is running and{' '}

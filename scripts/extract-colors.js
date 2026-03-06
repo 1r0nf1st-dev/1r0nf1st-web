@@ -9,7 +9,7 @@
  * 3. Copy the CSS variables from the page
  * 4. Run this script with the colors: node scripts/extract-colors.js
  *
- * Or visit the page and manually update src/index.css with the generated colors
+ * Or visit the page and manually update src/app/globals.css with the generated colors
  */
 
 console.log(`
@@ -27,7 +27,7 @@ To extract colors from your logo:
    - Dominant colors with hex codes
    - Generated CSS variables ready to copy
 
-4. Copy the CSS variables from the page and update src/index.css
+4. Copy the CSS variables from the page and update src/app/globals.css
 
 Alternatively, you can manually inspect your logo and provide the main colors,
 and I can update the CSS for you.

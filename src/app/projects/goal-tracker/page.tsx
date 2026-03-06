@@ -1,6 +1,6 @@
-import type { JSX } from 'react';
-import { GoalTrackerPage } from '../../../views/GoalTrackerPage';
+import { redirect } from 'next/navigation';
 
-export default function Page(): JSX.Element {
-  return <GoalTrackerPage />;
+/** Goal Tracker has been integrated into Notes. Redirect to Notes. */
+export default function GoalTrackerRedirectPage(): never {
+  redirect('/notes');
 }

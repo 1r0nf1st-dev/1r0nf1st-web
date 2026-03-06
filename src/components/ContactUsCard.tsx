@@ -1,6 +1,6 @@
 import type { JSX, FormEvent } from 'react';
 import { useState, useCallback } from 'react';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
 import { ApiError } from '../apiClient';
 
@@ -101,7 +101,7 @@ export const ContactUsCard = (): JSX.Element => {
   if (success) {
     return (
       <article className={cardClasses}>
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Contact us</h2>
         <p className={cardBody}>
           Thanks for your message. We&apos;ve received it and will get back to you soon. Check your
@@ -113,7 +113,7 @@ export const ContactUsCard = (): JSX.Element => {
 
   return (
     <article className={cardClasses}>
-      <div className={cardOverlay} aria-hidden />
+
       <h2 className={cardTitle}>Contact us</h2>
       <p className={`${cardBody} mb-4`}>
         We&apos;d love to help with any web projects you need. Get in contact with us.
@@ -130,7 +130,7 @@ export const ContactUsCard = (): JSX.Element => {
             placeholder="Your name"
             value={form.name}
             onChange={(e) => handleChange('name', e.target.value)}
-            className="w-full rounded-lg border-2 border-primary/30 dark:border-border bg-white dark:bg-surface-soft px-3 py-2 text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+            className="w-full rounded-xl border-2 border-primary/30 dark:border-border bg-white dark:bg-surface-soft px-3 py-2 text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
             aria-invalid={Boolean(fieldErrors.name)}
             aria-describedby={fieldErrors.name ? 'contact-name-error' : undefined}
           />
@@ -155,7 +155,7 @@ export const ContactUsCard = (): JSX.Element => {
             placeholder="Your email"
             value={form.email}
             onChange={(e) => handleChange('email', e.target.value)}
-            className="w-full rounded-lg border-2 border-primary/30 dark:border-border bg-white dark:bg-surface-soft px-3 py-2 text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+            className="w-full rounded-xl border-2 border-primary/30 dark:border-border bg-white dark:bg-surface-soft px-3 py-2 text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
             aria-invalid={Boolean(fieldErrors.email)}
             aria-describedby={fieldErrors.email ? 'contact-email-error' : undefined}
           />
@@ -179,7 +179,7 @@ export const ContactUsCard = (): JSX.Element => {
             placeholder="Your message"
             value={form.message}
             onChange={(e) => handleChange('message', e.target.value)}
-            className="w-full rounded-lg border-2 border-primary/30 dark:border-border bg-white dark:bg-surface-soft px-3 py-2 text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none resize-y min-h-[80px]"
+            className="w-full rounded-xl border-2 border-primary/30 dark:border-border bg-white dark:bg-surface-soft px-3 py-2 text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none resize-y min-h-[80px]"
             aria-invalid={Boolean(fieldErrors.message)}
             aria-describedby={fieldErrors.message ? 'contact-message-error' : undefined}
             maxLength={MESSAGE_MAX_LENGTH}

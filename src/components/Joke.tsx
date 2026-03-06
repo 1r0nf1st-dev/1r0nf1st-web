@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useJoke } from '../useJoke';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost } from '../styles/buttons';
 
 export const Joke = (): JSX.Element | null => {
@@ -12,7 +12,7 @@ export const Joke = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="joke">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Joke</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="mb-4 h-5 w-full" />
@@ -25,7 +25,7 @@ export const Joke = (): JSX.Element | null => {
   if (error) {
     return (
       <article className={cardClasses} id="joke">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Joke</h2>
         <div className={cardBody}>
           <p className="mb-4">Joke unavailable right now. Try again later.</p>
@@ -52,7 +52,7 @@ export const Joke = (): JSX.Element | null => {
   if (!joke) {
     return (
       <article className={cardClasses} id="joke">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Joke</h2>
         <p className={cardBody}>No joke available. Make sure the API server is running.</p>
       </article>
@@ -61,7 +61,7 @@ export const Joke = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses} id="joke">
-      <div className={cardOverlay} aria-hidden />
+
       <h2 className={cardTitle}>Joke</h2>
       <div className={cardBody}>
         <div className="mb-4">

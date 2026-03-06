@@ -55,7 +55,9 @@ describe('Hero', () => {
     });
 
     renderHero();
-    expect(screen.getByText('Login')).toBeInTheDocument();
+    // Use getAllByText and check that at least one exists, since AuthControls may render multiple Login buttons
+    const loginButtons = screen.getAllByText('Login');
+    expect(loginButtons.length).toBeGreaterThan(0);
   });
 
   it('should show username when user is logged in', () => {
@@ -70,8 +72,11 @@ describe('Hero', () => {
     });
 
     renderHero();
-    expect(screen.getByText(/Logged in as/)).toBeInTheDocument();
-    expect(screen.getByText('testuser')).toBeInTheDocument();
+    // AuthControls renders twice (desktop + mobile), so use getAllByText
+    const loggedInTexts = screen.getAllByText(/Logged in as/);
+    expect(loggedInTexts.length).toBeGreaterThan(0);
+    const usernameTexts = screen.getAllByText('testuser');
+    expect(usernameTexts.length).toBeGreaterThan(0);
   });
 
   it('should show logout button when user is logged in', () => {
@@ -87,7 +92,9 @@ describe('Hero', () => {
     });
 
     renderHero();
-    expect(screen.getByText('Logout')).toBeInTheDocument();
+    // AuthControls renders twice (desktop + mobile), so use getAllByText
+    const logoutButtons = screen.getAllByText('Logout');
+    expect(logoutButtons.length).toBeGreaterThan(0);
   });
 
   it('should show change password link when user is logged in', () => {
@@ -102,7 +109,9 @@ describe('Hero', () => {
     });
 
     renderHero();
-    expect(screen.getByText('Change Password')).toBeInTheDocument();
+    // AuthControls renders twice (desktop + mobile), so use getAllByText
+    const changePasswordLinks = screen.getAllByText('Change Password');
+    expect(changePasswordLinks.length).toBeGreaterThan(0);
   });
 
   it('should render portfolio pill', () => {

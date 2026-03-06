@@ -5,12 +5,11 @@ import type { FormEvent } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { Hero } from '../components/Hero';
-import { Footer } from '../components/Footer';
-import { cardClasses, cardOverlay, cardTitle } from '../styles/cards';
+import { ChromeLayout } from '../components/ChromeLayout';
+import { cardClasses, cardTitle } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
-import { getJson } from '../apiClient';
-import { getApiBase } from '../config';
+import { logger } from '../utils/logger';
+import { supabaseClient } from '../lib/supabaseClient';
 
 export const ChangePasswordPage = (): JSX.Element => {
   const [newPassword, setNewPassword] = useState('');
@@ -43,9 +42,9 @@ export const ChangePasswordPage = (): JSX.Element => {
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
 
-    // Log for debugging (remove in production if needed)
+    // Log for debugging
     if (type === 'recovery' || accessToken) {
-      console.log('[Password Reset] Detected recovery link:', {
+      logger.debug('[Password Reset] Detected recovery link', {
         type,
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
@@ -82,15 +81,25 @@ export const ChangePasswordPage = (): JSX.Element => {
 
     try {
       if (recoveryToken) {
-        await getJson<{ message: string }>(`${getApiBase()}/auth/confirm-reset-password`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            accessToken: recoveryToken,
-            refreshToken: recoveryRefreshToken,
-            newPassword,
-          }),
+        if (!supabaseClient) {
+          throw new Error('Password reset is not configured. Please contact support.');
+        }
+        // Set the recovery session directly with Supabase — the new password
+        // never touches the Express server.
+        const { error: sessionError } = await supabaseClient.auth.setSession({
+          access_token: recoveryToken,
+          refresh_token: recoveryRefreshToken ?? '',
         });
+        if (sessionError) {
+          throw new Error('This reset link is invalid or has expired. Please request a new one.');
+        }
+        const { error: updateError } = await supabaseClient.auth.updateUser({
+          password: newPassword,
+        });
+        if (updateError) {
+          throw new Error(updateError.message);
+        }
+        await supabaseClient.auth.signOut();
         setSuccess('Password changed successfully! You can now log in.');
         setNewPassword('');
         setConfirmPassword('');
@@ -126,23 +135,21 @@ export const ChangePasswordPage = (): JSX.Element => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
-      <Hero />
-      <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section className="w-full max-w-[500px] mx-auto">
+    <ChromeLayout>
+      <section className="w-full max-w-[500px] mx-auto space-y-8">
           <article className={cardClasses}>
-            <div className={cardOverlay} aria-hidden />
+
             <h2 className={`${cardTitle} mb-6`}>
               {recoveryToken ? 'Set new password' : 'Change Password'}
             </h2>
             <form onSubmit={handleSubmit} className="relative z-10">
               {error && (
-                <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+                <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
                   {error}
                 </div>
               )}
               {success && (
-                <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-500 text-sm">
+                <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-500 text-sm">
                   {success}
                 </div>
               )}
@@ -160,7 +167,7 @@ export const ChangePasswordPage = (): JSX.Element => {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+                  className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
                 <p className="mt-2 text-[0.85rem] opacity-70">Must be at least 6 characters</p>
               </div>
@@ -178,7 +185,7 @@ export const ChangePasswordPage = (): JSX.Element => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+                  className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
               </div>
               <button
@@ -194,9 +201,7 @@ export const ChangePasswordPage = (): JSX.Element => {
               </button>
             </form>
           </article>
-        </section>
-      </main>
-      <Footer />
-    </div>
+      </section>
+    </ChromeLayout>
   );
 };

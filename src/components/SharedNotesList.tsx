@@ -1,15 +1,20 @@
+'use client';
+
 import type { JSX } from 'react';
 import { useState, useEffect } from 'react';
 import { getSharedNotes } from '../useNoteSharing';
-import { Skeleton } from './Skeleton';
 import type { Note } from '../useNotes';
 import { NotesList } from './NotesList';
 
 export interface SharedNotesListProps {
   onNoteSelect: (note: Note | null) => void;
+  layout?: 'cards' | 'list';
 }
 
-export const SharedNotesList = ({ onNoteSelect }: SharedNotesListProps): JSX.Element => {
+export const SharedNotesList = ({
+  onNoteSelect,
+  layout = 'cards',
+}: SharedNotesListProps): JSX.Element => {
   const [sharedNotes, setSharedNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,5 +61,12 @@ export const SharedNotesList = ({ onNoteSelect }: SharedNotesListProps): JSX.Ele
     );
   }
 
-  return <NotesList notes={sharedNotes} onNoteClick={onNoteSelect} selectedNoteId={undefined} />;
+  return (
+    <NotesList
+      notes={sharedNotes}
+      onNoteClick={onNoteSelect}
+      selectedNoteId={undefined}
+      layout={layout}
+    />
+  );
 };

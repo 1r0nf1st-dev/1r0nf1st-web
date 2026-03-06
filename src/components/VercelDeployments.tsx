@@ -3,7 +3,7 @@
 import type { JSX } from 'react';
 import { useVercelDeployments, type VercelDeployment } from '../useVercelDeployments';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 
 function formatRelativeTime(timestamp: number): string {
   const now = Date.now();
@@ -61,7 +61,7 @@ function DeploymentItem({ deployment }: { deployment: VercelDeployment }): JSX.E
     : null;
 
   return (
-    <div className="p-3 mb-2 bg-white/5 rounded text-sm">
+    <div className="p-3 mb-2 bg-white/5 rounded-xl text-sm">
       <div className="flex items-center gap-2 mb-2">
         <span
           className="inline-block w-2 h-2 rounded-full"
@@ -69,7 +69,7 @@ function DeploymentItem({ deployment }: { deployment: VercelDeployment }): JSX.E
         />
         <span className="font-medium">{deployment.state}</span>
         {deployment.target && (
-          <span className="text-xs opacity-80 py-0.5 px-1.5 bg-white/10 rounded">
+          <span className="text-xs opacity-80 py-0.5 px-1.5 bg-white/10 rounded-xl">
             {deployment.target}
           </span>
         )}
@@ -166,7 +166,7 @@ export const VercelDeployments = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses} id="vercel-deployments">
-      <div className={cardOverlay} aria-hidden />
+
       <h2 className={cardTitle}>Vercel Deployments</h2>
       <div className={cardBody}>
         <div className="mb-6">

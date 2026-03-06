@@ -20,6 +20,8 @@ import { config } from './config.js';
 import { logger } from './utils/logger.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorLogger } from './middleware/errorLogger.js';
+import { securityHeaders } from './middleware/securityHeaders.js';
+import { defaultRateLimiter } from './middleware/rateLimiter.js';
 
 // Validate required environment variables in production (skip on Vercel; env is set in dashboard)
 if (config.nodeEnv === 'production' && !process.env.VERCEL) {
@@ -45,13 +47,32 @@ if (config.nodeEnv === 'production' && !process.env.VERCEL) {
 const app = express();
 
 // Configure CORS based on environment
+// Allow chrome-extension:// origins for Web Clipper extension
 const corsOptions: cors.CorsOptions = {
-  origin: config.nodeEnv === 'production' && config.allowedOrigins ? config.allowedOrigins : true, // Allow all origins in development
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ): void => {
+    if (!origin) return callback(null, true);
+    if (config.nodeEnv !== 'production' || !config.allowedOrigins) {
+      return callback(null, true);
+    }
+    if (origin.startsWith('chrome-extension://')) return callback(null, true); // Web Clipper
+    if (config.allowedOrigins.includes(origin)) return callback(null, true);
+    callback(null, false);
+  },
   credentials: true,
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
+// Allow larger payloads for Web Clipper (full-page HTML can exceed 100kb default)
+app.use(express.json({ limit: '1mb' }));
+
+// Security headers middleware (must be early in the chain)
+app.use(securityHeaders);
+
+// Rate limiting middleware (apply to all routes)
+app.use(defaultRateLimiter);
 
 // Request logging middleware (must be after body parser, before routes)
 app.use(requestLogger);
@@ -72,6 +93,7 @@ app.use('/api/devto', devtoRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/notes', notesRouter);
+app.use('/api/v1/notes', notesRouter);
 app.use('/api/logs', logsRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/contact', contactRouter);

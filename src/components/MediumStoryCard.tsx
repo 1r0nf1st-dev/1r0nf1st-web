@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import DOMPurify from 'dompurify';
 import type { MediumStory } from '../useMediumStories';
-import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
+import { cardClasses, cardBody } from '../styles/cards';
 
 export interface MediumStoryCardProps {
   story: MediumStory;
@@ -23,7 +23,7 @@ function formatPubDate(iso: string): string {
 export const MediumStoryCard = ({ story, isExpanded, id }: MediumStoryCardProps): JSX.Element => {
   return (
     <article className={cardClasses} id={id}>
-      <div className={cardOverlay} aria-hidden />
+
       <div className={`${cardBody} flex flex-col h-full`}>
         <div className="flex items-start gap-3 mb-2">
           {story.thumbnailUrl && (
@@ -33,7 +33,7 @@ export const MediumStoryCard = ({ story, isExpanded, id }: MediumStoryCardProps)
                 alt=""
                 width={120}
                 height={80}
-                className="object-cover rounded block"
+                className="object-cover rounded-xl block"
               />
             </a>
           )}

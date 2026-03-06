@@ -1,9 +1,9 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import type { Goal } from '../useGoals';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost } from '../styles/buttons';
-import { FaCheckCircle, FaCircle, FaTrash, FaEdit, FaFlag } from 'react-icons/fa';
+import { CheckCircle, Circle, Trash2, Pencil, Flag } from 'lucide-react';
 import { logger } from '../utils/logger';
 
 export interface GoalCardProps {
@@ -111,12 +111,12 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
 
   return (
     <article className={cardClasses} id={id}>
-      <div className={cardOverlay} aria-hidden />
+
       <div className={`${cardBody} flex flex-col h-full`}>
         {isEditing ? (
           <div className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-600 dark:text-red-400">
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
@@ -129,7 +129,7 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
                 type="text"
                 value={editTitle}
                 onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Goal title"
               />
             </div>
@@ -145,7 +145,7 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
                 value={editDescription}
                 onChange={(e) => setEditDescription(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Goal description"
               />
             </div>
@@ -187,12 +187,12 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
         ) : (
           <>
             {error && (
-              <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-600 dark:text-red-400">
+              <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-600 dark:text-red-400">
                 {error}
               </div>
             )}
             {showDeleteConfirm && (
-              <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded">
+              <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
                 <p className="text-sm mb-2 text-foreground">
                   Are you sure you want to delete this goal? This action cannot be undone.
                 </p>
@@ -226,7 +226,7 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
                     <>
                       <span>•</span>
                       <span>
-                        <FaFlag className="inline mr-1" />
+                        <Flag className="inline mr-1" />
                         {formatDate(goal.target_date)}
                       </span>
                     </>
@@ -239,7 +239,7 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
                   className="p-2 text-muted hover:text-foreground transition-colors"
                   aria-label="Edit goal"
                 >
-                  <FaEdit />
+                  <Pencil />
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
@@ -247,7 +247,7 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
                   className="p-2 text-muted hover:text-red-500 transition-colors disabled:opacity-50"
                   aria-label="Delete goal"
                 >
-                  <FaTrash />
+                  <Trash2 />
                 </button>
               </div>
             </div>
@@ -278,12 +278,12 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
                 {goal.milestones.map((milestone) => (
                   <div
                     key={milestone.id}
-                    className="flex items-center gap-2 text-sm p-2 bg-surface-soft/50 rounded"
+                    className="flex items-center gap-2 text-sm p-2 bg-surface-soft/50 rounded-xl"
                   >
                     {milestone.completed ? (
-                      <FaCheckCircle className="text-green-500 shrink-0" />
+                      <CheckCircle className="text-green-500 shrink-0" />
                     ) : (
-                      <FaCircle className="text-muted shrink-0" />
+                      <Circle className="text-muted shrink-0" />
                     )}
                     <span className={milestone.completed ? 'line-through opacity-60' : ''}>
                       {milestone.title}

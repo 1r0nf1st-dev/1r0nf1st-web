@@ -4,7 +4,7 @@ import type { JSX } from 'react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getJson, ApiError } from '../apiClient';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
 import { parseEmailsClient, hasMaliciousScripts } from '../utils/emailValidation';
 import { getApiBase } from '../config';
@@ -136,7 +136,7 @@ export const SendEmailCard = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses}>
-      <div className={cardOverlay} aria-hidden />
+
       <h2 className={cardTitle}>Send Email</h2>
       <p className={cardBody}>
         Send an email via Brevo. Only visible to admin. To and CC accept comma-separated addresses.
@@ -152,7 +152,7 @@ export const SendEmailCard = (): JSX.Element | null => {
             value={to}
             onChange={(e) => setTo(e.target.value)}
             placeholder="one@example.com, two@example.com"
-            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
             aria-required
             disabled={sending}
           />
@@ -167,7 +167,7 @@ export const SendEmailCard = (): JSX.Element | null => {
             value={cc}
             onChange={(e) => setCc(e.target.value)}
             placeholder="optional, comma-separated"
-            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
             disabled={sending}
           />
         </div>
@@ -181,7 +181,7 @@ export const SendEmailCard = (): JSX.Element | null => {
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Email subject"
-            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
             aria-required
             disabled={sending}
           />
@@ -196,7 +196,7 @@ export const SendEmailCard = (): JSX.Element | null => {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Plain text message (no scripts or HTML)"
             rows={4}
-            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary resize-y"
+            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary resize-y"
             aria-required
             disabled={sending}
           />

@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import type { NoteVersion } from '../useNoteVersions';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 export interface RestoreVersionModalProps {
@@ -34,7 +34,7 @@ export const RestoreVersionModal = ({
       aria-labelledby="restore-modal-title"
     >
       <article className={`${cardClasses} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
-        <div className={cardOverlay} aria-hidden />
+
         <div className="relative z-10">
           <h2 id="restore-modal-title" className={cardTitle}>
             Restore Version {version.version_number}?

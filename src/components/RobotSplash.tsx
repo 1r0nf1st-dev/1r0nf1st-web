@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { CutsceneCodingProblem } from './CutsceneCodingProblem';
 import { RobotWalkRaiseAnimation } from './RobotWalkRaiseAnimation';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 type Step = 'boot' | 'intro' | 'cutscene' | 'theme';
@@ -58,7 +58,7 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
     <button
       type="button"
       onClick={onEnter}
-      className="absolute top-4 right-4 text-sm text-muted hover:text-foreground underline focus:ring-2 focus:ring-primary rounded bg-transparent border-0 cursor-pointer"
+      className="absolute top-4 right-4 text-sm text-muted hover:text-foreground underline focus:ring-2 focus:ring-primary rounded-xl bg-transparent border-0 cursor-pointer"
       aria-label="Skip to portfolio"
     >
       Skip to portfolio
@@ -70,7 +70,7 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative">
         {skipLink}
         <article className={cardClasses} style={{ maxWidth: '420px' }}>
-          <div className={cardOverlay} aria-hidden />
+
           <div className="relative z-10">
             <h1 className={cardTitle}>
               Initializing 1r0nf1st... {Math.min(100, Math.round(bootPercent))}%
@@ -87,7 +87,7 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative">
         {skipLink}
         <article className={cardClasses} style={{ maxWidth: '420px' }}>
-          <div className={cardOverlay} aria-hidden />
+
           <div className="relative z-10 flex flex-col items-center text-center">
             <RobotWalkRaiseAnimation width={140} loop className="mb-4" />
             <h1 className={cardTitle}>Hi, I&apos;m 1r0nf1st</h1>
@@ -121,7 +121,7 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative">
         {skipLink}
         <article className={cardClasses} style={{ maxWidth: '420px' }}>
-          <div className={cardOverlay} aria-hidden />
+
           <div className="relative z-10 flex flex-col items-center text-center">
             <img
               src="/logo.jpg"

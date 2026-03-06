@@ -13,7 +13,7 @@ colorsRouter.get('/extract', async (req, res) => {
         '1. Start the dev server: pnpm dev',
         '2. Open http://localhost:5173/extract-colors.html',
         '3. Copy the generated CSS variables',
-        '4. Update src/index.css with the new colors',
+        '4. Update src/app/globals.css with the new colors',
       ],
     });
   } catch (error) {
