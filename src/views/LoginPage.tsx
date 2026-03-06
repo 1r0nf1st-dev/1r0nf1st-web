@@ -6,9 +6,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { Hero } from '../components/Hero';
-import { Footer } from '../components/Footer';
-import { cardClasses, cardOverlay, cardTitle } from '../styles/cards';
+import { ChromeLayout } from '../components/ChromeLayout';
+import { cardClasses, cardTitle } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 export const LoginPage = (): JSX.Element => {
@@ -36,7 +35,11 @@ export const LoginPage = (): JSX.Element => {
       }
       // Redirect to returnTo URL if provided, otherwise go to home
       const returnTo = searchParams.get('returnTo');
-      router.push(returnTo || '/');
+      // Validate returnTo to prevent redirect loops and ensure it's a valid path
+      const redirectPath = returnTo && returnTo !== '/login' && returnTo.startsWith('/') 
+        ? returnTo 
+        : '/';
+      router.push(redirectPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
@@ -45,21 +48,19 @@ export const LoginPage = (): JSX.Element => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
-      <Hero />
-      <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section className="w-full max-w-[500px] mx-auto">
+    <ChromeLayout>
+      <section className="w-full max-w-[500px] mx-auto">
           <article className={cardClasses}>
-            <div className={cardOverlay} aria-hidden />
+
             <h2 className={`${cardTitle} mb-6`}>{isRegister ? 'Create Account' : 'Login'}</h2>
             <form onSubmit={handleSubmit} className="relative z-10">
               {resetSuccess && (
-                <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-600 dark:text-green-400 text-sm">
+                <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-600 dark:text-green-400 text-sm">
                   Password reset successfully. You can now log in with your new password.
                 </div>
               )}
               {error && (
-                <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+                <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
                   {error}
                 </div>
               )}
@@ -73,7 +74,7 @@ export const LoginPage = (): JSX.Element => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+                  className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
               </div>
               {isRegister && (
@@ -89,7 +90,7 @@ export const LoginPage = (): JSX.Element => {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+                    className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                   />
                   <p className="mt-2 text-[0.85rem] opacity-70">
                     If not provided, email prefix will be used
@@ -117,7 +118,7 @@ export const LoginPage = (): JSX.Element => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={isRegister ? 6 : undefined}
-                  className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+                  className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                 />
                 {isRegister && (
                   <p className="mt-2 text-[0.85rem] opacity-70">
@@ -144,15 +145,13 @@ export const LoginPage = (): JSX.Element => {
               </button>
             </form>
             {!isRegister && (
-              <div className="mt-6 p-4 bg-primary/10 rounded-lg text-sm opacity-80 relative z-10">
+              <div className="mt-6 p-4 bg-primary/10 rounded-xl text-sm opacity-80 relative z-10">
                 <strong>Note:</strong> Use your email address to login. If you haven&apos;t created
                 an account yet, click &quot;Register&quot; to create one.
               </div>
             )}
           </article>
-        </section>
-      </main>
-      <Footer />
-    </div>
+      </section>
+    </ChromeLayout>
   );
 };

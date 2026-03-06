@@ -23,7 +23,7 @@ export const SaveConfirmationModal = ({
       aria-labelledby="save-confirmation-title"
     >
       <div
-        className="bg-white dark:bg-surface rounded-lg shadow-xl p-6 max-w-md w-full mx-4 border-2 border-primary/40 dark:border-border"
+        className="bg-white dark:bg-surface rounded-xl shadow-xl p-6 max-w-md w-full mx-4 border-2 border-primary/40 dark:border-border"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="save-confirmation-title" className="text-xl font-semibold mb-4 text-foreground">

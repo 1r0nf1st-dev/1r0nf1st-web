@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ApiError, getJson } from './apiClient';
+import { ApiError, getJson, postFormData } from './apiClient';
 
 describe('ApiError', () => {
   it('should create an ApiError with correct properties', () => {
@@ -136,5 +136,55 @@ describe('getJson', () => {
         'Content-Type': 'application/json',
       },
     });
+  });
+});
+
+describe('postFormData', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  it('should POST FormData and return JSON', async () => {
+    const formData = new FormData();
+    formData.append('file', new Blob(['test']));
+    const mockData = { text: 'extracted' };
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockData,
+    });
+
+    const result = await postFormData<typeof mockData>('/api/transcribe/image', formData);
+    expect(result).toEqual(mockData);
+    expect(global.fetch).toHaveBeenCalledWith('/api/transcribe/image', {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: formData,
+    });
+  });
+
+  it('should add Authorization when token exists', async () => {
+    localStorage.setItem('authToken', 'token-123');
+    const formData = new FormData();
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+
+    await postFormData('/api/transcribe/image', formData);
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer token-123' }),
+      }),
+    );
+  });
+
+  it('should throw ApiError when response is not ok', async () => {
+    const formData = new FormData();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: async () => JSON.stringify({ error: 'Invalid file' }),
+    });
+
+    await expect(postFormData('/api/transcribe/image', formData)).rejects.toThrow(ApiError);
   });
 });

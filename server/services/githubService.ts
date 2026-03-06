@@ -55,8 +55,35 @@ export async function fetchUserRepos(
   const response = await fetch(url, { headers });
 
   if (!response.ok) {
-    const text = await response.text().catch(() => '');
-    throw new Error(text || `Request to ${url} failed with status ${response.status}`);
+    let errorMessage = `GitHub API request failed with status ${response.status}`;
+    
+    try {
+      const errorData = (await response.json()) as { message?: string; documentation_url?: string };
+      if (errorData.message) {
+        errorMessage = errorData.message;
+        
+        // Provide helpful guidance for common errors
+        if (response.status === 401) {
+          if (config.githubToken) {
+            errorMessage += '. Your GITHUB_TOKEN may be invalid or expired. Please check your token at https://github.com/settings/tokens';
+          } else {
+            errorMessage += '. GITHUB_TOKEN is not set. Add it to your .env file (optional but recommended for higher rate limits).';
+          }
+        } else if (response.status === 404) {
+          errorMessage += `. User "${effectiveUsername}" not found.`;
+        } else if (response.status === 403) {
+          errorMessage += '. Rate limit exceeded or access forbidden.';
+        }
+      }
+    } catch {
+      // If JSON parsing fails, use the text response
+      const text = await response.text().catch(() => '');
+      if (text) {
+        errorMessage = text;
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return (await response.json()) as GitHubRepo[];
@@ -89,8 +116,35 @@ export async function fetchRepoCommits(
   const response = await fetch(url, { headers });
 
   if (!response.ok) {
-    const text = await response.text().catch(() => '');
-    throw new Error(text || `Request to ${url} failed with status ${response.status}`);
+    let errorMessage = `GitHub API request failed with status ${response.status}`;
+    
+    try {
+      const errorData = (await response.json()) as { message?: string; documentation_url?: string };
+      if (errorData.message) {
+        errorMessage = errorData.message;
+        
+        // Provide helpful guidance for common errors
+        if (response.status === 401) {
+          if (config.githubToken) {
+            errorMessage += '. Your GITHUB_TOKEN may be invalid or expired. Please check your token at https://github.com/settings/tokens';
+          } else {
+            errorMessage += '. GITHUB_TOKEN is not set. Add it to your .env file (optional but recommended for higher rate limits).';
+          }
+        } else if (response.status === 404) {
+          errorMessage += `. Repository "${owner}/${repo}" not found.`;
+        } else if (response.status === 403) {
+          errorMessage += '. Rate limit exceeded or access forbidden.';
+        }
+      }
+    } catch {
+      // If JSON parsing fails, use the text response
+      const text = await response.text().catch(() => '');
+      if (text) {
+        errorMessage = text;
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 
   return (await response.json()) as GitHubCommit[];

@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
-import { HomePage } from '../views/HomePage';
+import { HomePageWrapper } from '../components/HomePageWrapper';
 
 export default function Page(): JSX.Element {
-  return <HomePage />;
+  return <HomePageWrapper />;
 }

@@ -1,4 +1,5 @@
 import { supabase } from '../db/supabase.js';
+import { extractNoteIdsFromContent } from '../utils/noteLinks.js';
 
 export interface Note {
   id: string;
@@ -129,6 +130,67 @@ export interface NotesFilters {
   search?: string;
   archived?: boolean;
   pinned?: boolean;
+}
+
+/** Parsed search operators: tag:name, notebook:name, is:archived|active. Remaining text used for full-text search. */
+export interface ParsedSearchOperators {
+  tagName?: string;
+  notebookName?: string;
+  archived?: boolean;
+  text: string;
+}
+
+/**
+ * Parse search query for operators: tag:X, notebook:X, is:archived, is:active.
+ * Supports quoted values for multi-word: tag:"work stuff".
+ */
+export function parseSearchOperators(search: string): ParsedSearchOperators {
+  const result: ParsedSearchOperators = { text: '' };
+  if (!search || typeof search !== 'string') return result;
+
+  let remaining = search.trim();
+  const used: string[] = [];
+
+  // is:archived or is:active
+  const isMatch = remaining.match(/\bis:(archived|active)\b/gi);
+  if (isMatch) {
+    const last = isMatch[isMatch.length - 1];
+    result.archived = last.toLowerCase().endsWith('archived');
+    used.push(...isMatch);
+  }
+
+  // tag:"quoted" or tag:word
+  const tagQuoted = remaining.match(/\btag:"([^"]*)"\s*/g);
+  const tagWord = remaining.match(/\btag:(\S+)\s*/g);
+  if (tagQuoted?.length) {
+    const m = tagQuoted[tagQuoted.length - 1].match(/\btag:"([^"]*)"/);
+    if (m) result.tagName = m[1].trim();
+    used.push(...tagQuoted);
+  } else if (tagWord?.length) {
+    const m = tagWord[tagWord.length - 1].match(/\btag:(\S+)/);
+    if (m) result.tagName = m[1].trim();
+    used.push(...tagWord);
+  }
+
+  // notebook:"quoted" or notebook:word
+  const nbQuoted = remaining.match(/\bnotebook:"([^"]*)"\s*/g);
+  const nbWord = remaining.match(/\bnotebook:(\S+)\s*/g);
+  if (nbQuoted?.length) {
+    const m = nbQuoted[nbQuoted.length - 1].match(/\bnotebook:"([^"]*)"/);
+    if (m) result.notebookName = m[1].trim();
+    used.push(...nbQuoted);
+  } else if (nbWord?.length) {
+    const m = nbWord[nbWord.length - 1].match(/\bnotebook:(\S+)/);
+    if (m) result.notebookName = m[1].trim();
+    used.push(...nbWord);
+  }
+
+  // Remove used tokens to get remaining search text
+  for (const u of used) {
+    remaining = remaining.replace(u, ' ');
+  }
+  result.text = remaining.replace(/\s+/g, ' ').trim();
+  return result;
 }
 
 // ========== Notes CRUD ==========
@@ -396,6 +458,12 @@ export async function updateNote(
 
   if (error) {
     throw new Error(`Failed to update note: ${error.message}`);
+  }
+
+  if (input.content !== undefined) {
+    syncNoteLinks(noteId, userId, input.content).catch(() => {
+      /* best-effort; don't fail the update */
+    });
   }
 
   // Update tags if provided
@@ -1219,6 +1287,42 @@ export async function getSharedNotes(userId: string): Promise<Note[]> {
   return notesWithAttachments;
 }
 
+export async function getSharedNotesCount(userId: string): Promise<number> {
+  if (!supabase) {
+    throw new Error('Database not configured');
+  }
+
+  // Get notes shared with this user (not expired)
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('shared_notes')
+    .select('note_id')
+    .eq('shared_with_user_id', userId)
+    .or(`expires_at.is.null,expires_at.gt.${now}`);
+
+  if (error) {
+    throw new Error(`Failed to fetch shared notes count: ${error.message}`);
+  }
+
+  if (!data || data.length === 0) {
+    return 0;
+  }
+
+  // Filter out deleted notes to match what getSharedNotes returns
+  const noteIds = data.map((s) => s.note_id);
+  const { count, error: notesError } = await supabase
+    .from('notes')
+    .select('*', { count: 'exact', head: true })
+    .in('id', noteIds)
+    .is('deleted_at', null);
+
+  if (notesError) {
+    throw new Error(`Failed to fetch shared notes count: ${notesError.message}`);
+  }
+
+  return count ?? 0;
+}
+
 export async function getSharedNoteByToken(token: string): Promise<Note | null> {
   if (!supabase) {
     throw new Error('Database not configured');
@@ -1430,5 +1534,216 @@ export async function deleteAttachment(attachmentId: string, userId: string): Pr
 
   if (error) {
     throw new Error(`Failed to delete attachment: ${error.message}`);
+  }
+}
+
+// ========== Saved Searches ==========
+
+export interface SavedSearch {
+  id: string;
+  user_id: string;
+  name: string;
+  query: string;
+  created_at: string;
+}
+
+export async function getSavedSearches(userId: string): Promise<SavedSearch[]> {
+  if (!supabase) {
+    throw new Error('Database not configured');
+  }
+
+  const { data, error } = await supabase
+    .from('saved_searches')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to fetch saved searches: ${error.message}`);
+  }
+
+  return (data || []) as SavedSearch[];
+}
+
+export async function createSavedSearch(
+  userId: string,
+  input: { name: string; query: string },
+): Promise<SavedSearch> {
+  if (!supabase) {
+    throw new Error('Database not configured');
+  }
+
+  const { data, error } = await supabase
+    .from('saved_searches')
+    .insert({
+      user_id: userId,
+      name: input.name.trim(),
+      query: input.query.trim(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create saved search: ${error.message}`);
+  }
+
+  return data as SavedSearch;
+}
+
+export async function deleteSavedSearch(
+  savedSearchId: string,
+  userId: string,
+): Promise<void> {
+  if (!supabase) {
+    throw new Error('Database not configured');
+  }
+
+  const { error } = await supabase
+    .from('saved_searches')
+    .delete()
+    .eq('id', savedSearchId)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(`Failed to delete saved search: ${error.message}`);
+  }
+}
+
+// ========== Note Links (Backlinks) ==========
+
+export async function syncNoteLinks(
+  sourceNoteId: string,
+  userId: string,
+  content: Record<string, unknown>,
+): Promise<void> {
+  if (!supabase) return;
+
+  const note = await getNoteById(sourceNoteId, userId);
+  if (!note) return;
+
+  const targetIds = extractNoteIdsFromContent(content);
+  const validTargetIds: string[] = [];
+
+  for (const targetId of targetIds) {
+    if (targetId === sourceNoteId) continue;
+    const target = await getNoteById(targetId, userId);
+    if (target) validTargetIds.push(targetId);
+  }
+
+  await supabase.from('note_links').delete().eq('source_note_id', sourceNoteId);
+
+  if (validTargetIds.length > 0) {
+    const rows = validTargetIds.map((target_note_id) => ({
+      source_note_id: sourceNoteId,
+      target_note_id,
+    }));
+    await supabase.from('note_links').upsert(rows, {
+      onConflict: 'source_note_id,target_note_id',
+    });
+  }
+}
+
+export async function getBacklinks(noteId: string, userId: string): Promise<Note[]> {
+  if (!supabase) {
+    throw new Error('Database not configured');
+  }
+
+  const note = await getNoteById(noteId, userId);
+  if (!note) return [];
+
+  const { data: links, error } = await supabase
+    .from('note_links')
+    .select('source_note_id')
+    .eq('target_note_id', noteId);
+
+  if (error || !links || links.length === 0) return [];
+
+  const sourceIds = [...new Set(links.map((l) => l.source_note_id))];
+  const notes: Note[] = [];
+
+  for (const id of sourceIds) {
+    const n = await getNoteById(id, userId);
+    if (n) notes.push(n);
+  }
+
+  notes.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+  return notes;
+}
+
+// ========== Note Templates ==========
+
+export interface NoteTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  content: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getNoteTemplates(userId: string): Promise<NoteTemplate[]> {
+  if (!supabase) {
+    throw new Error('Database not configured');
+  }
+
+  const { data, error } = await supabase
+    .from('note_templates')
+    .select('*')
+    .eq('user_id', userId)
+    .order('name', { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to fetch templates: ${error.message}`);
+  }
+
+  return (data || []) as NoteTemplate[];
+}
+
+export async function createNoteTemplate(
+  userId: string,
+  input: { name: string; content: Record<string, unknown> },
+): Promise<NoteTemplate> {
+  if (!supabase) {
+    throw new Error('Database not configured');
+  }
+
+  const content =
+    input.content && typeof input.content === 'object' && input.content.type === 'doc'
+      ? input.content
+      : { type: 'doc' as const, content: [] };
+
+  const { data, error } = await supabase
+    .from('note_templates')
+    .insert({
+      user_id: userId,
+      name: input.name.trim().slice(0, 255),
+      content,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to create template: ${error.message}`);
+  }
+
+  return data as NoteTemplate;
+}
+
+export async function deleteNoteTemplate(
+  templateId: string,
+  userId: string,
+): Promise<void> {
+  if (!supabase) {
+    throw new Error('Database not configured');
+  }
+
+  const { error } = await supabase
+    .from('note_templates')
+    .delete()
+    .eq('id', templateId)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(`Failed to delete template: ${error.message}`);
   }
 }

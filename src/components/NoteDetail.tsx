@@ -1,24 +1,32 @@
 import type { JSX } from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Note, Tag } from '../useNotes';
 import { NoteEditor } from './NoteEditor';
 import { updateNote, deleteNote, getNoteById } from '../useNotes';
 import { SaveConfirmationModal } from './SaveConfirmationModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { FileUpload } from './FileUpload';
 import { AttachmentsList } from './AttachmentsList';
 import { NoteVersionHistory } from './NoteVersionHistory';
 import { ShareNoteModal } from './ShareNoteModal';
 import { ShareSettings } from './ShareSettings';
-import { cardClasses, cardOverlay, cardTitle } from '../styles/cards';
-import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
+import { BacklinksSection } from './BacklinksSection';
+import { tiptapToMarkdown } from '../utils/tiptapToMarkdown';
+import { createNoteTemplate } from '../useNoteTemplates';
+import { useAlert } from '../contexts/AlertContext';
+import { cardClasses, cardTitle } from '../styles/cards';
+import { btnBase, btnPrimary, btnGhost, btnIcon, btnCompact } from '../styles/buttons';
+import { ChevronDown, X } from 'lucide-react';
 
 export interface NoteDetailProps {
   note: Note | null;
   tags: Tag[];
   notebooks: Array<{ id: string; name: string }>;
+  notes?: Note[];
   onSave: () => void;
   onDelete: () => void;
   onClose: () => void;
+  onNoteClick?: (note: Note) => void;
   /** Called when the notes list should refresh (e.g. after sharing, which adds a history note). */
   onNotesChanged?: () => void;
 }
@@ -27,9 +35,11 @@ export const NoteDetail = ({
   note,
   tags,
   notebooks,
+  notes = [],
   onSave,
   onDelete,
   onClose,
+  onNoteClick,
   onNotesChanged,
 }: NoteDetailProps): JSX.Element => {
   const [title, setTitle] = useState('');
@@ -43,8 +53,42 @@ export const NoteDetail = ({
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showShareSettings, setShowShareSettings] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [attachments, setAttachments] = useState<Note['attachments']>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [isTagsDropdownOpen, setIsTagsDropdownOpen] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const tagsDropdownRef = useRef<HTMLDivElement>(null);
+  const { showAlert } = useAlert();
+
+  // Sally: focus title when opening a note for better keyboard flow
+  useEffect(() => {
+    if (!note) return;
+    const id = requestAnimationFrame(() => {
+      titleInputRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(id);
+  }, [note?.id]);
+
+  // Close tags dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        tagsDropdownRef.current &&
+        !tagsDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsTagsDropdownOpen(false);
+      }
+    };
+
+    if (isTagsDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isTagsDropdownOpen]);
 
   useEffect(() => {
     if (note) {
@@ -65,6 +109,8 @@ export const NoteDetail = ({
         setContent({ type: 'doc', content: [] });
       }
       setNotebookId(note.notebook_id);
+      // Set tags from note - tags should only be present if explicitly added by user
+      // For new notes, tags should be empty array (tags are optional, not auto-added)
       setSelectedTagIds(note.tags?.map((t) => t.id) || []);
       setIsPinned(note.is_pinned);
       setIsArchived(note.is_archived);
@@ -74,7 +120,7 @@ export const NoteDetail = ({
       setTitle('');
       setContent({ type: 'doc', content: [] });
       setNotebookId(null);
-      setSelectedTagIds([]);
+      setSelectedTagIds([]); // Explicitly reset tags to empty array - tags are optional
       setIsPinned(false);
       setIsArchived(false);
       setAttachments([]);
@@ -126,7 +172,7 @@ export const NoteDetail = ({
         console.error('Failed to create note:', error);
         const message =
           error instanceof Error ? error.message : 'Failed to create note. Please try again.';
-        alert(`Failed to create note: ${message}`);
+        showAlert(`Failed to create note: ${message}`, 'Error');
       } finally {
         setIsSaving(false);
       }
@@ -149,30 +195,33 @@ export const NoteDetail = ({
       console.error('Failed to save note:', error);
       const message =
         error instanceof Error ? error.message : 'Failed to save note. Please try again.';
-      alert(`Failed to save note: ${message}`);
+      showAlert(`Failed to save note: ${message}`, 'Error');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!note || !confirm('Are you sure you want to delete this note?')) return;
+  const handleDeleteClick = () => {
+    setDeleteError(null);
+    setShowDeleteModal(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!note) return;
+    setIsDeleting(true);
+    setDeleteError(null);
     try {
       await deleteNote(note.id);
+      setShowDeleteModal(false);
       onDelete();
     } catch (error) {
       console.error('Failed to delete note:', error);
-      const message =
-        error instanceof Error ? error.message : 'Failed to delete note. Please try again.';
-      alert(`Failed to delete note: ${message}`);
+      setDeleteError(
+        error instanceof Error ? error.message : 'Failed to delete note. Please try again.',
+      );
+    } finally {
+      setIsDeleting(false);
     }
-  };
-
-  const toggleTag = (tagId: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId],
-    );
   };
 
   if (!note) {
@@ -200,14 +249,14 @@ export const NoteDetail = ({
   return (
     <>
       <article className={cardClasses}>
-        <div className={cardOverlay} aria-hidden />
+
         <div className="relative z-10 flex flex-col h-full">
           <div className="flex items-center justify-between mb-4">
             <h2 className={cardTitle}>Edit Note</h2>
             <button
               type="button"
               onClick={onClose}
-              className={`${btnBase} ${btnGhost} text-sm`}
+              className={`${btnBase} ${btnGhost} ${btnIcon}`}
               aria-label="Close"
             >
               ✕
@@ -223,11 +272,12 @@ export const NoteDetail = ({
                 Title
               </label>
               <input
+                ref={titleInputRef}
                 id="note-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 placeholder="Note title..."
               />
             </div>
@@ -237,7 +287,7 @@ export const NoteDetail = ({
               <select
                 value={notebookId || ''}
                 onChange={(e) => setNotebookId(e.target.value || null)}
-                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">No notebook</option>
                 {notebooks.map((nb) => (
@@ -249,29 +299,75 @@ export const NoteDetail = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 text-foreground">Tags</label>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => toggleTag(tag.id)}
-                    className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                      selectedTagIds.includes(tag.id)
-                        ? 'bg-primary text-white'
-                        : 'bg-primary/10 dark:bg-primary/20 text-primary-strong dark:text-primary hover:bg-primary/20'
+              <label className="block text-sm font-medium mb-1 text-foreground">Tags</label>
+              <div ref={tagsDropdownRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsTagsDropdownOpen(!isTagsDropdownOpen)}
+                  className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-between"
+                >
+                  <span className="truncate">
+                    {selectedTagIds.length === 0
+                      ? 'No tags'
+                      : selectedTagIds.length === 1
+                        ? tags.find((t) => t.id === selectedTagIds[0])?.name || '1 tag'
+                        : `${selectedTagIds.length} tags`}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 shrink-0 transition-transform ${
+                      isTagsDropdownOpen ? 'rotate-180' : ''
                     }`}
-                  >
-                    {tag.name}
-                  </button>
-                ))}
+                    aria-hidden
+                  />
+                </button>
+                {isTagsDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface shadow-lg max-h-60 overflow-y-auto">
+                    {tags.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted">No tags available</div>
+                    ) : (
+                      <div className="p-2 space-y-1">
+                        {tags.map((tag) => {
+                          const isSelected = selectedTagIds.includes(tag.id);
+                          return (
+                            <label
+                              key={tag.id}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedTagIds([...selectedTagIds, tag.id]);
+                                  } else {
+                                    setSelectedTagIds(selectedTagIds.filter((id) => id !== tag.id));
+                                  }
+                                }}
+                                className="rounded border-primary/40 text-primary focus:ring-primary"
+                              />
+                              <span className="text-sm text-foreground flex-1">{tag.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2 text-foreground">Content</label>
-              <NoteEditor content={content} onChange={setContent} />
+              <NoteEditor
+                content={content}
+                onChange={setContent}
+                notesForLinking={notes}
+              />
             </div>
+
+            {note && onNoteClick && (
+              <BacklinksSection noteId={note.id} onNoteClick={onNoteClick} />
+            )}
 
             {note && (
               <>
@@ -281,11 +377,11 @@ export const NoteDetail = ({
                     onUploadComplete={handleAttachmentUploadComplete}
                     onError={(error) => {
                       setAttachmentError(error);
-                      setTimeout(() => setAttachmentError(null), 5000);
+                      setTimeout(() => setAttachmentError(null), 10000);
                     }}
                   />
                   {attachmentError && (
-                    <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded text-sm">
+                    <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
                       {attachmentError}
                     </div>
                   )}
@@ -318,38 +414,84 @@ export const NoteDetail = ({
               </label>
             </div>
 
-            <div className="flex gap-2 pt-4 border-t border-primary/20 dark:border-border">
+            <div className="flex flex-wrap gap-2 pt-4 border-t border-primary/20 dark:border-border">
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={isSaving}
-                className={`${btnBase} ${btnPrimary} flex-1`}
+                className={`${btnBase} ${btnPrimary} flex-1 min-w-[80px]`}
               >
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
               <button
                 type="button"
+                onClick={() => {
+                  const md = `# ${title}\n\n${tiptapToMarkdown(content)}`;
+                  const blob = new Blob([md], { type: 'text/markdown' });
+                  const a = document.createElement('a');
+                  a.href = URL.createObjectURL(blob);
+                  a.download = `${(title || 'note').replace(/[^a-z0-9-]/gi, '_')}.md`;
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                }}
+                className={`${btnBase} ${btnGhost} ${btnCompact}`}
+                title="Export as Markdown"
+              >
+                Export
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowVersionHistory(true)}
-                className={`${btnBase} ${btnGhost}`}
+                className={`${btnBase} ${btnGhost} ${btnCompact}`}
                 title="View version history"
               >
                 History
               </button>
               <button
                 type="button"
+                onClick={async () => {
+                  setIsSavingTemplate(true);
+                  try {
+                    const name = window.prompt('Template name:', title || 'Untitled');
+                    if (name?.trim()) {
+                      await createNoteTemplate({ name: name.trim(), content });
+                      onNotesChanged?.();
+                      showAlert('Template saved.', 'Success');
+                    }
+                  } catch (err) {
+                    showAlert(
+                      err instanceof Error ? err.message : 'Failed to save template.',
+                      'Error',
+                    );
+                  } finally {
+                    setIsSavingTemplate(false);
+                  }
+                }}
+                disabled={isSavingTemplate}
+                className={`${btnBase} ${btnGhost} ${btnCompact}`}
+                title="Save as template"
+              >
+                {isSavingTemplate ? '...' : 'Save as template'}
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowShareModal(true)}
-                className={`${btnBase} ${btnGhost}`}
+                className={`${btnBase} ${btnGhost} ${btnCompact}`}
               >
                 Share
               </button>
               <button
                 type="button"
                 onClick={() => setShowShareSettings(true)}
-                className={`${btnBase} ${btnGhost}`}
+                className={`${btnBase} ${btnGhost} ${btnCompact}`}
               >
                 Share Settings
               </button>
-              <button type="button" onClick={handleDelete} className={`${btnBase} ${btnGhost}`}>
+              <button
+                type="button"
+                onClick={handleDeleteClick}
+                className={`${btnBase} ${btnGhost} ${btnCompact}`}
+              >
                 Delete
               </button>
             </div>
@@ -384,6 +526,19 @@ export const NoteDetail = ({
             </div>
           </div>
         )}
+        <ConfirmDeleteModal
+          isOpen={showDeleteModal}
+          title="Delete note"
+          message="Are you sure you want to delete this note? This action cannot be undone."
+          confirmLabel="Delete"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => {
+            setShowDeleteModal(false);
+            setDeleteError(null);
+          }}
+          isLoading={isDeleting}
+          errorMessage={deleteError}
+        />
       </article>
     </>
   );

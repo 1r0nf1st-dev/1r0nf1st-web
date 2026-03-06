@@ -2,7 +2,7 @@ import type { JSX } from 'react';
 import { useSpotifyRecentlyPlayed } from '../useSpotifyRecentlyPlayed';
 import { SpotifyTrackCard } from './SpotifyTrackCard';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 
 const DEFAULT_LIMIT = 8;
 
@@ -12,7 +12,7 @@ export const SpotifyListening = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="spotify">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Recently played</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="mb-3 h-16 w-full" />
@@ -30,7 +30,7 @@ export const SpotifyListening = (): JSX.Element | null => {
   if (!tracks || tracks.length === 0) {
     return (
       <article className={cardClasses} id="spotify">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Recently played</h2>
         <p className={cardBody}>
           No recent tracks. Make sure the API server is running and <code>SPOTIFY_CLIENT_ID</code>,{' '}

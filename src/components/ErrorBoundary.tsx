@@ -3,7 +3,7 @@
 import type { JSX } from 'react';
 import { Component, type ReactNode } from 'react';
 import { reportError } from '../utils/errorReporter';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
 
 interface ErrorBoundaryProps {
@@ -79,7 +79,6 @@ function DefaultErrorFallback({
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <article className={cardClasses} style={{ maxWidth: '600px' }}>
-        <div className={cardOverlay} aria-hidden />
         <h2 className={cardTitle}>Something went wrong</h2>
         <div className={cardBody}>
           <p className="mb-4">
@@ -87,7 +86,7 @@ function DefaultErrorFallback({
             we&apos;ll look into it.
           </p>
           {process.env.NODE_ENV === 'development' && (
-            <details className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm">
+            <details className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-sm">
               <summary className="cursor-pointer font-medium mb-2">
                 Error details (dev only)
               </summary>

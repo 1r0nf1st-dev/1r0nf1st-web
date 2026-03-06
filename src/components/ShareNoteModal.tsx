@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { shareNote, type ShareNoteInput } from '../useNoteSharing';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 export interface ShareNoteModalProps {
@@ -79,7 +79,7 @@ export const ShareNoteModal = ({
       aria-labelledby="share-modal-title"
     >
       <article className={`${cardClasses} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
-        <div className={cardOverlay} aria-hidden />
+
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <h2 id="share-modal-title" className={cardTitle}>
@@ -97,12 +97,12 @@ export const ShareNoteModal = ({
 
           <form onSubmit={handleSubmit}>
             {error && (
-              <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+              <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
                 {error}
               </div>
             )}
             {success && (
-              <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-lg text-green-600 dark:text-green-400 text-sm">
+              <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-600 dark:text-green-400 text-sm">
                 {success}
               </div>
             )}
@@ -149,7 +149,7 @@ export const ShareNoteModal = ({
                   value={userEmail}
                   onChange={(e) => setUserEmail(e.target.value)}
                   placeholder="user@example.com"
-                  className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <p className="mt-1 text-xs text-muted">
                   Enter the email address of the user to share with
@@ -162,7 +162,7 @@ export const ShareNoteModal = ({
               <select
                 value={permission}
                 onChange={(e) => setPermission(e.target.value as 'view' | 'edit')}
-                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="view">View Only</option>
                 <option value="edit">Can Edit</option>
@@ -182,7 +182,7 @@ export const ShareNoteModal = ({
                   setExpiresInDays(e.target.value === '' ? '' : Number.parseInt(e.target.value, 10))
                 }
                 placeholder="Leave empty for no expiration"
-                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 

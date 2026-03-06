@@ -5,53 +5,106 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 
 const STORAGE_KEY = 'theme';
 
-type Theme = 'light' | 'dark';
+type ColorMode = 'light' | 'dark';
+
+interface ThemePreferences {
+  colorMode: ColorMode;
+}
 
 interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  colorMode: ColorMode;
+  /** Always 'corporate'; kept for compatibility with components that expect styleTheme */
+  styleTheme: 'corporate';
+  setColorMode: (mode: ColorMode) => void;
+  setStyleTheme: () => void;
+  toggleColorMode: () => void;
+  theme: ColorMode;
+  setTheme: (theme: ColorMode) => void;
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-function getSystemTheme(): Theme {
+function getSystemColorMode(): ColorMode {
   if (typeof window === 'undefined') return 'dark';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-function getStoredTheme(): Theme | null {
+function getStoredTheme(): ThemePreferences | null {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark') return stored;
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored) as Partial<ThemePreferences & { styleTheme?: string }>;
+    if (
+      parsed.colorMode &&
+      (parsed.colorMode === 'light' || parsed.colorMode === 'dark')
+    ) {
+      return { colorMode: parsed.colorMode };
+    }
+  } catch {
+    // fall through
+  }
+
+  if (stored === 'light' || stored === 'dark') {
+    return { colorMode: stored };
+  }
   return null;
 }
 
-function applyTheme(theme: Theme): void {
+function applyTheme(preferences: ThemePreferences): void {
   const root = document.documentElement;
-  if (theme === 'dark') {
+  // Add transition class for smooth theme switching
+  root.classList.add('theme-transitioning');
+  if (preferences.colorMode === 'dark') {
     root.classList.add('dark');
   } else {
     root.classList.remove('dark');
   }
+  // Remove transition class after transition completes
+  setTimeout(() => {
+    root.classList.remove('theme-transitioning');
+  }, 300);
 }
 
+const INITIAL_PREFERENCES: ThemePreferences = {
+  colorMode: 'dark',
+};
+
 export const ThemeProvider = ({ children }: { children: ReactNode }): ReactNode => {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    return getStoredTheme() ?? getSystemTheme();
-  });
+  const [preferences, setPreferencesState] = useState<ThemePreferences>(INITIAL_PREFERENCES);
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    applyTheme(theme);
-    localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
+    const stored = getStoredTheme();
+    if (stored) {
+      setPreferencesState(stored);
+      applyTheme(stored);
+    } else {
+      const systemColor = getSystemColorMode();
+      const next = { colorMode: systemColor };
+      setPreferencesState(next);
+      applyTheme(next);
+    }
+    setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hasMounted) return;
+    applyTheme(preferences);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
+  }, [preferences, hasMounted]);
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (): void => {
-      if (getStoredTheme() === null) {
-        const next = media.matches ? 'dark' : 'light';
-        setThemeState(next);
+      const stored = getStoredTheme();
+      if (!stored) {
+        const next: ThemePreferences = {
+          colorMode: media.matches ? 'dark' : 'light',
+        };
+        setPreferencesState(next);
         applyTheme(next);
       }
     };
@@ -59,16 +112,37 @@ export const ThemeProvider = ({ children }: { children: ReactNode }): ReactNode 
     return () => media.removeEventListener('change', handleChange);
   }, []);
 
-  const setTheme = useCallback((next: Theme) => {
-    setThemeState(next);
+  const setColorMode = useCallback((mode: ColorMode) => {
+    setPreferencesState((prev) => ({ ...prev, colorMode: mode }));
   }, []);
 
-  const toggleTheme = useCallback(() => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  const setStyleTheme = useCallback((_theme?: string) => {
+    /* No-op: only corporate style is supported */
   }, []);
+
+  const toggleColorMode = useCallback(() => {
+    setPreferencesState((prev) => ({
+      ...prev,
+      colorMode: prev.colorMode === 'dark' ? 'light' : 'dark',
+    }));
+  }, []);
+
+  const setTheme = useCallback((t: ColorMode) => setColorMode(t), [setColorMode]);
+  const toggleTheme = useCallback(() => toggleColorMode(), [toggleColorMode]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+    <ThemeContext.Provider
+      value={{
+        colorMode: preferences.colorMode,
+        styleTheme: 'corporate' as const,
+        setColorMode,
+        setStyleTheme,
+        toggleColorMode,
+        theme: preferences.colorMode,
+        setTheme,
+        toggleTheme,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

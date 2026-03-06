@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import type { DevToArticle } from '../useDevToArticles';
-import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
+import { cardClasses, cardBody } from '../styles/cards';
 
 export interface DevToArticleCardProps {
   article: DevToArticle;
@@ -24,7 +24,7 @@ export const DevToArticleCard = ({
 }: DevToArticleCardProps): JSX.Element => {
   return (
     <article className={cardClasses} id={id}>
-      <div className={cardOverlay} aria-hidden />
+
       <div className={`${cardBody} flex flex-col h-full`}>
         <div className="flex items-start gap-3 mb-2">
           {article.thumbnailUrl && (
@@ -40,7 +40,7 @@ export const DevToArticleCard = ({
                 alt=""
                 width={120}
                 height={80}
-                className="object-cover rounded block"
+                className="object-cover rounded-xl block"
               />
             </a>
           )}

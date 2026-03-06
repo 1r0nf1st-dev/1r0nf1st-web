@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import { useState, useEffect, useCallback } from 'react';
-import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
+import { cardClasses, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
 
 type ScenePhase = 'problem' | 'robot-enter' | 'solving' | 'fixed' | 'done';
@@ -61,12 +61,12 @@ export const CutsceneCodingProblem = ({ onComplete }: CutsceneCodingProblemProps
       aria-live="polite"
       aria-label="1r0nf1st solves a coding problem"
     >
-      <div className={cardOverlay} aria-hidden />
+
       <div
         className={`${cardBody} relative z-10 flex flex-col items-center min-h-[280px] justify-center`}
       >
         {/* Code block + error */}
-        <div className="w-full max-w-md rounded-lg border-2 border-red-500/50 dark:border-red-400/50 bg-black/10 dark:bg-white/5 p-3 font-mono text-sm mb-4">
+        <div className="w-full max-w-md rounded-xl border-2 border-red-500/50 dark:border-red-400/50 bg-black/10 dark:bg-white/5 p-3 font-mono text-sm mb-4">
           <div className="text-muted">{'// There is a bug in my circuitry'}</div>
           <div
             className={

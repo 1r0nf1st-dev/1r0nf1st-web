@@ -7,9 +7,10 @@ import {
   type NoteVersion,
 } from '../useNoteVersions';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
 import { RestoreVersionModal } from './RestoreVersionModal';
+import { useAlert } from '../contexts/AlertContext';
 import { VersionPreview } from './VersionPreview';
 
 export interface NoteVersionHistoryProps {
@@ -24,6 +25,7 @@ export const NoteVersionHistory = ({
   onClose,
 }: NoteVersionHistoryProps): JSX.Element => {
   const { versions, isLoading, error, refetch } = useNoteVersions(noteId);
+  const { showAlert } = useAlert();
   const [selectedVersion, setSelectedVersion] = useState<NoteVersion | null>(null);
   const [previewVersion, setPreviewVersion] = useState<NoteVersion | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
@@ -34,7 +36,10 @@ export const NoteVersionHistory = ({
       setPreviewVersion(version);
     } catch (error) {
       console.error('Failed to load version:', error);
-      alert(error instanceof Error ? error.message : 'Failed to load version');
+      showAlert(
+        error instanceof Error ? error.message : 'Failed to load version',
+        'Error',
+      );
     }
   };
 
@@ -47,7 +52,10 @@ export const NoteVersionHistory = ({
       onVersionRestored?.();
     } catch (error) {
       console.error('Failed to restore version:', error);
-      alert(error instanceof Error ? error.message : 'Failed to restore version');
+      showAlert(
+        error instanceof Error ? error.message : 'Failed to restore version',
+        'Error',
+      );
     } finally {
       setIsRestoring(false);
     }
@@ -79,7 +87,7 @@ export const NoteVersionHistory = ({
 
   return (
     <article className={cardClasses}>
-      <div className={cardOverlay} aria-hidden />
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
           <h2 className={cardTitle}>Version History</h2>
@@ -107,7 +115,7 @@ export const NoteVersionHistory = ({
             <Skeleton className="h-4 w-1/2" />
           </div>
         ) : error ? (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
             {error}
           </div>
         ) : !versions || versions.length === 0 ? (
@@ -121,7 +129,7 @@ export const NoteVersionHistory = ({
               return (
                 <div
                   key={version.id}
-                  className="p-3 border-2 border-primary/20 dark:border-border rounded-lg bg-surface-soft/50 hover:bg-surface-soft transition-colors"
+                  className="p-3 border-2 border-primary/20 dark:border-border rounded-xl bg-surface-soft/50 hover:bg-surface-soft transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">

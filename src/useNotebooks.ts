@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { env } from './config';
 import { getJson, ApiError } from './apiClient';
+import { useAuth } from './contexts/AuthContext';
 import type { Notebook } from './useNotes';
 
 interface NotebooksState {
@@ -25,6 +26,7 @@ function getApiBase(): string {
 }
 
 export function useNotebooks(): NotebooksState {
+  const { user, isLoading: authLoading } = useAuth();
   const [state, setState] = useState<Omit<NotebooksState, 'refetch'>>({
     notebooks: null,
     isLoading: true,
@@ -32,6 +34,12 @@ export function useNotebooks(): NotebooksState {
   });
 
   useEffect(() => {
+    // Don't make API calls if auth is still loading or user is not authenticated
+    if (authLoading || !user) {
+      setState({ notebooks: null, isLoading: authLoading, error: null });
+      return;
+    }
+
     let isCancelled = false;
     // Initialize loading state before async fetch
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Setting initial loading state before async operation is necessary
@@ -65,9 +73,14 @@ export function useNotebooks(): NotebooksState {
     return () => {
       isCancelled = true;
     };
-  }, []);
+  }, [authLoading, user]);
 
   const fetchNotebooks = async () => {
+    if (!user) {
+      setState({ notebooks: null, isLoading: false, error: 'Please log in to view your notebooks.' });
+      return;
+    }
+
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {

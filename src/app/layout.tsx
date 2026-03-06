@@ -4,6 +4,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Providers } from './providers';
 import { AuthHashErrorHandler } from '../components/AuthHashErrorHandler';
+import { SkipLink } from '../components/SkipLink';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -37,9 +38,27 @@ export default function RootLayout({
             __html: `
               (function () {
                 var stored = localStorage.getItem('theme');
-                var dark = stored === 'dark' || (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                if (dark) document.documentElement.classList.add('dark');
+                var colorMode = 'dark';
+                if (stored) {
+                  try {
+                    var parsed = JSON.parse(stored);
+                    if (parsed.colorMode && (parsed.colorMode === 'light' || parsed.colorMode === 'dark')) {
+                      colorMode = parsed.colorMode;
+                    }
+                  } catch (e) {
+                    if (stored === 'light' || stored === 'dark') {
+                      colorMode = stored;
+                    }
+                  }
+                } else {
+                  colorMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+                if (colorMode === 'dark') document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
+                var favicon = '/favicon.ico?v=3';
+                var links = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+                if (links.length) { links.forEach(function(l) { l.href = favicon; }); }
+                else { var l = document.createElement('link'); l.rel = 'icon'; l.href = favicon; document.head.appendChild(l); }
               })();
             `,
           }}
@@ -48,6 +67,7 @@ export default function RootLayout({
       <body>
         <ErrorBoundary>
           <Providers>
+            <SkipLink />
             <AuthHashErrorHandler />
             <div className="min-h-screen relative z-[1]">{children}</div>
           </Providers>

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect } from 'react';
-import { getJson } from '../apiClient';
+import { supabaseClient } from '../lib/supabaseClient';
 
 interface User {
   id: string;
@@ -16,7 +16,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, username?: string) => Promise<void>;
   changePassword: (newPassword: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -27,142 +27,130 @@ export const AuthProvider = ({ children }: { children: ReactNode }): ReactNode =
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing token on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-      setToken(storedToken);
-      verifyToken(storedToken);
-    } else {
+    if (!supabaseClient) {
+      // Supabase is not configured (likely missing env vars); stay logged out
+      // but don't crash the app.
       setIsLoading(false);
+      return;
     }
+
+    // Initialise from current session and subscribe to auth state changes.
+    // onAuthStateChange fires immediately with the current session on mount,
+    // then on every login / logout / token refresh, so there is no need for
+    // a separate "verifyToken" call.
+    const {
+      data: { subscription },
+    } = supabaseClient.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const accessToken = session.access_token;
+        setToken(accessToken);
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          username: session.user.user_metadata?.username as string | undefined,
+        });
+        // Keep the existing localStorage key so apiClient.ts needs no changes.
+        localStorage.setItem('authToken', accessToken);
+        if (session.refresh_token) {
+          localStorage.setItem('refreshToken', session.refresh_token);
+        }
+      } else {
+        setToken(null);
+        setUser(null);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const verifyToken = async (tokenToVerify: string): Promise<void> => {
-    try {
-      const response = await getJson<{ user: User }>('/api/auth/verify', {
-        headers: {
-          Authorization: `Bearer ${tokenToVerify}`,
-        },
-      });
-      setUser(response.user);
-    } catch {
-      // Token invalid, clear it
-      localStorage.removeItem('authToken');
-      setToken(null);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const login = async (email: string, password: string): Promise<void> => {
-    try {
-      const response = await getJson<{ token: string; refreshToken?: string; user: User }>(
-        '/api/auth/login',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        },
-      );
+    if (!supabaseClient) {
+      throw new Error('Authentication is not configured. Please contact support.');
+    }
 
-      setToken(response.token);
-      setUser(response.user);
-      localStorage.setItem('authToken', response.token);
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw new Error(
+        error.message === 'Email not confirmed'
+          ? 'Please confirm your email address before signing in. Check your inbox for the confirmation link.'
+          : error.message === 'Invalid login credentials'
+            ? 'Invalid credentials'
+            : error.message,
+      );
+    }
+
+    if (!data.session || !data.user) {
       throw new Error('Login failed');
     }
+    // onAuthStateChange will update state; nothing extra needed here.
   };
 
   const register = async (email: string, password: string, username?: string): Promise<void> => {
-    try {
-      const response = await getJson<{
-        token?: string;
-        refreshToken?: string;
-        user: User;
-        message?: string;
-      }>('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, username }),
-      });
+    if (!supabaseClient) {
+      throw new Error('Authentication is not configured. Please contact support.');
+    }
 
-      // If email confirmation is required, token might not be present
-      if (response.token) {
-        setToken(response.token);
-        setUser(response.user);
-        localStorage.setItem('authToken', response.token);
-        if (response.refreshToken) {
-          localStorage.setItem('refreshToken', response.refreshToken);
-        }
-      } else if (response.message) {
-        // Email verification required
-        throw new Error(response.message);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username: username ?? email.split('@')[0],
+        },
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data.user) {
       throw new Error('Registration failed');
     }
+
+    // When email confirmation is required, session is null and the user must
+    // verify their address before they can sign in.
+    if (!data.session) {
+      throw new Error('User created. Please check your email to verify your account.');
+    }
+    // onAuthStateChange will update state; nothing extra needed here.
   };
 
   const changePassword = async (newPassword: string): Promise<void> => {
-    try {
-      await getJson<{ message: string }>('/api/auth/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ newPassword }),
-      });
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
-      throw new Error('Failed to change password');
+    if (!supabaseClient) {
+      throw new Error('Authentication is not configured. Please contact support.');
+    }
+
+    const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+    if (error) {
+      throw new Error(error.message);
     }
   };
 
   const logout = async (): Promise<void> => {
-    try {
-      // Call logout endpoint if token exists
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        try {
-          await getJson('/api/auth/logout', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-        } catch {
-          // Ignore errors on logout
-        }
-      }
-    } finally {
-      setToken(null);
+    if (!supabaseClient) {
+      // Nothing to do if auth is not configured.
       setUser(null);
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('refreshToken');
+      setToken(null);
+      return;
     }
+
+    await supabaseClient.auth.signOut();
+    // onAuthStateChange will clear state and localStorage automatically.
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, token, login, register, changePassword, logout, isLoading }}
-    >
+    <AuthContext.Provider value={{ user, token, login, register, changePassword, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

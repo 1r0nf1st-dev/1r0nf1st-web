@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { env } from './config';
 import { getJson, ApiError } from './apiClient';
+import { useAuth } from './contexts/AuthContext';
 
 export interface Note {
   id: string;
@@ -77,6 +78,7 @@ function getApiBase(): string {
 }
 
 export function useNotes(filters?: NotesFilters): NotesState {
+  const { user, isLoading: authLoading } = useAuth();
   const [state, setState] = useState<Omit<NotesState, 'refetch'>>({
     notes: null,
     isLoading: true,
@@ -93,6 +95,12 @@ export function useNotes(filters?: NotesFilters): NotesState {
   ].join('|');
 
   useEffect(() => {
+    // Don't make API calls if auth is still loading or user is not authenticated
+    if (authLoading || !user) {
+      setState({ notes: null, isLoading: authLoading, error: null });
+      return;
+    }
+
     let isCancelled = false;
     // Initialize loading state before async fetch
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Setting initial loading state before async operation is necessary
@@ -133,9 +141,14 @@ export function useNotes(filters?: NotesFilters): NotesState {
     return () => {
       isCancelled = true;
     };
-  }, [filterKey]);
+  }, [filterKey, authLoading, user]);
 
   const fetchNotes = useCallback(async () => {
+    if (!user) {
+      setState({ notes: null, isLoading: false, error: 'Please log in to view your notes.' });
+      return;
+    }
+
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -164,7 +177,7 @@ export function useNotes(filters?: NotesFilters): NotesState {
       }
       setState({ notes: null, isLoading: false, error: message });
     }
-  }, [filterKey]);
+  }, [filterKey, user]);
 
   return {
     ...state,

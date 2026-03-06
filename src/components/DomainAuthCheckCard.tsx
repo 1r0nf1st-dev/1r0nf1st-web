@@ -4,7 +4,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getJson, ApiError } from '../apiClient';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary } from '../styles/buttons';
 import { getApiBase } from '../config';
 
@@ -91,12 +91,12 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
       )}
       {r.lookupHostname && (
         <p className="text-xs text-muted" title={r.lookupHostname}>
-          Looked up: <code className="break-all bg-muted/50 px-1 rounded">{r.lookupHostname}</code>
+          Looked up: <code className="break-all bg-muted/50 px-1 rounded-xl">{r.lookupHostname}</code>
         </p>
       )}
       {r.error && <p className="text-sm text-red-500 dark:text-red-400 mt-0.5">{r.error}</p>}
       {r.suggestion && (
-        <p className="text-sm text-foreground/90 mt-1 p-2 rounded bg-primary/10 dark:bg-primary/5 border border-primary/20">
+        <p className="text-sm text-foreground/90 mt-1 p-2 rounded-xl bg-primary/10 dark:bg-primary/5 border border-primary/20">
           <span className="font-medium text-foreground">Suggestion:</span> {r.suggestion}
         </p>
       )}
@@ -110,7 +110,7 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses}>
-      <div className={cardOverlay} aria-hidden />
+
       <h2 className={cardTitle}>Domain auth (DKIM / DMARC)</h2>
       <p className={cardBody}>
         Check DNS for DMARC and DKIM on a domain. Only visible to admin. Use the DKIM selector from
@@ -130,7 +130,7 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             placeholder="example.com"
-            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
             aria-required
             disabled={loading}
           />
@@ -148,7 +148,7 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
             value={dkimSelector}
             onChange={(e) => setDkimSelector(e.target.value)}
             placeholder="mail or brevo"
-            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
+            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:ring-2 focus:ring-primary"
             disabled={loading}
           />
         </div>
@@ -158,7 +158,7 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
           </p>
         )}
         {result && (
-          <div className="rounded-lg border-2 border-primary/20 dark:border-border p-3 space-y-2 text-sm">
+          <div className="rounded-xl border-2 border-primary/20 dark:border-border p-3 space-y-2 text-sm">
             <div>
               <strong className="text-foreground">DMARC</strong>
               <Status r={result.dmarc} />

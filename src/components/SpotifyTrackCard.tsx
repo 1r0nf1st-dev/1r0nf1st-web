@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import type { SpotifyTrack } from '../useSpotifyRecentlyPlayed';
-import { cardClasses, cardOverlay, cardBody } from '../styles/cards';
+import { cardClasses, cardBody } from '../styles/cards';
 
 export interface SpotifyTrackCardProps {
   track: SpotifyTrack;
@@ -20,7 +20,7 @@ function formatPlayedAt(iso: string): string {
 export const SpotifyTrackCard = ({ track, id }: SpotifyTrackCardProps): JSX.Element => {
   return (
     <article className={cardClasses} id={id}>
-      <div className={cardOverlay} aria-hidden />
+
       <div className={`${cardBody} flex flex-col h-full`}>
         <div className="flex items-start gap-3 mb-2">
           {track.albumImageUrl && (
@@ -36,7 +36,7 @@ export const SpotifyTrackCard = ({ track, id }: SpotifyTrackCardProps): JSX.Elem
                 alt=""
                 width={80}
                 height={80}
-                className="object-cover rounded block"
+                className="object-cover rounded-xl block"
               />
             </a>
           )}

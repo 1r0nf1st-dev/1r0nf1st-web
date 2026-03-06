@@ -1,17 +1,18 @@
 import { Router } from 'express';
 import multer from 'multer';
 import type { AuthRequest } from '../middleware/auth.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, authenticateWebClipper } from '../middleware/auth.js';
 import {
   getNotesByUserId,
   getNoteById,
   createNote,
+  getNotebookById,
   updateNote,
   deleteNote,
   restoreNote,
   searchNotes,
+  parseSearchOperators,
   getNotebooksByUserId,
-  getNotebookById,
   createNotebook,
   updateNotebook,
   deleteNotebook,
@@ -30,9 +31,17 @@ import {
   shareNoteWithUser,
   getNoteShares,
   getSharedNotes,
+  getSharedNotesCount,
   getSharedNoteByToken,
   updateSharePermission,
   unshareNote,
+  getSavedSearches,
+  createSavedSearch,
+  deleteSavedSearch,
+  getBacklinks,
+  getNoteTemplates,
+  createNoteTemplate,
+  deleteNoteTemplate,
 } from '../services/noteService.js';
 import {
   sanitizeFreeText,
@@ -42,10 +51,15 @@ import {
   isAllowedMimeType,
   hasDangerousExtension,
 } from '../utils/sanitize.js';
+import { buildClipContent } from '../utils/clipContent.js';
 import { sendTransactionalEmail } from '../services/brevoService.js';
 import { config } from '../config.js';
+import { createWebClipperToken } from '../services/webClipperService.js';
+import { transcribeRouter } from './transcribe.js';
 
 const notesRouter = Router();
+
+notesRouter.use('/transcribe', transcribeRouter);
 const NOTE_TITLE_MAX_LENGTH = 2000;
 const NOTE_SEARCH_MAX_LENGTH = 500;
 const NOTEBOOK_NAME_MAX_LENGTH = 200;
@@ -59,7 +73,62 @@ const upload = multer({
   },
 });
 
-// All routes require authentication
+// GET /api/notes/clip/notebooks - List notebooks for Web Clipper extension
+notesRouter.get('/clip/notebooks', authenticateWebClipper, async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Web Clipper token invalid' });
+      return;
+    }
+    const notebooks = await getNotebooksByUserId(req.userId);
+    res.json(notebooks);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch notebooks';
+    res.status(500).json({ error: message });
+  }
+});
+
+// POST /api/notes/clip - Web Clipper (uses nc_ token, not JWT)
+notesRouter.post('/clip', authenticateWebClipper, async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Web Clipper token invalid' });
+      return;
+    }
+
+    const body = req.body as {
+      title?: string;
+      content?: string;
+      notebook_id?: string;
+      source_url?: string;
+      source_title?: string;
+    };
+
+    const title = sanitizePlainText(body.title ?? '', NOTE_TITLE_MAX_LENGTH) || 'Clipped page';
+    const rawContent = typeof body.content === 'string' ? body.content : '';
+    const sourceUrl = typeof body.source_url === 'string' ? body.source_url : '';
+    const sourceTitle = typeof body.source_title === 'string' ? body.source_title : title;
+
+    let notebookId: string | null = null;
+    if (body.notebook_id && typeof body.notebook_id === 'string') {
+      const notebook = await getNotebookById(req.userId, body.notebook_id);
+      if (!notebook) {
+        res.status(400).json({ error: 'Notebook not found or access denied' });
+        return;
+      }
+      notebookId = notebook.id;
+    }
+
+    const content = buildClipContent(rawContent, sourceUrl, sourceTitle);
+    const note = await createNote(req.userId, { title, content, notebook_id: notebookId ?? undefined });
+    res.status(201).json(note);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to clip note';
+    res.status(500).json({ error: message });
+  }
+});
+
+// All other routes require JWT authentication
 notesRouter.use(authenticateToken);
 
 // ========== Notes Routes ==========
@@ -77,6 +146,28 @@ notesRouter.get('/shared', async (req: AuthRequest, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch shared notes';
     res.status(500).json({ error: message });
+  }
+});
+
+// GET /api/notes/shared/count - Get shared notes unread count
+notesRouter.get('/shared/count', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({
+        data: null,
+        error: { message: 'User not authenticated', code: 'UNAUTHORIZED' },
+      });
+      return;
+    }
+
+    const count = await getSharedNotesCount(req.userId);
+    res.json({ data: { count }, error: null });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to fetch shared notes count';
+    res.status(500).json({
+      data: null,
+      error: { message, code: 'COUNT_FAILED' },
+    });
   }
 });
 
@@ -99,6 +190,7 @@ notesRouter.get('/shared/:token', async (req, res) => {
 });
 
 // GET /api/notes - List notes (with filters: ?notebook_id=...&tag_id=...&search=...&archived=true&pinned=true)
+// Search supports operators: tag:name, notebook:name, is:archived, is:active
 notesRouter.get('/', async (req: AuthRequest, res) => {
   try {
     if (!req.userId) {
@@ -106,14 +198,47 @@ notesRouter.get('/', async (req: AuthRequest, res) => {
       return;
     }
 
+    const rawSearch =
+      typeof req.query.search === 'string'
+        ? sanitizePlainText(req.query.search, NOTE_SEARCH_MAX_LENGTH)
+        : undefined;
+
+    // Parse search operators (tag:, notebook:, is:archived)
+    const parsed = rawSearch ? parseSearchOperators(rawSearch) : null;
+
+    let notebook_id: string | undefined =
+      typeof req.query.notebook_id === 'string' ? req.query.notebook_id : undefined;
+    let tag_id: string | undefined =
+      typeof req.query.tag_id === 'string' ? req.query.tag_id : undefined;
+    let archived: boolean | undefined =
+      typeof req.query.archived === 'string' ? req.query.archived === 'true' : undefined;
+    let search: string | undefined = rawSearch;
+
+    // Operators override query params when present
+    if (parsed) {
+      if (parsed.archived !== undefined) archived = parsed.archived;
+      if (parsed.tagName) {
+        const tags = await getTagsByUserId(req.userId);
+        const tag = tags.find(
+          (t) => t.name.toLowerCase().trim() === parsed!.tagName!.toLowerCase().trim(),
+        );
+        if (tag) tag_id = tag.id;
+      }
+      if (parsed.notebookName) {
+        const notebooks = await getNotebooksByUserId(req.userId);
+        const nb = notebooks.find(
+          (n) => n.name.toLowerCase().trim() === parsed!.notebookName!.toLowerCase().trim(),
+        );
+        if (nb) notebook_id = nb.id;
+      }
+      search = parsed.text || undefined;
+    }
+
     const filters = {
-      notebook_id: typeof req.query.notebook_id === 'string' ? req.query.notebook_id : undefined,
-      tag_id: typeof req.query.tag_id === 'string' ? req.query.tag_id : undefined,
-      search:
-        typeof req.query.search === 'string'
-          ? sanitizePlainText(req.query.search, NOTE_SEARCH_MAX_LENGTH)
-          : undefined,
-      archived: typeof req.query.archived === 'string' ? req.query.archived === 'true' : undefined,
+      notebook_id,
+      tag_id,
+      search,
+      archived,
       pinned: typeof req.query.pinned === 'string' ? req.query.pinned === 'true' : undefined,
     };
 
@@ -122,7 +247,7 @@ notesRouter.get('/', async (req: AuthRequest, res) => {
       {
         userId: req.userId,
         filters,
-        tagId: filters.tag_id,
+        parsed: parsed ?? undefined,
       },
       'Fetching notes with filters',
     );
@@ -156,6 +281,145 @@ notesRouter.get('/search', async (req: AuthRequest, res) => {
     res.json(notes);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to search notes';
+    res.status(500).json({ error: message });
+  }
+});
+
+// ========== Saved Searches Routes ==========
+
+// POST /api/notes/web-clipper-token - Generate Web Clipper token (JWT required)
+notesRouter.post('/web-clipper-token', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+    const { token, createdAt } = await createWebClipperToken(req.userId);
+    res.json({ token, createdAt });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to create Web Clipper token';
+    res.status(500).json({ error: message });
+  }
+});
+
+// GET /api/notes/saved-searches - List saved searches
+notesRouter.get('/saved-searches', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const savedSearches = await getSavedSearches(req.userId);
+    res.json(savedSearches);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to fetch saved searches';
+    res.status(500).json({ error: message });
+  }
+});
+
+// POST /api/notes/saved-searches - Create saved search
+notesRouter.post('/saved-searches', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const body = req.body as { name?: string; query?: string };
+    const name = typeof body?.name === 'string' ? body.name.trim() : '';
+    const query = typeof body?.query === 'string' ? body.query.trim() : '';
+
+    if (!name || !query) {
+      res.status(400).json({ error: 'Name and query are required' });
+      return;
+    }
+
+    const savedSearch = await createSavedSearch(req.userId, {
+      name: sanitizePlainText(name, 255),
+      query: sanitizePlainText(query, NOTE_SEARCH_MAX_LENGTH),
+    });
+    res.status(201).json(savedSearch);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to create saved search';
+    res.status(500).json({ error: message });
+  }
+});
+
+// GET /api/notes/templates - List note templates
+notesRouter.get('/templates', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    const templates = await getNoteTemplates(req.userId);
+    res.json(templates);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to fetch templates';
+    res.status(500).json({ error: message });
+  }
+});
+
+// POST /api/notes/templates - Create template
+notesRouter.post('/templates', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    const { name, content } = req.body;
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      res.status(400).json({ error: 'Name is required' });
+      return;
+    }
+    const template = await createNoteTemplate(req.userId, {
+      name: sanitizePlainText(name.trim(), 255),
+      content: content && typeof content === 'object' ? content : { type: 'doc', content: [] },
+    });
+    res.status(201).json(template);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to create template';
+    res.status(500).json({ error: message });
+  }
+});
+
+// DELETE /api/notes/templates/:id - Delete template
+notesRouter.delete('/templates/:id', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    await deleteNoteTemplate(id, req.userId);
+    res.status(204).send();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to delete template';
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+// DELETE /api/notes/saved-searches/:id - Delete saved search
+notesRouter.delete('/saved-searches/:id', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    await deleteSavedSearch(id, req.userId);
+    res.status(204).send();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to delete saved search';
     res.status(500).json({ error: message });
   }
 });
@@ -388,6 +652,24 @@ notesRouter.delete('/tags/:id', async (req: AuthRequest, res) => {
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete tag';
+    const status = error instanceof Error && message.includes('not found') ? 404 : 500;
+    res.status(status).json({ error: message });
+  }
+});
+
+// GET /api/notes/:id/backlinks - Get notes that link to this note
+notesRouter.get('/:id/backlinks', async (req: AuthRequest, res) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const notes = await getBacklinks(noteId, req.userId);
+    res.json(notes);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to fetch backlinks';
     const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
@@ -667,12 +949,35 @@ notesRouter.post(
         'Attempting to upload file to Supabase Storage',
       );
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('note-attachments')
-        .upload(filePath, file.buffer, {
-          contentType: file.mimetype || 'application/octet-stream',
-          upsert: false,
-        });
+      let uploadData: { path: string } | null = null;
+      let uploadError: { message: string; statusCode?: number } | null = null;
+
+      try {
+        const result = await supabase.storage
+          .from('note-attachments')
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype || 'application/octet-stream',
+            upsert: false,
+          });
+        uploadData = result.data;
+        uploadError = result.error
+          ? {
+              message: result.error.message,
+              statusCode:
+                result.error.statusCode != null
+                  ? parseInt(String(result.error.statusCode), 10)
+                  : undefined,
+            }
+          : null;
+      } catch (storageErr) {
+        const errMsg =
+          storageErr instanceof Error ? storageErr.message : String(storageErr);
+        logger.error(
+          { err: storageErr, filePath, bucket: 'note-attachments' },
+          'Storage upload threw',
+        );
+        uploadError = { message: errMsg };
+      }
 
       if (uploadError) {
         logger.error(
@@ -685,16 +990,23 @@ notesRouter.post(
           'Failed to upload file to Supabase Storage',
         );
 
-        // Provide helpful error message for RLS policy violations
+        // Provide helpful error message for common failures
         let errorMessage = `Failed to upload file: ${uploadError.message}`;
         const isRlsOrForbidden =
           uploadError.message.includes('row-level security') ||
+          uploadError.message.includes('policy') ||
           String(uploadError.statusCode) === '403';
-        if (isRlsOrForbidden) {
+        const isBucketNotFound =
+          uploadError.message.includes('Bucket') &&
+          (uploadError.message.includes('not found') ||
+            uploadError.message.includes('does not exist'));
+
+        if (isBucketNotFound) {
           errorMessage +=
-            ' This is likely an RLS issue. Try: (A) Storage → Buckets → note-attachments → disable RLS; ' +
-            'or (B) run 012_storage_service_role_policy.sql or 013_storage_service_role_jwt_policy.sql in Supabase SQL Editor. ' +
-            'See server/db/migrations/RUN_MIGRATIONS.md.';
+            ' Create the bucket: Supabase Dashboard → Storage → New bucket → name "note-attachments", disable RLS. See server/db/migrations/009_setup_storage_bucket.md.';
+        } else if (isRlsOrForbidden) {
+          errorMessage +=
+            ' Storage RLS may be blocking. Try: Storage → Buckets → note-attachments → disable RLS. See RUN_MIGRATIONS.md.';
         }
 
         res.status(500).json({ error: errorMessage });
@@ -714,6 +1026,9 @@ notesRouter.post(
 
       res.status(201).json(attachment);
     } catch (error) {
+      const { logger } = await import('../utils/logger.js');
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      logger.error({ err: error, noteId: id }, 'Attachment upload failed');
       const message = error instanceof Error ? error.message : 'Failed to upload file';
       res.status(500).json({ error: message });
     }

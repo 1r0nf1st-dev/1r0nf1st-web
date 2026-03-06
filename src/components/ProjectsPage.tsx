@@ -3,33 +3,32 @@
 import type { JSX } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost } from '../styles/buttons';
 import {
-  FaRocket,
-  FaCode,
-  FaPalette,
-  FaMobileAlt,
-  FaTools,
-  FaBolt,
-  FaGlobe,
-  FaChartBar,
-  FaBullseye,
-  FaStar,
-  FaCloud,
-  FaShieldAlt,
-  FaDatabase,
-  FaServer,
-  FaLock,
-  FaBell,
-  FaHeart,
-  FaFire,
-  FaSun,
-  FaLeaf,
-  FaStickyNote,
-  FaEnvelope,
-} from 'react-icons/fa';
-import type { IconType } from 'react-icons';
+  Rocket,
+  Code,
+  Palette,
+  Smartphone,
+  Wrench,
+  Zap,
+  Globe,
+  BarChart3,
+  Star,
+  Cloud,
+  Shield,
+  Database,
+  Server,
+  Lock,
+  Bell,
+  Heart,
+  Flame,
+  Sun,
+  Leaf,
+  StickyNote,
+  Mail,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Hero } from './Hero';
 import { Footer } from './Footer';
 import { AdminOnlyPlaceholderCard } from './AdminOnlyPlaceholderCard';
@@ -38,10 +37,14 @@ const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 
 interface Project {
   id: number;
-  icon: IconType;
+  icon: LucideIcon;
   title: string;
   description: string;
   link: string;
+}
+
+function formatProjectNumber(index: number): string {
+  return String(index + 1).padStart(3, '0');
 }
 
 export const ProjectsPage = (): JSX.Element => {
@@ -51,24 +54,16 @@ export const ProjectsPage = (): JSX.Element => {
   const projects: Project[] = [
     // Working projects first
     {
-      id: 9,
-      icon: FaBullseye,
-      title: 'Goal Tracker',
-      description:
-        'Precision goal-setting and tracking application that helps users achieve their objectives with detailed progress monitoring and milestones.',
-      link: '/projects/goal-tracker',
-    },
-    {
       id: 21,
-      icon: FaStickyNote,
+      icon: StickyNote,
       title: 'Notes',
       description:
-        'A powerful note-taking application with rich text editing, notebooks, tags, and full-text search. Organize your thoughts and ideas effortlessly.',
+        'A comprehensive note-taking application with rich text editing, notebooks, tags, templates, note sharing, web clipper, saved searches, attachments, version history, and full-text search. Organize, collaborate, and manage your thoughts effortlessly.',
       link: '/notes',
     },
     {
       id: 19,
-      icon: FaSun,
+      icon: Sun,
       title: 'Weather Dashboard',
       description:
         'Beautiful weather application with detailed forecasts, interactive maps, and location-based recommendations.',
@@ -76,7 +71,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 17,
-      icon: FaHeart,
+      icon: Heart,
       title: 'Health Tracker',
       description:
         'Personal health and wellness application with activity tracking, goal setting, and progress visualization.',
@@ -84,7 +79,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 11,
-      icon: FaCloud,
+      icon: Cloud,
       title: 'Cloud Infrastructure',
       description:
         'A scalable cloud-based solution designed for modern applications. Features include automated deployment and resource management.',
@@ -92,7 +87,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 10,
-      icon: FaStar,
+      icon: Star,
       title: 'Featured Showcase',
       description:
         'A curated collection platform that highlights top-rated content, products, and services with user reviews and recommendations.',
@@ -101,7 +96,7 @@ export const ProjectsPage = (): JSX.Element => {
     // Placeholder projects
     {
       id: 1,
-      icon: FaRocket,
+      icon: Rocket,
       title: 'Launch Platform',
       description:
         'A powerful deployment and launch management system that streamlines the process of releasing applications to production environments.',
@@ -109,7 +104,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 2,
-      icon: FaCode,
+      icon: Code,
       title: 'Code Editor Pro',
       description:
         'An advanced code editor with syntax highlighting, intelligent autocomplete, and seamless integration with version control systems.',
@@ -117,7 +112,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 3,
-      icon: FaPalette,
+      icon: Palette,
       title: 'Design Studio',
       description:
         'A comprehensive design tool for creating beautiful interfaces, mockups, and prototypes with collaborative features for teams.',
@@ -125,7 +120,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 4,
-      icon: FaMobileAlt,
+      icon: Smartphone,
       title: 'Mobile App Builder',
       description:
         'Cross-platform mobile application development framework that enables rapid prototyping and deployment for iOS and Android.',
@@ -133,7 +128,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 5,
-      icon: FaTools,
+      icon: Wrench,
       title: 'DevOps Toolkit',
       description:
         'A collection of essential development and operations tools for automating workflows, managing infrastructure, and improving productivity.',
@@ -141,7 +136,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 6,
-      icon: FaBolt,
+      icon: Zap,
       title: 'Speed Optimizer',
       description:
         'Performance enhancement tool that accelerates application load times and optimizes resource usage for maximum efficiency.',
@@ -149,7 +144,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 7,
-      icon: FaGlobe,
+      icon: Globe,
       title: 'Global Network',
       description:
         'Worldwide connectivity platform that enables seamless communication and data exchange across international boundaries.',
@@ -157,7 +152,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 8,
-      icon: FaChartBar,
+      icon: BarChart3,
       title: 'Analytics Dashboard',
       description:
         'Comprehensive analytics platform with real-time data visualization, custom reports, and actionable insights for business intelligence.',
@@ -165,7 +160,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 12,
-      icon: FaShieldAlt,
+      icon: Shield,
       title: 'Security Platform',
       description:
         'Enterprise-grade security system with advanced threat detection and real-time monitoring capabilities.',
@@ -173,7 +168,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 13,
-      icon: FaDatabase,
+      icon: Database,
       title: 'Data Analytics',
       description:
         'Powerful data processing and visualization tool that transforms raw data into actionable insights.',
@@ -181,7 +176,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 14,
-      icon: FaServer,
+      icon: Server,
       title: 'Server Management',
       description:
         'Comprehensive server monitoring and management platform with automated scaling and health checks.',
@@ -189,7 +184,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 15,
-      icon: FaLock,
+      icon: Lock,
       title: 'Authentication System',
       description:
         'Secure authentication and authorization framework with multi-factor support and session management.',
@@ -197,7 +192,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 16,
-      icon: FaBell,
+      icon: Bell,
       title: 'Notification Service',
       description:
         'Real-time notification system supporting multiple channels including email, SMS, and push notifications.',
@@ -205,7 +200,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 18,
-      icon: FaFire,
+      icon: Flame,
       title: 'Performance Optimizer',
       description:
         'Advanced performance optimization tool that identifies bottlenecks and suggests improvements for faster execution.',
@@ -213,7 +208,7 @@ export const ProjectsPage = (): JSX.Element => {
     },
     {
       id: 20,
-      icon: FaLeaf,
+      icon: Leaf,
       title: 'Eco Tracker',
       description:
         'Sustainability tracking application that helps users monitor their environmental impact and reduce their carbon footprint.',
@@ -230,7 +225,6 @@ export const ProjectsPage = (): JSX.Element => {
       <main className="flex-1 flex items-stretch justify-center pt-7">
         <section className="w-full max-w-[1080px] mx-auto" aria-label="Projects">
           <article className={cardClasses}>
-            <div className={cardOverlay} aria-hidden />
             <div className="flex justify-between items-center mb-4 relative z-10">
               <h2 className={`${cardTitle} m-0`}>Projects</h2>
               <Link href="/" className={`${btnBase} ${btnGhost} text-sm py-2 px-4`}>
@@ -239,59 +233,20 @@ export const ProjectsPage = (): JSX.Element => {
             </div>
             <div className={cardBody}>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6 mt-4 w-full">
-                {isAdmin ? (
-                  <Link
-                    href="/projects/send-email"
-                    className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
-                  >
-                    <div className="flex items-center gap-4 mb-3">
-                      <FaEnvelope className="text-3xl text-primary shrink-0" />
-                      <h3 className="m-0 text-xl font-semibold">Send Email</h3>
-                    </div>
-                    <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
-                      Send transactional emails via Brevo. Admin only.
-                    </p>
-                    <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
-                      <span>View project</span>
-                      <span>→</span>
-                    </div>
-                  </Link>
-                ) : (
-                  <AdminOnlyPlaceholderCard
-                    title="Send Email"
-                    description="Send transactional emails via Brevo. Admin only."
-                    icon={FaEnvelope}
-                  />
-                )}
-                {isAdmin ? (
-                  <Link
-                    href="/projects/domain-auth"
-                    className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
-                  >
-                    <div className="flex items-center gap-4 mb-3">
-                      <FaShieldAlt className="text-3xl text-primary shrink-0" />
-                      <h3 className="m-0 text-xl font-semibold">Domain Auth (DKIM / DMARC)</h3>
-                    </div>
-                    <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
-                      Check DNS for DMARC and DKIM on your sending domain. Admin only.
-                    </p>
-                    <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
-                      <span>View project</span>
-                      <span>→</span>
-                    </div>
-                  </Link>
-                ) : (
-                  <AdminOnlyPlaceholderCard
-                    title="Domain Auth (DKIM / DMARC)"
-                    description="Check DNS for DMARC and DKIM on your sending domain. Admin only."
-                    icon={FaShieldAlt}
-                  />
-                )}
-                {projects.map((project) => {
+                {projects
+                  .filter((project) => project.id === 21) // Only show Notes project
+                  .map((project) => {
                   const IconComponent = project.icon;
                   const isInternalLink = project.link.startsWith('/');
+                  const projectNumber = formatProjectNumber(0); // Notes is 001
                   const cardContent = (
                     <>
+                      <span
+                        className="text-xs font-mono text-muted absolute top-4 right-4"
+                        aria-hidden
+                      >
+                        {projectNumber}
+                      </span>
                       <div className="flex items-center gap-4 mb-3">
                         <IconComponent className="text-3xl text-primary shrink-0" />
                         <h3 className="m-0 text-xl font-semibold">{project.title}</h3>
@@ -310,7 +265,7 @@ export const ProjectsPage = (): JSX.Element => {
                     <Link
                       key={project.id}
                       href={project.link}
-                      className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
+                      className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
                     >
                       {cardContent}
                     </Link>
@@ -320,12 +275,88 @@ export const ProjectsPage = (): JSX.Element => {
                       href={project.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="block p-6 border border-border rounded-lg bg-surface-soft/30 no-underline text-inherit transition-all duration-200 hover:bg-surface-soft/60 hover:border-border-strong hover:-translate-y-0.5 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-lg"
+                      className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
                     >
                       {cardContent}
                     </a>
                   );
                 })}
+                {isAdmin ? (
+                  <Link
+                    href="/projects/send-email"
+                    className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+                  >
+                    <span
+                      className="text-xs font-mono text-muted absolute top-4 right-4"
+                      aria-hidden
+                    >
+                      {formatProjectNumber(1)}
+                    </span>
+                    <div className="flex items-center gap-4 mb-3">
+                      <Mail className="text-3xl text-primary shrink-0" />
+                      <h3 className="m-0 text-xl font-semibold">Send Email</h3>
+                    </div>
+                    <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
+                      Send transactional emails via Brevo. Admin only.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
+                      <span>View project</span>
+                      <span>→</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="relative">
+                    <span
+                      className="text-xs font-mono text-muted absolute top-4 right-4 z-10"
+                      aria-hidden
+                    >
+                      {formatProjectNumber(1)}
+                    </span>
+                    <AdminOnlyPlaceholderCard
+                      title="Send Email"
+                      description="Send transactional emails via Brevo. Admin only."
+                      icon={Mail}
+                    />
+                  </div>
+                )}
+                {isAdmin ? (
+                  <Link
+                    href="/projects/domain-auth"
+                    className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+                  >
+                    <span
+                      className="text-xs font-mono text-muted absolute top-4 right-4"
+                      aria-hidden
+                    >
+                      {formatProjectNumber(2)}
+                    </span>
+                    <div className="flex items-center gap-4 mb-3">
+                      <Shield className="text-3xl text-primary shrink-0" />
+                      <h3 className="m-0 text-xl font-semibold">Domain Auth (DKIM / DMARC)</h3>
+                    </div>
+                    <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
+                      Check DNS for DMARC and DKIM on your sending domain. Admin only.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
+                      <span>View project</span>
+                      <span>→</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="relative">
+                    <span
+                      className="text-xs font-mono text-muted absolute top-4 right-4 z-10"
+                      aria-hidden
+                    >
+                      {formatProjectNumber(2)}
+                    </span>
+                    <AdminOnlyPlaceholderCard
+                      title="Domain Auth (DKIM / DMARC)"
+                      description="Check DNS for DMARC and DKIM on your sending domain. Admin only."
+                      icon={Shield}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </article>

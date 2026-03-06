@@ -26,3 +26,6 @@ playwright/.cache
 coverage
 *.lcov
 .nyc_output
+
+
+*.md

@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useGitHubCommits } from '../useGitHubCommits';
 import { Skeleton } from './Skeleton';
+import { ErrorDisplay } from './ErrorDisplay';
 
 export interface RepoCardProps {
   repo: {
@@ -23,7 +24,7 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
   return (
     <div className="mb-6 pb-6 border-b border-border/50">
       <div
-        className="flex items-center gap-2 cursor-pointer mb-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded"
+        className="flex items-center gap-2 cursor-pointer mb-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background rounded-xl"
         onClick={onToggle}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -59,7 +60,7 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
             </div>
           )}
           {commitsError && (
-            <p className="text-[0.85rem] opacity-70 text-red-400">Error: {commitsError}</p>
+            <ErrorDisplay error={commitsError} variant="inline" announce={false} />
           )}
           {!commitsLoading && !commitsError && commits && commits.length > 0 && (
             <ul className="text-[0.85rem] list-none p-0 m-0 max-h-[400px] overflow-y-auto">

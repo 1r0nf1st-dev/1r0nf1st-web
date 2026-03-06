@@ -8,9 +8,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGoals, createGoal, updateGoal, deleteGoal } from '../useGoals';
 import { GoalCard } from './GoalCard';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
-import { FaPlus, FaBullseye, FaLock } from 'react-icons/fa';
+import { Plus, Target, Lock } from 'lucide-react';
 import type { Goal } from '../useGoals';
 import { logger } from '../utils/logger';
 
@@ -83,9 +83,9 @@ export const GoalTracker = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="goals">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>
-          <FaBullseye className="inline mr-2" />
+          <Target className="inline mr-2" />
           Goals
         </h2>
         <div className={cardBody} aria-busy>
@@ -102,11 +102,11 @@ export const GoalTracker = (): JSX.Element | null => {
     return (
       <div className="md:col-span-3">
         <article className={cardClasses} id="goals">
-          <div className={cardOverlay} aria-hidden />
+
           <div className="flex items-center gap-3 mb-4 relative z-10">
-            <FaLock className="text-2xl text-primary" />
+            <Lock className="text-2xl text-primary" />
             <h2 className={`${cardTitle} m-0`}>
-              <FaBullseye className="inline mr-2" />
+              <Target className="inline mr-2" />
               Goal Tracker
             </h2>
           </div>
@@ -143,9 +143,9 @@ export const GoalTracker = (): JSX.Element | null => {
   if (goalsError) {
     return (
       <article className={cardClasses} id="goals">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>
-          <FaBullseye className="inline mr-2" />
+          <Target className="inline mr-2" />
           Goals
         </h2>
         <p className={cardBody}>Error: {goalsError}</p>
@@ -160,10 +160,10 @@ export const GoalTracker = (): JSX.Element | null => {
   return (
     <>
       <article className={cardClasses} id="goals">
-        <div className={cardOverlay} aria-hidden />
+
         <div className="flex items-center justify-between mb-4 relative z-10">
           <h2 className={`${cardTitle} m-0`}>
-            <FaBullseye className="inline mr-2" />
+            <Target className="inline mr-2" />
             Goals
           </h2>
           {!isCreating && (
@@ -171,7 +171,7 @@ export const GoalTracker = (): JSX.Element | null => {
               onClick={() => setIsCreating(true)}
               className={`${btnBase} ${btnGhost} text-sm py-2 px-4 flex items-center gap-2`}
             >
-              <FaPlus />
+              <Plus />
               New Goal
             </button>
           )}
@@ -179,11 +179,11 @@ export const GoalTracker = (): JSX.Element | null => {
 
         {isCreating && (
           <div
-            className={`${cardBody} mb-4 p-4 border-2 border-primary/35 dark:border-border rounded-lg`}
+            className={`${cardBody} mb-4 p-4 border-2 border-primary/35 dark:border-border rounded-xl`}
           >
             <h3 className="text-lg font-semibold mb-3">Create New Goal</h3>
             {createError && (
-              <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-600 dark:text-red-400">
+              <div className="mb-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-sm text-red-600 dark:text-red-400">
                 {createError}
               </div>
             )}
@@ -197,7 +197,7 @@ export const GoalTracker = (): JSX.Element | null => {
                   type="text"
                   value={newGoalTitle}
                   onChange={(e) => setNewGoalTitle(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="Enter goal title"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
@@ -215,7 +215,7 @@ export const GoalTracker = (): JSX.Element | null => {
                   value={newGoalDescription}
                   onChange={(e) => setNewGoalDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   placeholder="Enter goal description (optional)"
                 />
               </div>
@@ -228,7 +228,7 @@ export const GoalTracker = (): JSX.Element | null => {
                   type="date"
                   value={newGoalTargetDate}
                   onChange={(e) => setNewGoalTargetDate(e.target.value)}
-                  className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-3 py-2 border-2 border-primary/35 dark:border-border rounded-xl bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div className="flex gap-2">

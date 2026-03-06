@@ -8,18 +8,23 @@ test.describe('Projects page', () => {
     await expect(page.getByRole('link', { name: /back to home/i }).first()).toBeVisible();
   });
 
-  test('shows Goal Tracker and Notes project cards', async ({ page }) => {
+  test('shows Notes project card', async ({ page }) => {
     await page.goto('/projects', { waitUntil: 'domcontentloaded' });
 
-    await expect(page.getByRole('heading', { name: /goal tracker/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: /notes/i })).toBeVisible();
   });
 
-  test('navigates to project sub-routes', async ({ page }) => {
+  test('navigates to Notes from projects', async ({ page }) => {
     await page.goto('/projects', { waitUntil: 'domcontentloaded' });
-    await page.locator('a[href*="/projects/goal-tracker"]').first().click();
+    await page.locator('a[href="/notes"]').first().click();
 
-    await expect(page).toHaveURL(/\/projects\/goal-tracker/);
-    await expect(page.getByRole('heading', { name: /goal tracker/i })).toBeVisible();
+    await expect(page).toHaveURL(/\/notes/);
+    await expect(page.getByRole('heading', { name: /notes/i })).toBeVisible();
+  });
+
+  test('goal-tracker redirects to notes', async ({ page }) => {
+    await page.goto('/projects/goal-tracker', { waitUntil: 'domcontentloaded' });
+
+    await expect(page).toHaveURL(/\/notes/);
   });
 });

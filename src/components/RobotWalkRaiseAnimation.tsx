@@ -34,7 +34,7 @@ export const RobotWalkRaiseAnimation = ({
         muted
         playsInline
         loop={loop}
-        className="block w-full h-auto rounded-lg object-cover"
+        className="block w-full h-auto rounded-xl object-cover"
         aria-hidden
       />
     </div>

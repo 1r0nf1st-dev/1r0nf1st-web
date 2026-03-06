@@ -50,6 +50,19 @@ export async function getSharedNotes(): Promise<unknown[]> {
   return getJson<unknown[]>(url);
 }
 
+/**
+ * Fetch a note by public share token. No auth required.
+ * Returns null if token is invalid or expired.
+ */
+export async function getSharedNoteByToken(token: string): Promise<unknown | null> {
+  try {
+    const url = `${getApiBase()}/notes/shared/${encodeURIComponent(token)}`;
+    return await getJson<unknown>(url);
+  } catch {
+    return null;
+  }
+}
+
 export async function updateSharePermission(
   shareId: string,
   permission: 'view' | 'edit',

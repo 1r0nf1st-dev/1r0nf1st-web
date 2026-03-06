@@ -4,11 +4,10 @@ import type { JSX } from 'react';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Hero } from '../components/Hero';
-import { Footer } from '../components/Footer';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { ChromeLayout } from '../components/ChromeLayout';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
-import { getApiBase } from '../config';
+import { supabaseClient } from '../lib/supabaseClient';
 
 export const ForgotPasswordPage = (): JSX.Element => {
   const [email, setEmail] = useState('');
@@ -25,14 +24,15 @@ export const ForgotPasswordPage = (): JSX.Element => {
     }
     setIsLoading(true);
     try {
-      const res = await fetch(`${getApiBase()}/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+      if (!supabaseClient) {
+        setError('Password reset is not configured. Please contact support.');
+        return;
+      }
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${window.location.origin}/change-password`,
       });
-      const data = (await res.json()) as { message?: string; error?: string };
-      if (!res.ok) {
-        setError(data.error || 'Something went wrong');
+      if (error) {
+        setError(error.message || 'Something went wrong');
         return;
       }
       setSent(true);
@@ -44,12 +44,10 @@ export const ForgotPasswordPage = (): JSX.Element => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
-      <Hero />
-      <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section className="w-full max-w-[500px] mx-auto">
+    <ChromeLayout>
+      <section className="w-full max-w-[500px] mx-auto">
           <article className={cardClasses}>
-            <div className={cardOverlay} aria-hidden />
+
             <h2 className={`${cardTitle} mb-4`}>Reset password</h2>
             {sent ? (
               <div className="relative z-10 space-y-4">
@@ -68,7 +66,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
             ) : (
               <form onSubmit={handleSubmit} className="relative z-10">
                 {error && (
-                  <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
+                  <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
                     {error}
                   </div>
                 )}
@@ -83,7 +81,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="you@example.com"
-                    className="w-full p-3 rounded-lg border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+                    className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
                   />
                 </div>
                 <button
@@ -102,9 +100,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
               </form>
             )}
           </article>
-        </section>
-      </main>
-      <Footer />
-    </div>
+      </section>
+    </ChromeLayout>
   );
 };

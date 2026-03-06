@@ -123,3 +123,52 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
     throw error;
   }
 }
+
+/**
+ * POST FormData and parse JSON response. Does not set Content-Type (browser sets
+ * multipart boundary for FormData). Includes auth token and 403 refresh retry.
+ */
+export async function postFormData<T>(url: string, formData: FormData): Promise<T> {
+  let token = localStorage.getItem('authToken');
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  let response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  const isAuthEndpoint = url.includes('/api/auth/');
+  if (response.status === 403 && token && !isAuthEndpoint) {
+    const newToken = await refreshAuthToken();
+    if (newToken) {
+      headers.Authorization = `Bearer ${newToken}`;
+      response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+    } else {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
+    }
+  }
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    let message = text || `Request to ${url} failed with status ${response.status}`;
+    try {
+      const json = JSON.parse(text) as { error?: string; message?: string };
+      if (typeof json.error === 'string') message = json.error;
+      else if (typeof json.message === 'string') message = json.message;
+    } catch {
+      // keep message as text
+    }
+    throw new ApiError(message, response.status, url);
+  }
+
+  return (await response.json()) as T;
+}

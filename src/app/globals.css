@@ -3,20 +3,50 @@
 /* Class-based dark mode (toggle via .dark on html) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Semantic theme tokens – light (default) */
+/* Custom scrollbar styles for toolbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(37, 99, 235, 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(37, 99, 235, 0.3);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Theme tokens – professional blues/grays, clean, minimal */
 @theme {
   --color-background: #f5f5f7;
   --color-surface: #ffffff;
   --color-surface-soft: #fafafa;
   --color-foreground: #1a1a1a;
-  --color-primary: #6366f1;
-  --color-primary-strong: #4f46e5;
+  --color-primary: #2563eb;
+  --color-primary-strong: #1d4ed8;
   --color-muted: #6b7280;
-  --color-border: rgba(99, 102, 241, 0.4);
-  --color-border-strong: rgba(99, 102, 241, 0.55);
-  --radius-xl: 1.5rem;
-  --shadow-soft: 0 4px 6px -1px rgba(99, 102, 241, 0.1), 0 2px 4px -1px rgba(99, 102, 241, 0.06);
-  --shadow-md: 0 10px 15px -3px rgba(99, 102, 241, 0.15), 0 4px 6px -2px rgba(99, 102, 241, 0.1);
+  --color-border: rgba(37, 99, 235, 0.3);
+  --color-border-strong: rgba(37, 99, 235, 0.5);
+  --radius-xl: 0.75rem;
+  --shadow-soft: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 /* Dark theme overrides */
@@ -25,46 +55,31 @@
   --color-surface: rgba(20, 20, 20, 0.95);
   --color-surface-soft: rgba(30, 30, 30, 0.8);
   --color-foreground: #f5f5f5;
-  --color-primary: #818cf8;
-  --color-primary-strong: #6366f1;
+  --color-primary: #3b82f6;
+  --color-primary-strong: #2563eb;
   --color-muted: #a1a1aa;
-  --color-border: rgba(161, 161, 170, 0.2);
-  --color-border-strong: rgba(161, 161, 170, 0.4);
-  --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.8);
+  --color-border: rgba(59, 130, 246, 0.25);
+  --color-border-strong: rgba(59, 130, 246, 0.4);
+  --shadow-soft: 0 2px 4px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-/* Legacy CSS variables for existing components (until migrated) */
+/* CSS variables for design system */
 :root {
   color-scheme: light;
-  --bg: #f5f5f7;
-  --bg-elevated: rgba(255, 255, 255, 0.95);
-  --bg-elevated-soft: #fafafa;
-  --border-subtle: rgba(99, 102, 241, 0.4);
-  --accent: #6366f1;
-  --accent-soft: rgba(99, 102, 241, 0.15);
-  --accent-strong: #4f46e5;
-  --text-main: #1a1a1a;
-  --text-muted: #6b7280;
-  --text-secondary: #9ca3af;
-  --border-strong: rgba(99, 102, 241, 0.55);
-  --shadow-soft: 0 4px 6px -1px rgba(99, 102, 241, 0.1), 0 2px 4px -1px rgba(99, 102, 241, 0.06);
-  --radius-xl: 1.5rem;
+  /* RGB values for rgba() usage in TipTap and gradients */
+  --color-primary-rgb: 37, 99, 235;
+  --touch-target-min: 44px;
+  /* Corporate-specific variables (keep as they're theme-specific) */
+  --corporate-letter-spacing-tight: -0.025em;
+  --corporate-letter-spacing-wide: 0.05em;
+  --corporate-letter-spacing-wider: 0.1em;
+  --corporate-section-padding-y: 6rem;
 }
 
 .dark {
   color-scheme: dark;
-  --bg: #0a0a0a;
-  --border-strong: rgba(161, 161, 170, 0.4);
-  --bg-elevated: rgba(20, 20, 20, 0.95);
-  --bg-elevated-soft: rgba(30, 30, 30, 0.8);
-  --border-subtle: rgba(161, 161, 170, 0.2);
-  --accent: #818cf8;
-  --accent-soft: rgba(129, 140, 248, 0.18);
-  --accent-strong: #6366f1;
-  --text-main: #f5f5f5;
-  --text-muted: #a1a1aa;
-  --text-secondary: #d4d4d8;
-  --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.8);
+  --color-primary-rgb: 59, 130, 246;
 }
 
 *,
@@ -73,21 +88,83 @@
   box-sizing: border-box;
 }
 
-/* Logo-inspired subtle background (Katana-style): soft glow from top-right, gradient through pink to purple/blue. Light theme: softer opacities. */
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Smooth theme transitions */
+html.theme-transitioning,
+html.theme-transitioning body {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Respect reduced motion for theme transitions */
+@media (prefers-reduced-motion: reduce) {
+  html.theme-transitioning,
+  html.theme-transitioning body {
+    transition: none !important;
+  }
+}
+
+/* Smooth transitions for theme-aware elements */
+[class*='bg-'],
+[class*='text-'],
+[class*='border-'] {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Disable transitions when user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body,
+  [class*='bg-'],
+  [class*='text-'],
+  [class*='border-'] {
+    transition: none !important;
+  }
+  
+  /* Disable hover transforms and animations */
+  *:hover {
+    transform: none !important;
+  }
+}
+
+/* Micro-interactions for interactive elements */
+button:not(:disabled),
+a:not([aria-disabled='true']),
+[role='button']:not([aria-disabled='true']) {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled),
+  a:not([aria-disabled='true']),
+  [role='button']:not([aria-disabled='true']) {
+    transition: none !important;
+  }
+}
+
 body {
   margin: 0;
   min-height: 100vh;
   font-family:
+    'Inter',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
     'SF Pro Text',
     sans-serif;
-  background:
-    radial-gradient(circle at 85% 15%, rgba(251, 191, 36, 0.1), transparent 55%),
-    radial-gradient(circle at 70% 30%, rgba(236, 72, 153, 0.08), transparent 55%),
-    radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.08), transparent 60%), var(--bg);
-  color: var(--text-main);
+  /* Glassmorphic background gradient - required for glass effect visibility */
+  background: linear-gradient(to bottom right, #eff6ff, #eef2ff, #faf5ff);
+  color: var(--color-foreground);
   position: relative;
 }
 
@@ -98,28 +175,47 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background-image:
-    radial-gradient(circle at 10% 20%, rgba(251, 191, 36, 0.045) 0%, transparent 1.5%),
-    radial-gradient(circle at 90% 15%, rgba(236, 72, 153, 0.04) 0%, transparent 1.5%),
-    radial-gradient(circle at 50% 70%, rgba(99, 102, 241, 0.04) 0%, transparent 1.5%),
-    radial-gradient(circle at 25% 40%, rgba(168, 85, 247, 0.03) 0%, transparent 1.5%);
-  background-size:
-    120px 120px,
-    100px 100px,
-    140px 140px,
-    110px 110px;
-  background-position:
-    0 0,
-    40px 20px,
-    20px 60px,
-    60px 40px;
+    radial-gradient(circle at 20% 30%, rgba(37, 99, 235, 0.02) 0%, transparent 2%),
+    radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.015) 0%, transparent 2%);
+  opacity: 0.5;
 }
 
 .dark body {
-  background:
-    radial-gradient(circle at 85% 15%, rgba(251, 191, 36, 0.12), transparent 55%),
-    radial-gradient(circle at 70% 30%, rgba(236, 72, 153, 0.1), transparent 55%),
-    radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.1), transparent 60%), var(--bg);
-  color: var(--text-main);
+  /* Dark mode glassmorphic background gradient */
+  background: linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a);
+  color: var(--color-foreground);
+}
+
+.dark body::before {
+  opacity: 0.8;
+}
+
+/* Glassmorphic card fallback styles for browsers without backdrop-filter support */
+/* Note: !important is necessary to override Tailwind utility classes (bg-white/80, etc.)
+   when backdrop-filter is not supported. This ensures fallback styling takes precedence. */
+.glass-card-fallback {
+  /* Fallback: more opaque background for browsers without backdrop-filter */
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(226, 232, 240, 0.8) !important;
+}
+
+.dark .glass-card-fallback {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+/* Enhanced glassmorphic styles for browsers with backdrop-filter support */
+@supports (backdrop-filter: blur(8px)) {
+  .glass-card-fallback {
+    /* Glass effect: less opaque background when backdrop-filter is available */
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(226, 232, 240, 0.5) !important;
+  }
+
+  .dark .glass-card-fallback {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    border-color: rgba(51, 65, 85, 0.5) !important;
+  }
 }
 
 #__next {
@@ -128,122 +224,36 @@ body::before {
   z-index: 1;
 }
 
-.dark body::before {
-  opacity: 0.8;
+/* Card/button Tailwind overrides */
+.border-primary\/40,
+.border-primary\/35 {
+  border-color: var(--color-border) !important;
 }
 
-/* Robot walk-and-raise: shared motion (walk + raise). Play-once ends raised; loop version adds return. */
-@keyframes robotWalkRaise {
-  0% {
-    transform: translate(0, 0) scale(0.98);
-  }
-  8% {
-    transform: translate(3%, 1.5%) scale(0.98);
-  }
-  16% {
-    transform: translate(6%, 0) scale(0.98);
-  }
-  24% {
-    transform: translate(10%, 2%) scale(0.98);
-  }
-  32% {
-    transform: translate(14%, 0) scale(0.98);
-  }
-  40% {
-    transform: translate(18%, 1.5%) scale(0.98);
-  }
-  48% {
-    transform: translate(22%, 0) scale(0.98);
-  }
-  56% {
-    transform: translate(26%, 1%) scale(0.98);
-  }
-  64% {
-    transform: translate(28%, 0) scale(0.99);
-  }
-  72% {
-    transform: translate(28%, -3%) scale(0.995);
-  }
-  80% {
-    transform: translate(28%, -6%) scale(1);
-  }
-  88% {
-    transform: translate(28%, -8%) scale(1);
-  }
-  100% {
-    transform: translate(28%, -8%) scale(1);
-  }
+.bg-gradient-to-br {
+  background: linear-gradient(
+    to bottom right,
+    var(--color-surface),
+    rgba(var(--color-primary-rgb), 0.08),
+    rgba(var(--color-primary-rgb), 0.05)
+  ) !important;
 }
 
-@keyframes robotWalkRaiseLoop {
-  0% {
-    transform: translate(0, 0) scale(0.98);
-  }
-  8% {
-    transform: translate(3%, 1.5%) scale(0.98);
-  }
-  16% {
-    transform: translate(6%, 0) scale(0.98);
-  }
-  24% {
-    transform: translate(10%, 2%) scale(0.98);
-  }
-  32% {
-    transform: translate(14%, 0) scale(0.98);
-  }
-  40% {
-    transform: translate(18%, 1.5%) scale(0.98);
-  }
-  48% {
-    transform: translate(22%, 0) scale(0.98);
-  }
-  56% {
-    transform: translate(26%, 1%) scale(0.98);
-  }
-  64% {
-    transform: translate(28%, 0) scale(0.99);
-  }
-  72% {
-    transform: translate(28%, -3%) scale(0.995);
-  }
-  80% {
-    transform: translate(28%, -6%) scale(1);
-  }
-  88% {
-    transform: translate(28%, -8%) scale(1);
-  }
-  92% {
-    transform: translate(21%, -5%) scale(0.99);
-  }
-  96% {
-    transform: translate(10%, -2%) scale(0.98);
-  }
-  100% {
-    transform: translate(0, 0) scale(0.98);
-  }
+.dark .bg-gradient-to-br {
+  background: linear-gradient(
+    to bottom right,
+    var(--color-surface),
+    var(--color-surface-soft)
+  ) !important;
 }
 
-.robot-walk-raise,
-.robot-walk-raise-loop {
-  will-change: transform;
-  backface-visibility: hidden;
+
+.rounded-xl {
+  border-radius: var(--radius-xl) !important;
 }
 
-.robot-walk-raise {
-  animation: robotWalkRaise 3.5s cubic-bezier(0.33, 1, 0.68, 1) 1 forwards;
-}
-
-.robot-walk-raise-loop {
-  animation: robotWalkRaiseLoop 4s cubic-bezier(0.33, 1, 0.68, 1) infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .robot-walk-raise,
-  .robot-walk-raise-loop {
-    animation: none;
-    will-change: auto;
-    transform: translate(28%, -8%) scale(1);
-  }
+.shadow-lg {
+  box-shadow: var(--shadow-soft) !important;
 }
 
 /* TipTap editor styles */
@@ -305,14 +315,14 @@ body::before {
   font-style: italic;
 }
 .ProseMirror code {
-  background-color: rgba(99, 102, 241, 0.1);
+  background-color: rgba(var(--color-primary-rgb), 0.1);
   padding: 0.125em 0.25em;
   border-radius: 0.25rem;
   font-family: monospace;
   font-size: 0.9em;
 }
 .dark .ProseMirror code {
-  background-color: rgba(129, 140, 248, 0.2);
+  background-color: rgba(var(--color-primary-rgb), 0.2);
 }
 
 /* TipTap table styles */
@@ -323,10 +333,87 @@ body::before {
   width: 100%;
   overflow: hidden;
 }
+
+/* Mobile table support - make tables horizontally scrollable */
+@media (max-width: 768px) {
+  .ProseMirror table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Prevent text selection during scroll */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  .ProseMirror table thead,
+  .ProseMirror table tbody,
+  .ProseMirror table tr {
+    display: block;
+  }
+  
+  .ProseMirror table thead {
+    display: none; /* Hide header on mobile for better UX */
+  }
+  
+  .ProseMirror table tbody tr {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(var(--color-primary-rgb), 0.3);
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .ProseMirror table td,
+  .ProseMirror table th {
+    display: block;
+    border: none;
+    padding: 0.5rem;
+    text-align: left;
+  }
+  
+  .ProseMirror table td:before,
+  .ProseMirror table th:before {
+    content: attr(data-label) ': ';
+    font-weight: 600;
+    display: inline-block;
+    min-width: 100px;
+  }
+  
+  /* Alternative: Keep table layout but make scrollable */
+  .ProseMirror table {
+    display: table;
+    min-width: 100%;
+  }
+  
+  .ProseMirror table thead {
+    display: table-header-group;
+  }
+  
+  .ProseMirror table tbody {
+    display: table-row-group;
+  }
+  
+  .ProseMirror table tr {
+    display: table-row;
+  }
+  
+  .ProseMirror table td,
+  .ProseMirror table th {
+    display: table-cell;
+    min-width: 120px; /* Ensure cells are wide enough for touch */
+  }
+  
+  .ProseMirror table td:before,
+  .ProseMirror table th:before {
+    display: none;
+  }
+}
 .ProseMirror table td,
 .ProseMirror table th {
   min-width: 1em;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.3);
   padding: 0.5rem;
   vertical-align: top;
   box-sizing: border-box;
@@ -334,15 +421,15 @@ body::before {
 }
 .dark .ProseMirror table td,
 .dark .ProseMirror table th {
-  border-color: rgba(161, 161, 170, 0.3);
+  border-color: rgba(var(--color-primary-rgb), 0.25);
 }
 .ProseMirror table th {
   font-weight: 600;
   text-align: left;
-  background-color: rgba(99, 102, 241, 0.1);
+  background-color: rgba(var(--color-primary-rgb), 0.1);
 }
 .dark .ProseMirror table th {
-  background-color: rgba(129, 140, 248, 0.15);
+  background-color: rgba(var(--color-primary-rgb), 0.15);
 }
 .ProseMirror table .selectedCell:after {
   z-index: 2;
@@ -352,11 +439,11 @@ body::before {
   right: 0;
   top: 0;
   bottom: 0;
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(var(--color-primary-rgb), 0.1);
   pointer-events: none;
 }
 .dark .ProseMirror table .selectedCell:after {
-  background: rgba(129, 140, 248, 0.15);
+  background: rgba(var(--color-primary-rgb), 0.15);
 }
 .ProseMirror table .column-resize-handle {
   position: absolute;
@@ -364,11 +451,8 @@ body::before {
   top: 0;
   bottom: -2px;
   width: 4px;
-  background-color: rgba(99, 102, 241, 0.5);
+  background-color: rgba(var(--color-primary-rgb), 0.5);
   pointer-events: none;
-}
-.dark .ProseMirror table .column-resize-handle {
-  background-color: rgba(129, 140, 248, 0.5);
 }
 .ProseMirror .resize-cursor {
   cursor: ew-resize;

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useDevToArticles } from '../useDevToArticles';
 import { DevToArticleCard } from './DevToArticleCard';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 
 const DEFAULT_LIMIT = 6;
 
@@ -55,7 +55,7 @@ export const DevToArticles = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="devto">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>{getTitle()}</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="mb-3 h-4 w-full" />
@@ -69,7 +69,7 @@ export const DevToArticles = (): JSX.Element | null => {
   if (error) {
     return (
       <article className={cardClasses} id="devto">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>{getTitle()}</h2>
         <p className={cardBody}>Error: {error}</p>
       </article>

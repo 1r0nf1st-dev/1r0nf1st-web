@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { supabase } from '../db/supabase.js';
+import { verifyWebClipperToken } from '../services/webClipperService.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -47,6 +48,33 @@ export const authenticateToken = async (
     req.userId = user.id;
     req.email = user.email;
     req.user = user;
+    next();
+  } catch {
+    res.status(403).json({ error: 'Invalid token' });
+  }
+};
+
+/** Authenticate Web Clipper extension via Bearer token (nc_xxx). */
+export const authenticateWebClipper = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    res.status(401).json({ error: 'Web Clipper token required' });
+    return;
+  }
+
+  try {
+    const userId = await verifyWebClipperToken(token);
+    if (!userId) {
+      res.status(403).json({ error: 'Invalid or expired Web Clipper token' });
+      return;
+    }
+    req.userId = userId;
     next();
   } catch {
     res.status(403).json({ error: 'Invalid token' });

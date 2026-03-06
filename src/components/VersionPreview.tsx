@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import type { NoteVersion } from '../useNoteVersions';
 import { NoteEditor } from './NoteEditor';
-import { cardClasses, cardOverlay, cardTitle } from '../styles/cards';
+import { cardClasses, cardTitle } from '../styles/cards';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
 
 export interface VersionPreviewProps {
@@ -36,7 +36,7 @@ export const VersionPreview = ({
 
   return (
     <article className={cardClasses}>
-      <div className={cardOverlay} aria-hidden />
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -62,13 +62,13 @@ export const VersionPreview = ({
         </div>
 
         {!isShareEvent && (
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-700 dark:text-amber-400 text-sm mb-4">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-700 dark:text-amber-400 text-sm mb-4">
             <strong>Preview Mode:</strong> You are viewing a previous version. This is read-only.
             Click &quot;Restore This Version&quot; to restore it.
           </div>
         )}
 
-        <div className="border-2 border-primary/20 dark:border-border rounded-lg p-4 bg-white dark:bg-surface-soft">
+        <div className="border-2 border-primary/20 dark:border-border rounded-xl p-4 bg-white dark:bg-surface-soft">
           <NoteEditor
             content={normalizedContent}
             onChange={() => {

@@ -2,31 +2,53 @@
 
 import type { JSX } from 'react';
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { StickyNote, Calendar, Lock } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
-import { Hero } from '../components/Hero';
-import { Footer } from '../components/Footer';
-import { NotesList } from '../components/NotesList';
+import { useTheme } from '../contexts/ThemeContext';
+import { useNotesActions } from '../contexts/NotesActionsContext';
+import { useLiveRegion } from '../contexts/LiveRegionContext';
+import { useErrorHandler } from '../hooks/useErrorHandler';
+import { ChromeLayout } from '../components/ChromeLayout';
 import { NoteDetail } from '../components/NoteDetail';
-import { NotebooksSidebar } from '../components/NotebooksSidebar';
-import { TagsList } from '../components/TagsList';
-import { SharedNotesList } from '../components/SharedNotesList';
 import { useNotes, createNote, type Note } from '../useNotes';
+import { ApiError } from '../apiClient';
+import { useNoteTemplates } from '../useNoteTemplates';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import { useNotebooks } from '../useNotebooks';
 import { useTags } from '../useTags';
-import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
-import { Skeleton } from '../components/Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
-import { FaLock, FaStickyNote } from 'react-icons/fa';
+import { btnBase, btnPrimary } from '../styles/buttons';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
+import { DailyTodoView } from '../components/DailyTodoView';
+import { parseArchivedFromQuery } from '../utils/savedSearchQuery';
+import type { WidgetType } from '../components/Sidebar/SidebarWidgets';
+import { GoalTrackerWidget } from '../components/GoalTrackerWidget';
+import { TasksWidget } from '../components/TasksWidget';
+import { StravaWidget } from '../components/StravaWidget';
+import { WebClipperModal } from '../components/Sidebar/WebClipperModal';
+import { SearchModal } from '../components/Sidebar/SearchModal';
 
-export const NotesPage = (): JSX.Element => {
+interface NotesPageProps {
+  useChrome?: boolean;
+}
+
+export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => {
+  const searchParams = useSearchParams();
   const { user } = useAuth();
-  const [selectedNotebookId, setSelectedNotebookId] = useState<string | undefined>();
-  const [selectedTagId, setSelectedTagId] = useState<string | undefined>();
+  const { styleTheme } = useTheme();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const { registerHandlers, registerRefetch, refetchAllNotes, isWebClipperOpen, closeWebClipper, isSearchOpen, closeSearch } = useNotesActions();
+  const { announce } = useLiveRegion();
+  const { handleError } = useErrorHandler();
+
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
-  const [showShared, setShowShared] = useState(false);
+  const [showDailyView, setShowDailyView] = useState(false);
+  const [selectedNotebookId, setSelectedNotebookId] = useState<string | undefined>();
+  const [selectedTagId, setSelectedTagId] = useState<string | undefined>();
+  const [activeWidgets, setActiveWidgets] = useState<Set<WidgetType>>(new Set());
 
   const notesFilters = useMemo(
     () => ({
@@ -38,18 +60,26 @@ export const NotesPage = (): JSX.Element => {
     [selectedNotebookId, selectedTagId, searchQuery, showArchived],
   );
 
-  const { notes, isLoading, error, refetch } = useNotes(notesFilters);
-
+  const { notes, refetch } = useNotes(notesFilters);
   const { notebooks } = useNotebooks();
   const { tags } = useTags();
+  const { templates } = useNoteTemplates();
 
-  // Track if we've already refetched after login to prevent infinite loops
   const hasRefetchedAfterLogin = useRef(false);
   const previousUser = useRef(user);
 
-  // Refetch notes when user becomes authenticated (e.g., after login)
   useEffect(() => {
-    // Only refetch if user changed from null/undefined to authenticated
+    if (useChrome) return;
+    setSelectedNotebookId(searchParams.get('notebook') ?? undefined);
+    setSelectedTagId(searchParams.get('tag') ?? undefined);
+    setSearchQuery(searchParams.get('q') ?? searchParams.get('search') ?? '');
+    setShowArchived(
+      searchParams.get('archived') === 'true' || searchParams.get('filter') === 'archived',
+    );
+  }, [searchParams, useChrome]);
+
+
+  useEffect(() => {
     if (user && !previousUser.current && !hasRefetchedAfterLogin.current) {
       hasRefetchedAfterLogin.current = true;
       refetch().catch((error) => {
@@ -57,63 +87,92 @@ export const NotesPage = (): JSX.Element => {
       });
     }
     previousUser.current = user;
-    // Reset the flag when user logs out
     if (!user) {
       hasRefetchedAfterLogin.current = false;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch is stable (memoized), and we only want to run when user changes
-  }, [user]);
+  }, [user, refetch]);
+
+  const handleApplySavedSearch = (query: string): void => {
+    setSearchQuery(query);
+    setSelectedNotebookId(undefined);
+    setSelectedTagId(undefined);
+    const archived = parseArchivedFromQuery(query);
+    setShowArchived(archived ?? false);
+  };
 
   const handleCreateNote = async () => {
-    // Ensure user is authenticated
     if (!user) {
-      alert('Please log in to create notes.');
+      handleError('Please log in to create notes.', { fallback: 'Log in required', showAlert: true });
       return;
     }
 
-    // Switch back to "My Notes" view if viewing shared notes
-    if (showShared) {
-      setShowShared(false);
-    }
-
     try {
-      // TipTap empty document structure
       const emptyContent = { type: 'doc', content: [] };
+      // Create note without tags - tags should be optional and not auto-added
       const newNote = await createNote({
         title: 'New Note',
         content: emptyContent,
         notebook_id: selectedNotebookId,
+        // Explicitly don't pass tag_ids - tags are a choice, not auto-added
       });
-
-      // Refetch notes list to include the new note
       await refetch();
-
-      // Select the newly created note
-      setSelectedNote(newNote);
+      await refetchAllNotes(); // Trigger refetch in sidebar components
+      // Ensure the new note doesn't have tags by explicitly clearing them if present
+      const noteWithoutTags = { ...newNote, tags: [] };
+      setSelectedNote(noteWithoutTags);
+      announce('New note created');
     } catch (error) {
-      console.error('Failed to create note:', error);
-      let message = 'Failed to create note. Please try again.';
+      handleError(error, { prefix: 'Failed to create note:', fallback: 'Failed to create note. Please try again.' });
+    }
+  };
 
-      if (error instanceof Error) {
-        message = error.message;
-      } else if (typeof error === 'object' && error !== null && 'message' in error) {
-        message = String(error.message);
+  const handleCreateNoteFromTemplate = async (template: { content: Record<string, unknown> }) => {
+    if (!user) return;
+    try {
+      const content =
+        template.content &&
+        typeof template.content === 'object' &&
+        (template.content as { type?: string }).type === 'doc'
+          ? template.content
+          : { type: 'doc' as const, content: [] };
+      const newNote = await createNote({
+        title: 'New Note',
+        content,
+        notebook_id: selectedNotebookId,
+      });
+      await refetch();
+      await refetchAllNotes(); // Trigger refetch in sidebar components
+      setSelectedNote(newNote);
+      announce('Note created from template');
+    } catch (error) {
+      handleError(error, { prefix: 'Failed to create note from template:', fallback: 'Failed to create note. Please try again.' });
+    }
+  };
+
+  const handleNoteClick = async (note: Note) => {
+    try {
+      const { getNoteById } = await import('../useNotes');
+      const fullNote = await getNoteById(note.id);
+      setSelectedNote(fullNote ?? note);
+    } catch (error) {
+      // If note not found (404), just use the note we have
+      if (error instanceof ApiError && error.status === 404) {
+        console.warn('Note not found, using cached note:', note.id);
+        setSelectedNote(note);
+      } else {
+        console.error('Failed to fetch note details:', error);
+        setSelectedNote(note);
       }
-
-      alert(`Failed to create note: ${message}`);
     }
   };
 
   const handleSave = async () => {
     await refetch();
-    // Refresh selected note by fetching it again
     if (selectedNote) {
       try {
         const { getNoteById } = await import('../useNotes');
         const updated = await getNoteById(selectedNote.id);
-        if (updated) {
-          setSelectedNote(updated);
-        }
+        if (updated) setSelectedNote(updated);
       } catch (error) {
         console.error('Failed to refresh note:', error);
       }
@@ -123,250 +182,214 @@ export const NotesPage = (): JSX.Element => {
   const handleDelete = async () => {
     setSelectedNote(null);
     await refetch();
+    await refetchAllNotes(); // Trigger refetch in sidebar components
   };
 
-  const handleNoteClick = async (note: Note) => {
-    // For shared notes, use the data directly (already includes attachments)
-    // For own notes, fetch full details with attachments
-    if (showShared) {
-      // Shared notes already have attachments loaded from getSharedNotes
-      setSelectedNote(note);
-      return;
-    }
-
-    // Fetch full note with attachments when opening own notes
-    try {
-      const { getNoteById } = await import('../useNotes');
-      const fullNote = await getNoteById(note.id);
-      if (fullNote) {
-        setSelectedNote(fullNote);
+  const handleToggleWidget = (widgetId: WidgetType) => {
+    setActiveWidgets((prev) => {
+      const next = new Set(prev);
+      if (next.has(widgetId)) {
+        next.delete(widgetId);
       } else {
-        // Fallback to note from list if fetch fails
-        setSelectedNote(note);
+        next.add(widgetId);
       }
-    } catch (error) {
-      console.error('Failed to fetch note details:', error);
-      // Fallback to note from list if fetch fails
-      setSelectedNote(note);
-    }
-  };
-
-  const handleNoteSelect = (note: Note | null) => {
-    if (note === null) {
-      setSelectedNote(null);
-      return;
-    }
-    // Fetch full note with attachments when opening
-    handleNoteClick(note).catch((error) => {
-      console.error('Failed to fetch note details:', error);
-      // Fallback to note from list if fetch fails
-      setSelectedNote(note);
+      return next;
     });
   };
 
+  const handleCreateNoteRef = useRef(handleCreateNote);
+  handleCreateNoteRef.current = handleCreateNote;
+
+  const handleCreateNoteFromTemplateRef = useRef(handleCreateNoteFromTemplate);
+  handleCreateNoteFromTemplateRef.current = handleCreateNoteFromTemplate;
+
+  const handleNoteClickRef = useRef(handleNoteClick);
+  handleNoteClickRef.current = handleNoteClick;
+
+  const handleToggleWidgetRef = useRef(handleToggleWidget);
+  handleToggleWidgetRef.current = handleToggleWidget;
+
+  // Handle note selection from query parameter (e.g., when navigating from shared notes)
+  useEffect(() => {
+    if (useChrome) return;
+    const noteId = searchParams.get('id');
+    if (noteId && notes && notes.length > 0) {
+      const noteToSelect = notes.find((note) => note.id === noteId);
+      if (noteToSelect && (!selectedNote || selectedNote.id !== noteId)) {
+        handleNoteClickRef.current(noteToSelect).catch((err) => {
+          console.error('Failed to select note from query param:', err);
+        });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleNoteClickRef is stable, notes and selectedNote are the real dependencies
+  }, [searchParams, notes, selectedNote, useChrome]);
+
+  // Register handlers with context so sidebar items can trigger them
+  useEffect(() => {
+    registerHandlers({
+      createNote: () => handleCreateNoteRef.current(),
+      createNoteFromTemplate: (template) => handleCreateNoteFromTemplateRef.current(template),
+      selectNote: (note) => {
+        handleNoteClickRef.current(note).catch((err) => {
+          console.error('Failed to select note:', err);
+          setSelectedNote(note);
+        });
+      },
+      toggleWidget: (widgetId) => handleToggleWidgetRef.current(widgetId),
+    });
+  }, [registerHandlers]);
+
+  // Register refetch callback so sidebar components can be notified when notes change
+  useEffect(() => {
+    const unregister = registerRefetch(refetch);
+    return unregister;
+  }, [registerRefetch, refetch]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedNote(null);
+        return;
+      }
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      if (e.key === 'n') {
+        e.preventDefault();
+        handleCreateNoteRef.current();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const wrapWithChrome = (content: JSX.Element): JSX.Element => {
+    if (!useChrome) return content;
+    return <ChromeLayout>{content}</ChromeLayout>;
+  };
+
   if (!user) {
-    return (
-      <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
-        <div className="w-full max-w-[1080px] mx-auto">
-          <Hero />
+    return wrapWithChrome(
+      <article className={cardClasses} style={{ maxWidth: '600px' }}>
+
+        <div className="relative z-10 flex flex-col items-center text-center">
+          <Lock className="text-4xl text-primary mb-4" />
+          <h2 className={cardTitle}>Notes</h2>
+          <p className={cardBody}>
+            Please log in to access your notes. Notes are private and only visible to you.
+          </p>
+          <Link href="/login?returnTo=/notes" className={`${btnBase} ${btnPrimary} mt-4`}>
+            Log In
+          </Link>
         </div>
-        <main className="flex-1 flex items-stretch justify-center pt-7">
-          <article className={cardClasses} style={{ maxWidth: '600px' }}>
-            <div className={cardOverlay} aria-hidden />
-            <div className="relative z-10 flex flex-col items-center text-center">
-              <FaLock className="text-4xl text-primary mb-4" />
-              <h2 className={cardTitle}>Notes</h2>
-              <p className={cardBody}>
-                Please log in to access your notes. Notes are private and only visible to you.
-              </p>
-              <Link href="/login?returnTo=/notes" className={`${btnBase} ${btnPrimary} mt-4`}>
-                Log In
-              </Link>
-            </div>
-          </article>
-        </main>
-        <Footer />
-      </div>
+      </article>,
     );
   }
 
-  return (
-    <div className="min-h-screen flex flex-col p-6 md:p-8 lg:p-10">
-      <div className="w-full max-w-[1080px] mx-auto">
-        <Hero />
-      </div>
+  const widgetArray = Array.from(activeWidgets);
 
-      <main className="flex-1 flex items-stretch justify-center pt-7">
-        <section className="w-full max-w-[1080px] mx-auto" aria-label="Notes">
-          <div className="mb-6">
-            <Link
-              href="/"
-              className={`${btnBase} ${btnGhost} text-sm py-2 px-4 inline-flex items-center gap-2`}
-            >
-              ← Back to Home
-            </Link>
-          </div>
-
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar */}
-            <aside className="lg:w-64 flex-shrink-0">
-              <div className="space-y-4">
-                <NotebooksSidebar
-                  selectedNotebookId={selectedNotebookId}
-                  onNotebookSelect={setSelectedNotebookId}
-                />
-                <TagsList
-                  selectedTagIds={selectedTagId ? [selectedTagId] : []}
-                  onTagToggle={(tagId) =>
-                    setSelectedTagId(selectedTagId === tagId ? undefined : tagId)
-                  }
-                />
+  return wrapWithChrome(
+    <div className="w-full h-full flex flex-col min-h-0 min-h-screen">
+      {showDailyView ? (
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
+          <DailyTodoView styleTheme={styleTheme} onBack={() => setShowDailyView(false)} />
+        </div>
+      ) : (
+        <>
+          {/* Content Area */}
+          <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
+            {/* Widget Grid */}
+            {widgetArray.length > 0 && (
+              <div className="w-full p-3 lg:p-6 border-b border-primary/10 dark:border-border">
+                <div className="flex flex-wrap gap-3 lg:gap-4">
+                  {widgetArray.map((widgetId) => (
+                    <div
+                      key={widgetId}
+                      className="rounded-xl border border-primary/10 dark:border-border bg-white dark:bg-surface p-3 lg:p-4 min-w-[280px] max-w-[400px] flex-1"
+                    >
+                      {widgetId === 'goals' && <GoalTrackerWidget styleTheme={styleTheme} />}
+                      {widgetId === 'tasks' && <TasksWidget styleTheme={styleTheme} />}
+                      {widgetId === 'strava' && <StravaWidget styleTheme={styleTheme} />}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </aside>
+            )}
 
-            {/* Main content */}
-            <div className="flex-1 flex flex-col gap-6">
-              {/* Search and create */}
-              <div className="flex gap-4 items-center">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search notes..."
-                  className="flex-1 px-4 py-2 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedNote(null);
-                    setShowArchived(false);
-                    setShowShared(false);
-                    setSelectedNotebookId(undefined);
-                    setSelectedTagId(undefined);
-                    setSearchQuery('');
-                  }}
-                  className={`${btnBase} ${btnGhost} ${!showArchived && !showShared ? 'bg-primary/20 dark:bg-primary/10' : ''}`}
-                  aria-label="Show my notes"
-                >
-                  My Notes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowArchived(!showArchived);
-                    setShowShared(false);
-                  }}
-                  className={`${btnBase} ${btnGhost} ${showArchived && !showShared ? 'bg-primary/20 dark:bg-primary/10' : ''}`}
-                  aria-label={showArchived ? 'Show active notes' : 'Show archived notes'}
-                >
-                  {showArchived ? 'Active Notes' : 'Archived'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowArchived(false);
-                    setShowShared(!showShared);
-                  }}
-                  className={`${btnBase} ${btnGhost} ${showShared ? 'bg-primary/20 dark:bg-primary/10' : ''}`}
-                  aria-label="Show shared notes"
-                >
-                  Shared
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCreateNote}
-                  className={`${btnBase} ${btnPrimary}`}
-                  aria-label="Create new note"
-                >
-                  <FaStickyNote className="mr-2" />
-                  New Note
-                </button>
-              </div>
-
-              {/* Notes list or detail */}
+            {/* Notes Content */}
+            <div className="flex-1 min-w-0 flex flex-col relative">
+              {/* Web Clipper Modal - positioned at top-left */}
+              {isWebClipperOpen && (
+                <WebClipperModal isOpen={isWebClipperOpen} onClose={closeWebClipper} />
+              )}
+              {/* Search Modal - positioned at top-left */}
+              {isSearchOpen && (
+                <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
+              )}
               {selectedNote ? (
-                <NoteDetail
-                  note={selectedNote}
-                  tags={tags || []}
-                  notebooks={notebooks || []}
-                  onSave={handleSave}
-                  onDelete={handleDelete}
-                  onClose={() => setSelectedNote(null)}
-                  onNotesChanged={() => refetch()}
-                />
+                <div className="flex-1 min-w-0 flex flex-col overflow-y-auto p-3 lg:p-6">
+                  <NoteDetail
+                    note={selectedNote}
+                    tags={tags || []}
+                    notebooks={notebooks || []}
+                    notes={notes || []}
+                    onSave={handleSave}
+                    onDelete={handleDelete}
+                    onClose={() => setSelectedNote(null)}
+                    onNoteClick={handleNoteClick}
+                    onNotesChanged={() => refetch()}
+                  />
+                </div>
               ) : (
-                <>
-                  {(selectedTagId || selectedNotebookId) && (
-                    <p className="text-sm text-muted mb-2" aria-live="polite">
-                      {selectedTagId && (
-                        <span>
-                          Tag:{' '}
-                          <strong>
-                            {tags?.find((t) => t.id === selectedTagId)?.name ?? 'Tag'}
-                          </strong>
-                          {' · '}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedTagId(undefined)}
-                            className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
-                          >
-                            Clear tag
-                          </button>
-                        </span>
-                      )}
-                      {selectedNotebookId && selectedTagId && ' · '}
-                      {selectedNotebookId && (
-                        <span>
-                          Notebook:{' '}
-                          <strong>
-                            {notebooks?.find((n) => n.id === selectedNotebookId)?.name ??
-                              'Notebook'}
-                          </strong>
-                          {' · '}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedNotebookId(undefined)}
-                            className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary rounded"
-                          >
-                            Clear notebook
-                          </button>
-                        </span>
-                      )}
-                    </p>
-                  )}
-                  {isLoading ? (
-                    <article className={cardClasses}>
-                      <div className={cardOverlay} aria-hidden />
-                      <h2 className={cardTitle}>Notes</h2>
-                      <div className={cardBody} aria-busy>
-                        <Skeleton className="mb-3 h-4 w-full" />
-                        <Skeleton className="mb-3 h-4 w-3/4" />
-                        <Skeleton className="h-20 w-full" />
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <div className="text-center space-y-4 max-w-sm">
+                    <div className="flex justify-center">
+                      <div className="rounded-full bg-primary/10 p-4">
+                        <StickyNote className="w-8 h-8 text-primary" aria-hidden />
                       </div>
-                    </article>
-                  ) : error ? (
-                    <article className={cardClasses}>
-                      <div className={cardOverlay} aria-hidden />
-                      <h2 className={cardTitle}>Notes</h2>
-                      <p className={cardBody}>Error: {error}</p>
-                    </article>
-                  ) : showShared ? (
-                    <SharedNotesList onNoteSelect={handleNoteSelect} />
-                  ) : (
-                    <NotesList
-                      notes={notes || []}
-                      onNoteClick={handleNoteClick}
-                      selectedNoteId={undefined}
-                    />
-                  )}
-                </>
+                    </div>
+                    <h2 className="text-lg font-semibold text-foreground">No note open</h2>
+                    <p className="text-sm text-muted">
+                      Select a note from the sidebar, or create a new one to get started.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
-        </section>
-      </main>
+        </>
+      )}
 
-      <Footer />
-    </div>
+      {/* Mobile bottom nav */}
+      {useChrome ? (
+        <nav
+          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around gap-1 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-white/95 dark:bg-surface/95 border-t border-primary/15 dark:border-border backdrop-blur-sm"
+          aria-label="Quick actions"
+        >
+          <button
+            type="button"
+            onClick={() => handleCreateNoteRef.current()}
+            className="flex flex-col items-center gap-0.5 flex-1 min-h-12 py-2 px-3 rounded-xl text-foreground hover:bg-primary/5 dark:hover:bg-primary/10 active:bg-primary/10 touch-manipulation transition-colors"
+            aria-label="New note"
+          >
+            <StickyNote className="w-5 h-5 text-primary" aria-hidden />
+            <span className="text-xs font-medium">New</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowDailyView(true)}
+            className={`flex flex-col items-center gap-0.5 flex-1 min-h-12 py-2 px-3 rounded-xl touch-manipulation transition-colors ${
+              showDailyView
+                ? 'bg-primary/20 dark:bg-primary/10 text-primary font-medium'
+                : 'text-foreground hover:bg-primary/5 dark:hover:bg-primary/10 active:bg-primary/10'
+            }`}
+            aria-label="Daily tasks"
+            aria-pressed={showDailyView}
+          >
+            <Calendar className="w-5 h-5" aria-hidden />
+            <span className="text-xs font-medium">Today</span>
+          </button>
+        </nav>
+      ) : null}
+    </div>,
   );
 };

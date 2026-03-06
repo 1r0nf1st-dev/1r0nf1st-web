@@ -43,13 +43,13 @@ export const AuthHashErrorHandler = (): JSX.Element | null => {
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="text-sm font-semibold underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-800 rounded"
+            className="text-sm font-semibold underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-800 rounded-xl"
           >
             Go to login
           </Link>
           <Link
             href="/forgot-password"
-            className="text-sm font-semibold underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-800 rounded"
+            className="text-sm font-semibold underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-800 rounded-xl"
           >
             Request a new reset link
           </Link>

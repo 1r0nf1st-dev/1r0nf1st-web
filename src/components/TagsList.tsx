@@ -2,17 +2,28 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import type { Tag } from '../useNotes';
 import { useTags, createTag } from '../useTags';
+import { useAlert } from '../contexts/AlertContext';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
-import { btnBase, btnPrimary } from '../styles/buttons';
+import { cardSidebar, cardTitle, cardBody } from '../styles/cards';
+import { btnBase, btnPrimary, btnGhost, btnCompact } from '../styles/buttons';
 
 export interface TagsListProps {
   selectedTagIds: string[];
   onTagToggle: (tagId: string) => void;
+  /** Compact mode for narrow sidebar or drawer */
+  compact?: boolean;
+  /** Hide internal header/title (for embedding inside another section) */
+  hideTitle?: boolean;
 }
 
-export const TagsList = ({ selectedTagIds, onTagToggle }: TagsListProps): JSX.Element => {
+export const TagsList = ({
+  selectedTagIds,
+  onTagToggle,
+  compact = false,
+  hideTitle = false,
+}: TagsListProps): JSX.Element => {
   const { tags, isLoading, error, refetch } = useTags();
+  const { showAlert } = useAlert();
   const [isCreating, setIsCreating] = useState(false);
   const [newTagName, setNewTagName] = useState('');
 
@@ -28,52 +39,59 @@ export const TagsList = ({ selectedTagIds, onTagToggle }: TagsListProps): JSX.El
       console.error('Failed to create tag:', error);
       const message =
         error instanceof Error ? error.message : 'Failed to create tag. It may already exist.';
-      alert(`Failed to create tag: ${message}`);
+      showAlert(`Failed to create tag: ${message}`, 'Error');
     }
   };
 
+  const containerClass = compact ? 'py-1' : cardSidebar;
+  const titleClass = compact
+    ? 'text-xs font-semibold text-muted uppercase tracking-wider mb-2 px-2'
+    : cardTitle;
+  const showHeader = !hideTitle;
+
   if (isLoading) {
     return (
-      <article className={cardClasses}>
-        <div className={cardOverlay} aria-hidden />
-        <h2 className={cardTitle}>Tags</h2>
+      <div className={containerClass}>
+        {showHeader && <h2 className={titleClass}>Tags</h2>}
         <div className={cardBody} aria-busy>
           <Skeleton className="mb-3 h-4 w-full" />
           <Skeleton className="mb-3 h-4 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
         </div>
-      </article>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <article className={cardClasses}>
-        <div className={cardOverlay} aria-hidden />
-        <h2 className={cardTitle}>Tags</h2>
-        <p className={cardBody}>Error: {error}</p>
-      </article>
+      <div className={containerClass}>
+        {showHeader && <h2 className={titleClass}>Tags</h2>}
+        <p className="text-sm text-muted px-2">Error: {error}</p>
+      </div>
     );
   }
 
   return (
-    <article className={cardClasses}>
-      <div className={cardOverlay} aria-hidden />
-      <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className={cardTitle}>Tags</h2>
-          <button
-            type="button"
-            onClick={() => setIsCreating(!isCreating)}
-            className={`${btnBase} ${btnPrimary} text-sm py-1 px-3`}
-            aria-label="Create tag"
-          >
-            +
-          </button>
-        </div>
+    <div className={containerClass}>
+      <div>
+        {showHeader && (
+          <div className={`flex items-center justify-between ${compact ? 'mb-2 px-2' : 'mb-4'}`}>
+            <h2 className={titleClass}>Tags</h2>
+            {!compact && (
+              <button
+                type="button"
+                onClick={() => setIsCreating(!isCreating)}
+                className={`${btnBase} ${btnPrimary} ${btnCompact}`}
+                aria-label="Add tag"
+              >
+                +
+              </button>
+            )}
+          </div>
+        )}
 
-        {isCreating && (
-          <div className="mb-4 p-3 border-2 border-primary/40 dark:border-border rounded-lg bg-white dark:bg-surface">
+        {!compact && isCreating && (
+          <div className="mb-4 p-3 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface">
             <input
               type="text"
               value={newTagName}
@@ -87,14 +105,14 @@ export const TagsList = ({ selectedTagIds, onTagToggle }: TagsListProps): JSX.El
                 }
               }}
               placeholder="Tag name..."
-              className="w-full px-2 py-1 border border-primary/20 dark:border-border rounded text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-2 py-1 border border-primary/20 dark:border-border rounded-xl text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-primary"
               autoFocus
             />
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={handleCreateTag}
-                className={`${btnBase} ${btnPrimary} text-sm py-1 px-3`}
+                className={`${btnBase} ${btnPrimary} ${btnCompact}`}
               >
                 Create
               </button>
@@ -104,7 +122,7 @@ export const TagsList = ({ selectedTagIds, onTagToggle }: TagsListProps): JSX.El
                   setIsCreating(false);
                   setNewTagName('');
                 }}
-                className={`${btnBase} text-sm py-1 px-3`}
+                className={`${btnBase} ${btnGhost} ${btnCompact}`}
               >
                 Cancel
               </button>
@@ -112,13 +130,15 @@ export const TagsList = ({ selectedTagIds, onTagToggle }: TagsListProps): JSX.El
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2">
+        <div className={`flex flex-wrap gap-1.5 ${compact ? 'px-2' : ''}`}>
           {tags?.map((tag) => (
             <button
               key={tag.id}
               type="button"
               onClick={() => onTagToggle(tag.id)}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              className={`rounded-full transition-colors ${
+                compact ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm'
+              } ${
                 selectedTagIds.includes(tag.id)
                   ? 'bg-primary text-white'
                   : 'bg-primary/10 dark:bg-primary/20 text-primary-strong dark:text-primary hover:bg-primary/20'
@@ -129,6 +149,6 @@ export const TagsList = ({ selectedTagIds, onTagToggle }: TagsListProps): JSX.El
           ))}
         </div>
       </div>
-    </article>
+    </div>
   );
 };

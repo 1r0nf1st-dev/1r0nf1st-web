@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { useQuote } from '../useQuote';
 import { Skeleton } from './Skeleton';
-import { cardClasses, cardOverlay, cardTitle, cardBody } from '../styles/cards';
+import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost } from '../styles/buttons';
 
 export const Quote = (): JSX.Element | null => {
@@ -10,7 +10,7 @@ export const Quote = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="quote">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Quote</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="h-5 w-full mb-4" />
@@ -23,7 +23,7 @@ export const Quote = (): JSX.Element | null => {
   if (error) {
     return (
       <article className={cardClasses} id="quote">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Quote</h2>
         <div className={cardBody}>
           <p className="mb-4">Quote unavailable right now. Try again later.</p>
@@ -47,7 +47,7 @@ export const Quote = (): JSX.Element | null => {
   if (!quote) {
     return (
       <article className={cardClasses} id="quote">
-        <div className={cardOverlay} aria-hidden />
+
         <h2 className={cardTitle}>Quote</h2>
         <p className={cardBody}>No quote available. Make sure the API server is running.</p>
       </article>
@@ -56,7 +56,7 @@ export const Quote = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses} id="quote">
-      <div className={cardOverlay} aria-hidden />
+
       <h2 className={cardTitle}>Quote</h2>
       <div className={cardBody}>
         <blockquote className="m-0 p-0 border-none text-[1.05rem] leading-relaxed opacity-95">

@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import Link from 'next/link';
-import { FaLock } from 'react-icons/fa';
+import { Lock } from 'lucide-react';
 import { btnBase, btnPrimary } from '../styles/buttons';
 
 export interface AdminOnlyPlaceholderCardProps {
@@ -19,13 +19,13 @@ export interface AdminOnlyPlaceholderCardProps {
 export const AdminOnlyPlaceholderCard = ({
   title,
   description,
-  icon: Icon = FaLock,
+  icon: Icon = Lock,
   returnTo = '/projects',
 }: AdminOnlyPlaceholderCardProps): JSX.Element => {
   const loginTo = `/login?returnTo=${encodeURIComponent(returnTo)}`;
   return (
     <div
-      className="block p-6 border border-border rounded-lg bg-surface-soft/30 text-foreground transition-all duration-200 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+      className="block p-6 border border-border rounded-xl bg-surface-soft/30 text-foreground transition-all duration-200 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
       aria-label={title}
     >
       <div className="flex items-center gap-4 mb-3">

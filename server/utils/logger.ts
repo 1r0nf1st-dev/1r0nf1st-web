@@ -9,9 +9,21 @@ function getLogLevel(): pino.Level {
   return config.nodeEnv === 'production' ? 'info' : 'debug';
 }
 
-// Create logger instance
+// On Vercel, add context so Log Drains and dashboard can filter (e.g. by VERCEL_ENV)
+const vercelContext =
+  typeof process.env.VERCEL === 'string'
+    ? {
+        vercel: true as const,
+        vercel_env: process.env.VERCEL_ENV ?? undefined,
+        vercel_region: process.env.VERCEL_REGION ?? undefined,
+      }
+    : {};
+
+// Create logger instance. In production (including Vercel) logs go to stdout as JSON;
+// Vercel captures stdout and shows it under Project → Logs / Runtime Logs.
 export const logger = pino({
   level: getLogLevel(),
+  base: { ...vercelContext },
   transport:
     config.nodeEnv === 'development'
       ? {
