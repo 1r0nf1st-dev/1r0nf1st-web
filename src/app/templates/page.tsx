@@ -13,14 +13,14 @@ export const dynamic = 'force-dynamic';
  */
 export default function TemplatesPage(): JSX.Element {
   return (
-    <ProtectedRoute>
-      <NotesActionsProvider>
-        <SidebarProvider>
-          <Suspense fallback={<div className="p-4 text-sm text-muted">Loading templates...</div>}>
+    <Suspense fallback={<div className="p-4 text-sm text-muted">Loading templates...</div>}>
+      <ProtectedRoute>
+        <NotesActionsProvider>
+          <SidebarProvider>
             <NotesPage useChrome={false} />
-          </Suspense>
-        </SidebarProvider>
-      </NotesActionsProvider>
-    </ProtectedRoute>
+          </SidebarProvider>
+        </NotesActionsProvider>
+      </ProtectedRoute>
+    </Suspense>
   );
 }

@@ -1,12 +1,13 @@
 'use client';
 
 import type { JSX } from 'react';
+import { Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '../../../components/ProtectedRoute';
 import { SharedNotesList } from '../../../components/SharedNotesList';
 import type { Note } from '../../../useNotes';
 
-export default function SharedNotesPage(): JSX.Element {
+function SharedNotesContent(): JSX.Element {
   const router = useRouter();
 
   const handleNoteSelect = (note: Note | null): void => {
@@ -17,10 +18,18 @@ export default function SharedNotesPage(): JSX.Element {
   };
 
   return (
-    <ProtectedRoute>
-      <div className="mx-auto w-full max-w-5xl p-4">
-        <SharedNotesList onNoteSelect={handleNoteSelect} />
-      </div>
-    </ProtectedRoute>
+    <div className="mx-auto w-full max-w-5xl p-4">
+      <SharedNotesList onNoteSelect={handleNoteSelect} />
+    </div>
+  );
+}
+
+export default function SharedNotesPage(): JSX.Element {
+  return (
+    <Suspense fallback={<div className="p-4 text-sm text-muted">Loading shared notes...</div>}>
+      <ProtectedRoute>
+        <SharedNotesContent />
+      </ProtectedRoute>
+    </Suspense>
   );
 }
