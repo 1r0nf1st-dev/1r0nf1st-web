@@ -56,8 +56,29 @@ export const useErrorHandler = () => {
         message = error.message;
       } else if (typeof error === 'string') {
         message = error;
-      } else if (error && typeof error === 'object' && 'message' in error) {
-        message = String((error as { message: unknown }).message);
+      } else if (error && typeof error === 'object') {
+        // Handle various object error formats
+        const errorObj = error as Record<string, unknown>;
+        if ('message' in errorObj && typeof errorObj.message === 'string') {
+          message = errorObj.message;
+        } else if ('error' in errorObj && typeof errorObj.error === 'string') {
+          message = errorObj.error;
+        } else if ('error_description' in errorObj && typeof errorObj.error_description === 'string') {
+          // Supabase auth errors
+          message = errorObj.error_description;
+        } else if ('msg' in errorObj && typeof errorObj.msg === 'string') {
+          message = errorObj.msg;
+        } else {
+          // Try to stringify the object for debugging
+          try {
+            const stringified = JSON.stringify(error);
+            if (stringified && stringified !== '{}') {
+              message = `Error: ${stringified}`;
+            }
+          } catch {
+            // Keep fallback
+          }
+        }
       }
 
       const fullMessage = prefix ? `${prefix} ${message}` : message;
@@ -73,7 +94,14 @@ export const useErrorHandler = () => {
       }
 
       // Log to console for debugging
-      console.error('Error handled:', { error, message: fullMessage, title });
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error handled:', {
+          errorType: error?.constructor?.name ?? typeof error,
+          error,
+          message: fullMessage,
+          title,
+        });
+      }
 
       return { message: fullMessage, title };
     },

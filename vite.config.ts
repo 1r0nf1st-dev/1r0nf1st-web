@@ -18,18 +18,15 @@ function getPackageVersion(): string {
   }
 }
 
-// Generate build number from Git commit SHA (Vercel provides VERCEL_GIT_COMMIT_SHA)
-// Falls back to 'dev' in local development or date-based string in other cases
+// Build number from build-number.json (set by scripts/increment-build-number.mjs)
 function getBuildNumber(): string {
-  // Vercel automatically provides this during builds
-  if (process.env.VERCEL_GIT_COMMIT_SHA) {
-    return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7);
+  try {
+    const data = JSON.parse(readFileSync(join(__dirname, 'build-number.json'), 'utf-8'));
+    if (data.buildNumber) return String(data.buildNumber);
+  } catch {
+    // ignore
   }
-  // Local development
-  if (process.env.NODE_ENV === 'development') {
-    return 'dev';
-  }
-  // Fallback: use date as build identifier
+  if (process.env.NODE_ENV === 'development') return 'dev';
   return new Date().toISOString().slice(0, 10).replace(/-/g, '');
 }
 

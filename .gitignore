@@ -10,6 +10,7 @@ node_modules
 .next
 dist
 server/dist
+build-number.json
 
 # Environment variables (never commit secrets)
 .env

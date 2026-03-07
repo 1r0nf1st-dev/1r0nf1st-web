@@ -49,6 +49,10 @@ authRouter.post('/refresh', async (req, res) => {
     });
 
     if (error || !data.session) {
+      logger.warn(
+        { refreshError: error?.message ?? String(error) },
+        'Refresh token rejected (403). Ensure server SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY match the client project.',
+      );
       res.status(403).json({ error: 'Invalid or expired refresh token' });
       return;
     }

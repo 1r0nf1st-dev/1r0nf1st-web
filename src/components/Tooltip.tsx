@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 export interface TooltipProps {
   content: string;
@@ -11,9 +12,15 @@ export interface TooltipProps {
   delay?: number;
 }
 
+interface TooltipPosition {
+  top: number;
+  left: number;
+}
+
 /**
  * Accessible tooltip component.
  * Shows on hover and keyboard focus, properly announced to screen readers.
+ * Rendered via portal to escape overflow containers.
  */
 export const Tooltip = ({
   content,
@@ -23,15 +30,50 @@ export const Tooltip = ({
   delay = 0,
 }: TooltipProps): JSX.Element => {
   const [isVisible, setIsVisible] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState<TooltipPosition>({ top: 0, left: 0 });
   const timeoutRef = useRef<number | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const tooltipId = useRef(`tooltip-${Math.random().toString(36).substr(2, 9)}`);
 
-  const positionClasses = {
-    top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
-    bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
-    left: 'right-full top-1/2 -translate-y-1/2 mr-2',
-    right: 'left-full top-1/2 -translate-y-1/2 ml-2',
-  };
+  const calculatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const tooltipEl = tooltipRef.current;
+    const tooltipWidth = tooltipEl?.offsetWidth ?? 100;
+    const tooltipHeight = tooltipEl?.offsetHeight ?? 30;
+    const gap = 8;
+
+    let top = 0;
+    let left = 0;
+
+    switch (position) {
+      case 'top':
+        top = triggerRect.top - tooltipHeight - gap + window.scrollY;
+        left = triggerRect.left + triggerRect.width / 2 - tooltipWidth / 2 + window.scrollX;
+        break;
+      case 'bottom':
+        top = triggerRect.bottom + gap + window.scrollY;
+        left = triggerRect.left + triggerRect.width / 2 - tooltipWidth / 2 + window.scrollX;
+        break;
+      case 'left':
+        top = triggerRect.top + triggerRect.height / 2 - tooltipHeight / 2 + window.scrollY;
+        left = triggerRect.left - tooltipWidth - gap + window.scrollX;
+        break;
+      case 'right':
+        top = triggerRect.top + triggerRect.height / 2 - tooltipHeight / 2 + window.scrollY;
+        left = triggerRect.right + gap + window.scrollX;
+        break;
+    }
+
+    // Ensure tooltip stays within viewport bounds
+    const padding = 8;
+    left = Math.max(padding, Math.min(left, window.innerWidth - tooltipWidth - padding));
+    top = Math.max(padding, top);
+
+    setTooltipPos({ top, left });
+  }, [position]);
 
   const showTooltip = (): void => {
     if (delay > 0) {
@@ -50,6 +92,13 @@ export const Tooltip = ({
     }
     setIsVisible(false);
   };
+
+  // Recalculate position when visible
+  useEffect(() => {
+    if (isVisible) {
+      calculatePosition();
+    }
+  }, [isVisible, calculatePosition]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -93,31 +142,39 @@ export const Tooltip = ({
       : childElement.props.onBlur,
   });
 
+  const arrowClasses = {
+    top: 'top-full left-1/2 -translate-x-1/2 border-t-gray-900 dark:border-t-gray-700',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-gray-900 dark:border-b-gray-700',
+    left: 'left-full top-1/2 -translate-y-1/2 border-l-gray-900 dark:border-l-gray-700',
+    right: 'right-full top-1/2 -translate-y-1/2 border-r-gray-900 dark:border-r-gray-700',
+  };
+
   return (
-    <div className="relative inline-block">
+    <div ref={triggerRef} className="inline-block">
       {childWithProps}
-      {isVisible && (
-        <div
-          id={tooltipId.current}
-          className={`absolute z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-xl shadow-lg whitespace-nowrap pointer-events-none ${positionClasses[position]}`}
-          role="tooltip"
-          aria-live="polite"
-        >
-          {content}
+      {isVisible &&
+        typeof document !== 'undefined' &&
+        createPortal(
           <div
-            className={`absolute w-0 h-0 border-4 border-transparent ${
-              position === 'top'
-                ? 'top-full left-1/2 -translate-x-1/2 border-t-gray-900 dark:border-t-gray-700'
-                : position === 'bottom'
-                  ? 'bottom-full left-1/2 -translate-x-1/2 border-b-gray-900 dark:border-b-gray-700'
-                  : position === 'left'
-                    ? 'left-full top-1/2 -translate-y-1/2 border-l-gray-900 dark:border-l-gray-700'
-                    : 'right-full top-1/2 -translate-y-1/2 border-r-gray-900 dark:border-r-gray-700'
-            }`}
-            aria-hidden="true"
-          />
-        </div>
-      )}
+            ref={tooltipRef}
+            id={tooltipId.current}
+            style={{
+              position: 'absolute',
+              top: tooltipPos.top,
+              left: tooltipPos.left,
+            }}
+            className="z-[9999] px-2 py-1 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-xl shadow-lg whitespace-nowrap pointer-events-none"
+            role="tooltip"
+            aria-live="polite"
+          >
+            {content}
+            <div
+              className={`absolute w-0 h-0 border-4 border-transparent ${arrowClasses[position]}`}
+              aria-hidden="true"
+            />
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

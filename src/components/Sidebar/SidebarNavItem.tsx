@@ -47,7 +47,7 @@ export const SidebarNavItem = ({
     </>
   );
 
-  const className = `group relative flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm transition-colors ${
+  const className = `group relative flex w-full items-center gap-2 rounded-xl px-2 py-2 min-h-[44px] text-sm transition-colors touch-manipulation ${
     isCollapsed && !forceShowLabel ? 'justify-center' : ''
   } ${
     isActive

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm build:server && pnpm build",
+  "buildCommand": "pnpm build",
   "framework": "nextjs",
   "rewrites": [
     {
