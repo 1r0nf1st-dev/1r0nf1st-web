@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { shareNote, type ShareNoteInput } from '../useNoteSharing';
 import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
@@ -24,6 +24,14 @@ export const ShareNoteModal = ({
   const [isSharing, setIsSharing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -72,23 +80,27 @@ export const ShareNoteModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/50 dark:bg-black/70 overscroll-contain"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="share-modal-title"
     >
-      <article className={`${cardClasses} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
+      <article
+        ref={modalRef}
+        className={`${cardClasses} max-w-md w-full`}
+        onClick={(e) => e.stopPropagation()}
+      >
 
         <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 id="share-modal-title" className={cardTitle}>
+          <div className="flex items-center justify-between gap-2 mb-4 min-h-[44px]">
+            <h2 id="share-modal-title" className={`${cardTitle} truncate min-w-0`}>
               Share Note
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className={`${btnBase} ${btnGhost} text-sm`}
+              className={`${btnBase} ${btnGhost} text-sm min-h-[44px] min-w-[44px] shrink-0`}
               aria-label="Close"
             >
               ✕
@@ -186,10 +198,10 @@ export const ShareNoteModal = ({
               />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <button
                 type="submit"
-                className={`${btnBase} ${btnPrimary} flex-1`}
+                className={`${btnBase} ${btnPrimary} flex-1 min-h-[44px] touch-manipulation`}
                 disabled={isSharing}
               >
                 {isSharing ? 'Sharing...' : 'Share'}
@@ -197,7 +209,7 @@ export const ShareNoteModal = ({
               <button
                 type="button"
                 onClick={onClose}
-                className={`${btnBase} ${btnGhost}`}
+                className={`${btnBase} ${btnGhost} flex-1 min-h-[44px] touch-manipulation`}
                 disabled={isSharing}
               >
                 Cancel

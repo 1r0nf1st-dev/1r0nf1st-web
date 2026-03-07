@@ -5,6 +5,7 @@ import type { AuthRequest } from '../middleware/auth.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { transcribeImage, transcribeAudio } from '../services/transcribeService.js';
 import { config } from '../config.js';
+import { logger } from '../utils/logger.js';
 
 const IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp'] as const;
 const AUDIO_MIMES = [
@@ -13,6 +14,7 @@ const AUDIO_MIMES = [
   'audio/ogg',
   'audio/mpeg',
   'audio/webm',
+  'audio/mp4', // Safari MediaRecorder
 ] as const;
 
 const uploadImage = multer({
@@ -26,6 +28,17 @@ const uploadAudio = multer({
 });
 
 const transcribeRouter = Router();
+
+const ADMIN_EMAIL = 'admin@1r0nf1st.com';
+
+function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): void {
+  const email = req.email?.toLowerCase().trim();
+  if (email !== ADMIN_EMAIL) {
+    res.status(403).json({ error: 'Admin only', message: 'Transcription is available to admin users only.' });
+    return;
+  }
+  next();
+}
 
 function requireGeminiKey(
   _req: AuthRequest,
@@ -45,6 +58,7 @@ function requireGeminiKey(
 transcribeRouter.post(
   '/image',
   authenticateToken,
+  requireAdmin,
   requireGeminiKey,
   uploadImage.single('file'),
   async (req: AuthRequest & { file?: Express.Multer.File }, res) => {
@@ -69,6 +83,7 @@ transcribeRouter.post(
       res.json({ text });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Transcription failed';
+      logger.error({ err, mime: req.file?.mimetype }, 'Image transcription failed');
       res.status(500).json({ error: 'Transcription failed', message });
     }
   },
@@ -77,6 +92,7 @@ transcribeRouter.post(
 transcribeRouter.post(
   '/audio',
   authenticateToken,
+  requireAdmin,
   requireGeminiKey,
   uploadAudio.single('file'),
   async (req: AuthRequest & { file?: Express.Multer.File }, res) => {
@@ -100,8 +116,23 @@ transcribeRouter.post(
       );
       res.json({ text });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Transcription failed';
-      res.status(500).json({ error: 'Transcription failed', message });
+      let message = 'Transcription failed. Please try again.';
+      if (err instanceof Error) {
+        message = err.message;
+        const cause = (err as { cause?: unknown }).cause;
+        if (cause instanceof Error && cause.message) {
+          message = `${message}: ${cause.message}`;
+        }
+      }
+      logger.error(
+        {
+          err,
+          mime: req.file?.mimetype,
+          bufferLength: req.file?.buffer?.length,
+        },
+        'Audio transcription failed',
+      );
+      res.status(500).json({ error: message, message });
     }
   },
 );

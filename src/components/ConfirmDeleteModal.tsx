@@ -48,11 +48,18 @@ export const ConfirmDeleteModal = ({
     }
   }, [isOpen, onCancel]);
 
+  // Scroll modal into view when opened (fixes mobile: modal appearing off-screen)
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4 bg-black/50 dark:bg-black/70 backdrop-blur-sm overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-delete-title"
@@ -77,7 +84,7 @@ export const ConfirmDeleteModal = ({
             {errorMessage}
           </div>
         )}
-        <div className="flex gap-3 justify-end">
+        <div className="flex flex-wrap gap-3 justify-end">
           <button
             ref={cancelRef}
             type="button"

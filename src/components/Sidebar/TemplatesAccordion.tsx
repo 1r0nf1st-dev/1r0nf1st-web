@@ -5,12 +5,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useNoteTemplates, createNoteTemplate, deleteNoteTemplate } from '../../useNoteTemplates';
 import { useNotesActions } from '../../contexts/NotesActionsContext';
+import { useSidebarAccordionClose } from './SidebarAccordion';
 import { Skeleton } from '../Skeleton';
 import { useAlert } from '../../contexts/AlertContext';
 
 export const TemplatesAccordion = (): JSX.Element => {
   const { templates, isLoading, error, refetch } = useNoteTemplates();
   const { createNoteFromTemplate } = useNotesActions();
+  const closePopover = useSidebarAccordionClose();
   const { showAlert } = useAlert();
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
@@ -80,7 +82,10 @@ export const TemplatesAccordion = (): JSX.Element => {
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={() => createNoteFromTemplate(template)}
+                onClick={() => {
+                  createNoteFromTemplate(template);
+                  closePopover?.();
+                }}
                 className="flex flex-1 items-center gap-2 rounded-xl px-2 py-2 text-sm text-foreground transition-colors hover:bg-primary/5 dark:hover:bg-primary/10"
                 aria-label={`Create note from template: ${template.name}`}
               >
@@ -90,7 +95,7 @@ export const TemplatesAccordion = (): JSX.Element => {
                 type="button"
                 aria-label={`Delete template ${template.name}`}
                 onClick={() => setConfirmDeleteId(template.id)}
-                className="opacity-0 group-hover:opacity-100 rounded-xl p-1 text-muted hover:bg-red-500/10 hover:text-red-500 transition-opacity"
+                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 text-muted hover:bg-red-500/10 hover:text-red-500 transition-opacity touch-manipulation"
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden />
               </button>

@@ -29,7 +29,7 @@ export const ForgotPasswordPage = (): JSX.Element => {
         return;
       }
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/change-password`,
+        redirectTo: `${window.location.origin}/notes/change-password`,
       });
       if (error) {
         setError(error.message || 'Something went wrong');

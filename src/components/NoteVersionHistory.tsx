@@ -89,18 +89,22 @@ export const NoteVersionHistory = ({
     <article className={cardClasses}>
 
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className={cardTitle}>Version History</h2>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h2 className={`${cardTitle} truncate min-w-0`}>Version History</h2>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             {onClose && (
-              <button type="button" onClick={onClose} className={`${btnBase} ${btnGhost} text-sm`}>
+              <button
+                type="button"
+                onClick={onClose}
+                className={`${btnBase} ${btnGhost} text-sm min-h-[44px] touch-manipulation`}
+              >
                 Back
               </button>
             )}
             <button
               type="button"
               onClick={() => refetch()}
-              className={`${btnBase} ${btnGhost} text-sm`}
+              className={`${btnBase} ${btnGhost} text-sm min-h-[44px] touch-manipulation`}
               disabled={isLoading}
             >
               Refresh
@@ -131,9 +135,9 @@ export const NoteVersionHistory = ({
                   key={version.id}
                   className="p-3 border-2 border-primary/20 dark:border-border rounded-xl bg-surface-soft/50 hover:bg-surface-soft transition-colors"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span className="font-semibold text-foreground">
                           {isShareEvent ? 'Share' : `Version ${version.version_number}`}
                         </span>
@@ -146,11 +150,11 @@ export const NoteVersionHistory = ({
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 ml-4">
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
                       <button
                         type="button"
                         onClick={() => handlePreviewVersion(version.version_number)}
-                        className={`${btnBase} ${btnGhost} text-sm py-1 px-3`}
+                        className={`${btnBase} ${btnGhost} text-sm py-2 px-3 min-h-[44px] touch-manipulation`}
                       >
                         Preview
                       </button>
@@ -158,7 +162,7 @@ export const NoteVersionHistory = ({
                         <button
                           type="button"
                           onClick={() => setSelectedVersion(version)}
-                          className={`${btnBase} ${btnPrimary} text-sm py-1 px-3`}
+                          className={`${btnBase} ${btnPrimary} text-sm py-2 px-3 min-h-[44px] touch-manipulation`}
                           disabled={isRestoring}
                         >
                           Restore

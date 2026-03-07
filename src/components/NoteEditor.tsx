@@ -15,8 +15,11 @@ import {
   Loader2,
   Undo2,
   Redo2,
+  Circle,
 } from 'lucide-react';
 import { useSpeechToText } from '../hooks/useSpeechToText';
+import { useRecordAndTranscribe } from '../hooks/useRecordAndTranscribe';
+import { useAuth } from '../contexts/AuthContext';
 import { useAlert } from '../contexts/AlertContext';
 import { postFormData } from '../apiClient';
 import { Tooltip } from './Tooltip';
@@ -138,8 +141,19 @@ export const NoteEditor = ({
   editable = true,
   notesForLinking,
 }: NoteEditorProps): JSX.Element => {
+  const { user } = useAuth();
   const { showAlert } = useAlert();
+  const isAdmin = !!user?.email && user.email.toLowerCase() === 'admin@1r0nf1st.com';
   const { isListening, error, isSupported, start, stop } = useSpeechToText();
+  const {
+    isRecording,
+    isTranscribing,
+    error: recordError,
+    supported: recordSupported,
+    startRecording,
+    stopRecording,
+    clearError: clearRecordError,
+  } = useRecordAndTranscribe();
   const [ocrLoading, setOcrLoading] = useState(false);
   const [audioTranscribeLoading, setAudioTranscribeLoading] = useState(false);
   const ocrInputRef = useRef<HTMLInputElement>(null);
@@ -151,6 +165,13 @@ export const NoteEditor = ({
       showAlert(error);
     }
   }, [error, showAlert]);
+
+  useEffect(() => {
+    if (recordError) {
+      showAlert(recordError);
+      clearRecordError();
+    }
+  }, [recordError, showAlert, clearRecordError]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -318,6 +339,28 @@ export const NoteEditor = ({
     [editor, showAlert],
   );
 
+  const handleRecordAndTranscribeToggle = useCallback(async () => {
+    if (!editor) return;
+    if (!recordSupported) {
+      showAlert('Recording is not supported in this browser.');
+      return;
+    }
+    if (isRecording) {
+      try {
+        const text = await stopRecording();
+        if (text) {
+          editor.chain().focus().insertContent(text).run();
+        } else {
+          showAlert('No speech detected. Try recording again.');
+        }
+      } catch {
+        // Error already shown via recordError
+      }
+    } else {
+      await startRecording();
+    }
+  }, [editor, recordSupported, isRecording, startRecording, stopRecording, showAlert]);
+
   if (!editor) {
     return (
       <div
@@ -390,10 +433,14 @@ export const NoteEditor = ({
                   start();
                 }
               }}
-              ocrLoading={ocrLoading}
-              onOcrClick={() => ocrInputRef.current?.click()}
-              audioTranscribeLoading={audioTranscribeLoading}
-              onAudioTranscribeClick={() => audioInputRef.current?.click()}
+              ocrLoading={isAdmin ? ocrLoading : false}
+              onOcrClick={isAdmin ? () => ocrInputRef.current?.click() : undefined}
+              audioTranscribeLoading={isAdmin ? audioTranscribeLoading : false}
+              onAudioTranscribeClick={isAdmin ? () => audioInputRef.current?.click() : undefined}
+              isRecordAndTranscribeRecording={isRecording}
+              recordAndTranscribeLoading={isTranscribing}
+              onRecordAndTranscribeToggle={isAdmin ? handleRecordAndTranscribeToggle : undefined}
+              recordAndTranscribeSupported={isAdmin && recordSupported}
             />
           )}
           {/* Desktop toolbar */}
@@ -621,58 +668,98 @@ export const NoteEditor = ({
               <ImageIcon className="w-4 h-4" aria-hidden />
             </button>
           </Tooltip>
-          <Tooltip content="Extract text from image (OCR)">
-            <span className="inline-block">
-              <input
-                ref={ocrInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                aria-hidden
-                onChange={handleOcrFileChange}
-              />
-              <button
-                type="button"
-                onClick={() => ocrInputRef.current?.click()}
-                disabled={ocrLoading}
-                className={`${btnToolbar} ${btnToolbarInactive}`}
-                aria-label="Extract text from image"
-                aria-busy={ocrLoading}
-              >
-                {ocrLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                ) : (
-                  <FileText className="w-4 h-4" aria-hidden />
-                )}
-              </button>
-            </span>
+          {isAdmin && (
+            <Tooltip content="Extract text from image (OCR)">
+              <span className="inline-block">
+                <input
+                  ref={ocrInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  aria-hidden
+                  onChange={handleOcrFileChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => ocrInputRef.current?.click()}
+                  disabled={ocrLoading}
+                  className={`${btnToolbar} ${btnToolbarInactive}`}
+                  aria-label="Extract text from image"
+                  aria-busy={ocrLoading}
+                >
+                  {ocrLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                  ) : (
+                    <FileText className="w-4 h-4" aria-hidden />
+                  )}
+                </button>
+              </span>
+            </Tooltip>
+          )}
+          {isAdmin && (
+            <Tooltip content="Transcribe audio file">
+              <span className="inline-block">
+                <input
+                  ref={audioInputRef}
+                  type="file"
+                  accept="audio/*"
+                  className="hidden"
+                  aria-hidden
+                  onChange={handleAudioFileChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => audioInputRef.current?.click()}
+                  disabled={audioTranscribeLoading}
+                  className={`${btnToolbar} ${btnToolbarInactive}`}
+                  aria-label="Transcribe audio file"
+                  aria-busy={audioTranscribeLoading}
+                >
+                  {audioTranscribeLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                  ) : (
+                    <FileAudio className="w-4 h-4" aria-hidden />
+                  )}
+                </button>
+              </span>
+            </Tooltip>
+          )}
+          {isAdmin && (
+          <Tooltip
+            content={
+              isRecording
+                ? 'Stop recording and transcribe'
+                : isTranscribing
+                  ? 'Transcribing...'
+                  : 'Record & transcribe (same quality as file upload)'
+            }
+          >
+            <button
+              type="button"
+              onClick={handleRecordAndTranscribeToggle}
+              disabled={!recordSupported || isTranscribing}
+              className={`${btnToolbar} ${isRecording ? btnToolbarActive : btnToolbarInactive}`}
+              aria-label={
+                isRecording
+                  ? 'Stop recording and transcribe'
+                  : 'Record and transcribe'
+              }
+              aria-pressed={isRecording}
+              aria-busy={isTranscribing}
+            >
+              {isTranscribing ? (
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+              ) : isRecording ? (
+                <Circle
+                  className="w-4 h-4 fill-red-500 text-red-500"
+                  aria-hidden
+                />
+              ) : (
+                <FileAudio className="w-4 h-4" aria-hidden />
+              )}
+            </button>
           </Tooltip>
-          <Tooltip content="Transcribe audio file">
-            <span className="inline-block">
-              <input
-                ref={audioInputRef}
-                type="file"
-                accept="audio/*"
-                className="hidden"
-                aria-hidden
-                onChange={handleAudioFileChange}
-              />
-              <button
-                type="button"
-                onClick={() => audioInputRef.current?.click()}
-                disabled={audioTranscribeLoading}
-                className={`${btnToolbar} ${btnToolbarInactive}`}
-                aria-label="Transcribe audio file"
-                aria-busy={audioTranscribeLoading}
-              >
-                {audioTranscribeLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                ) : (
-                  <FileAudio className="w-4 h-4" aria-hidden />
-                )}
-              </button>
-            </span>
-          </Tooltip>
+          )}
           <Tooltip content={isListening ? 'Stop voice input' : 'Voice input (speech to text)'}>
             <button
               type="button"

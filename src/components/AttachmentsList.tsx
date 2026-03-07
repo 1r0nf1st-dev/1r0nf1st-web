@@ -106,13 +106,13 @@ export const AttachmentsList = ({
         {attachments.map((attachment) => (
           <div
             key={attachment.id}
-            className="flex items-center justify-between p-2 bg-gray-50 dark:bg-surface-soft rounded-xl hover:bg-gray-100 dark:hover:bg-surface transition-colors"
+            className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-2 bg-gray-50 dark:bg-surface-soft rounded-xl hover:bg-gray-100 dark:hover:bg-surface transition-colors"
           >
             <button
               type="button"
               onClick={() => handleDownload(attachment)}
               disabled={downloadingId === attachment.id}
-              className="flex items-center gap-2 flex-1 text-left hover:text-primary transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 flex-1 min-w-0 text-left hover:text-primary transition-colors disabled:opacity-50 min-h-[44px] touch-manipulation"
             >
               {getFileIcon(attachment.file_type)}
               <div className="flex-1 min-w-0">
@@ -129,7 +129,7 @@ export const AttachmentsList = ({
               type="button"
               onClick={() => handleDeleteClick(attachment)}
               disabled={deletingId === attachment.id}
-              className={`${btnBase} ${btnGhost} text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50`}
+              className={`${btnBase} ${btnGhost} text-sm min-h-[44px] min-w-[44px] shrink-0 touch-manipulation text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50`}
               aria-label={`Delete ${attachment.file_name}`}
             >
               {deletingId === attachment.id ? '...' : '×'}

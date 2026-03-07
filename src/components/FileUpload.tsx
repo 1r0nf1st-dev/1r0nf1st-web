@@ -66,7 +66,7 @@ export const FileUpload = ({ noteId, onUploadComplete, onError }: FileUploadProp
         type="button"
         onClick={handleClick}
         disabled={isUploading}
-        className={`${btnBase} ${btnPrimary} text-sm`}
+        className={`${btnBase} ${btnPrimary} text-sm min-h-[44px] touch-manipulation`}
       >
         {isUploading ? `Uploading... ${uploadProgress}%` : '📎 Attach File'}
       </button>

@@ -11,7 +11,8 @@ export const Hero = (): JSX.Element => {
   const pathname = usePathname();
   const isProjectsPage = pathname === '/projects';
   const isLoginPage = pathname === '/login';
-  const isChangePasswordPage = pathname === '/change-password';
+  const isChangePasswordPage =
+    pathname === '/change-password' || pathname === '/notes/change-password';
 
   return (
     <header className="w-full">

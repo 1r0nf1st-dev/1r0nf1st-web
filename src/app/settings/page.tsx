@@ -7,6 +7,6 @@ export const dynamic = 'force-dynamic';
  * Future: Can be expanded to include more settings
  */
 export default function SettingsPage(): never {
-  // Redirect to change password page (main settings page for now)
-  redirect('/change-password');
+  // Redirect to change password page (keeps sidebar in notes layout)
+  redirect('/notes/change-password');
 }

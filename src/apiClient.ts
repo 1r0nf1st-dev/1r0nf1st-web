@@ -12,37 +12,47 @@ export class ApiError extends Error {
   }
 }
 
+let refreshPromise: Promise<string | null> | null = null;
+
+/**
+ * Refresh the auth token. Uses a lock so concurrent 403s share one refresh
+ * (Supabase refresh tokens are single-use; multiple parallel refreshes fail).
+ */
 async function refreshAuthToken(): Promise<string | null> {
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (!refreshToken) {
-    return null;
-  }
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) return null;
 
-  try {
-    const response = await fetch('/api/auth/refresh', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
+        const response = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
 
-    if (!response.ok) {
-      return null;
-    }
+        if (!response.ok) return null;
 
-    const data = (await response.json()) as { token?: string; refreshToken?: string };
-    if (data.token) {
-      localStorage.setItem('authToken', data.token);
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken);
+        const data = (await response.json()) as {
+          token?: string;
+          refreshToken?: string;
+        };
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+          if (data.refreshToken) {
+            localStorage.setItem('refreshToken', data.refreshToken);
+          }
+          return data.token;
+        }
+        return null;
+      } catch {
+        return null;
+      } finally {
+        refreshPromise = null;
       }
-      return data.token;
-    }
-    return null;
-  } catch {
-    return null;
+    })();
   }
+  return refreshPromise;
 }
 
 export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {

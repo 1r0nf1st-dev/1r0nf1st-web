@@ -92,7 +92,7 @@ export const NotebooksSidebar = (): JSX.Element => {
                 type="button"
                 aria-label={`Delete notebook ${notebook.name}`}
                 onClick={() => setConfirmDeleteId(notebook.id)}
-                className="opacity-0 group-hover:opacity-100 rounded-xl p-1 text-muted hover:bg-red-500/10 hover:text-red-500 transition-opacity"
+                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 rounded-xl p-2 min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0 text-muted hover:bg-red-500/10 hover:text-red-500 transition-opacity touch-manipulation"
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden />
               </button>

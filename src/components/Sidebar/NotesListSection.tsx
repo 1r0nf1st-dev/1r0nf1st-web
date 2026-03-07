@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useMemo, useEffect, useState } from 'react';
 import { useNotes, deleteNote } from '../../useNotes';
 import { useNotesActions } from '../../contexts/NotesActionsContext';
+import { useSidebarAccordionClose } from './SidebarAccordion';
 import { useAlert } from '../../contexts/AlertContext';
 import { useLiveRegion } from '../../contexts/LiveRegionContext';
 import { Skeleton } from '../Skeleton';
@@ -12,6 +13,7 @@ import { FileText, Trash2 } from 'lucide-react';
 export const NotesListSection = (): JSX.Element => {
   const { notes, isLoading, error, refetch } = useNotes({});
   const { selectNote, registerRefetch, refetchAllNotes } = useNotesActions();
+  const closePopover = useSidebarAccordionClose();
   const { showAlert } = useAlert();
   const { announce } = useLiveRegion();
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -94,6 +96,7 @@ export const NotesListSection = (): JSX.Element => {
               onClick={() => {
                 selectNote(note);
                 announce(`Opened note: ${note.title || 'Untitled'}`);
+                closePopover?.();
               }}
               className="group relative flex w-full items-center gap-2 rounded-xl px-2 py-2 min-h-[44px] text-sm text-foreground transition-colors hover:bg-primary/5 dark:hover:bg-primary/10 touch-manipulation"
               aria-label={`Open note: ${note.title || 'Untitled'}`}
