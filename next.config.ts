@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import withPWAInit from '@ducanh2912/next-pwa';
 
-// Build version for footer display (Vercel provides VERCEL_GIT_COMMIT_SHA)
+// Build version for footer display (build number from Upstash Redis via scripts/increment-build-number.mjs)
 function getBuildVersion(): string {
   let version = '0.1.0';
   try {
@@ -12,11 +12,15 @@ function getBuildVersion(): string {
   } catch {
     // ignore
   }
-  const build = process.env.VERCEL_GIT_COMMIT_SHA
-    ? process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 7)
-    : process.env.NODE_ENV === 'development'
-      ? 'dev'
-      : new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  let build = 'dev';
+  try {
+    const data = JSON.parse(readFileSync(join(process.cwd(), 'build-number.json'), 'utf-8'));
+    if (data.buildNumber) build = String(data.buildNumber);
+  } catch {
+    if (process.env.NODE_ENV !== 'development') {
+      build = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    }
+  }
   return `${version}+${build}`;
 }
 

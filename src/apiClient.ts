@@ -97,12 +97,15 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
     }
 
     // Handle 204 No Content responses
-    if (response.status === 204 || response.status === 201) {
-      // For DELETE requests or empty responses, return void
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        return undefined as T;
-      }
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    // For other successful responses (including 201), parse JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      // Non-JSON response for non-204 status - return undefined
+      return undefined as T;
     }
 
     return (await response.json()) as T;
@@ -119,7 +122,19 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
         url,
       );
     }
-    // Re-throw other errors
+    // Normalize non-Error throws (e.g. empty object {} from some libraries)
+    if (error && typeof error === 'object' && !(error instanceof Error)) {
+      const obj = error as Record<string, unknown>;
+      const msg =
+        typeof obj.message === 'string'
+          ? obj.message
+          : typeof obj.error === 'string'
+            ? obj.error
+            : typeof obj.error_description === 'string'
+              ? obj.error_description
+              : null;
+      throw new ApiError(msg || 'An unexpected error occurred. Please try again.', 0, url);
+    }
     throw error;
   }
 }

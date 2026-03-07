@@ -1,7 +1,8 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useId } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
@@ -32,6 +33,7 @@ export const SidebarAccordion = ({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const panelId = `${id}-panel`;
+  const tooltipId = useId();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -88,9 +90,7 @@ export const SidebarAccordion = ({
     if (!isMobile || !isCollapsed || !isOpen) return;
 
     const handleClickOutside = (event: Event) => {
-      const target = (event instanceof TouchEvent 
-        ? (event.touches?.[0]?.target || event.target)
-        : (event as MouseEvent).target) as Node;
+      const target = event.target as Node;
       
       // Get the popover panel element
       const panelElement = document.getElementById(panelId);
@@ -122,16 +122,19 @@ export const SidebarAccordion = ({
     };
   }, [isMobile, isCollapsed, isOpen, panelId]);
 
+  const showTooltip = isCollapsed && !isMobile;
+
   return (
     <div ref={containerRef} className="relative">
       <button
         ref={buttonRef}
         type="button"
-        className={`flex w-full items-center rounded-xl px-2 py-2 text-sm font-medium hover:bg-primary/5 dark:hover:bg-primary/10 ${
+        className={`group flex w-full min-h-[44px] items-center rounded-xl px-2 py-2 text-sm font-medium hover:bg-primary/5 dark:hover:bg-primary/10 touch-manipulation ${
           isCollapsed ? 'justify-center' : 'justify-between'
         }`}
         aria-expanded={isOpen}
         aria-controls={panelId}
+        aria-describedby={showTooltip ? tooltipId : undefined}
         onClick={() => {
           // On mobile (when collapsed), clicking toggles accordion and shows popover
           // On desktop, normal accordion behavior (expands sidebar if collapsed)
@@ -161,9 +164,18 @@ export const SidebarAccordion = ({
           setIsOpen((prev) => !prev);
         }}
       >
-        <span className="flex min-w-0 items-center gap-2">
+        <span className="relative flex min-w-0 items-center gap-2">
           <Icon className="h-4 w-4 shrink-0" aria-hidden />
           {!isCollapsed ? <span className="truncate">{label}</span> : null}
+          {showTooltip ? (
+            <span
+              id={tooltipId}
+              role="tooltip"
+              className="pointer-events-none absolute left-full top-1/2 z-20 ml-2 hidden -translate-y-1/2 rounded-xl bg-surface px-2 py-1 text-xs text-foreground shadow group-hover:block group-focus-visible:block whitespace-nowrap"
+            >
+              {label}
+            </span>
+          ) : null}
         </span>
         {!isCollapsed ? (
           isOpen ? (
@@ -175,45 +187,37 @@ export const SidebarAccordion = ({
       </button>
       {/* Show content when open */}
       {isOpen ? (
-        <>
-          {/* Backdrop for mobile popover */}
-          {isCollapsed && isMobile && (
-            <div
-              className="fixed inset-0 z-[99] bg-black/20"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen(false);
-                notifyAccordionChange(null);
-              }}
-              onTouchStart={(e) => {
-                e.stopPropagation();
-                setIsOpen(false);
-                notifyAccordionChange(null);
-              }}
-              aria-hidden="true"
-            />
-          )}
-          <div 
-            id={panelId} 
-            role="region" 
-            className={`space-y-1 ${
-              isCollapsed && isMobile
-                ? 'fixed left-[64px] z-[100] bg-white/95 dark:bg-surface/95 backdrop-blur-md rounded-xl shadow-xl p-3 min-w-[240px] max-w-[280px] max-h-[60vh] overflow-y-auto border border-primary/10 dark:border-border pointer-events-auto'
-                : isCollapsed
-                ? 'hidden'
-                : 'mt-1 pl-3'
-            }`}
-            style={
-              isCollapsed && isMobile && popoverTop !== undefined
-                ? {
-                    top: `${popoverTop}px`,
-                  }
-                : undefined
-            }
+        isCollapsed && isMobile && typeof document !== 'undefined' ? (
+          createPortal(
+            <>
+              {/* Backdrop - pointer-events-none so touches pass through to panel or main */}
+              <div
+                className="fixed inset-0 z-[9998] bg-black/20 pointer-events-none"
+                aria-hidden="true"
+              />
+              <div
+                id={panelId}
+                role="region"
+                aria-label={label}
+                className="fixed left-[64px] z-[9999] space-y-1 bg-white/95 dark:bg-surface/95 backdrop-blur-md rounded-xl shadow-xl p-3 min-w-[240px] max-w-[280px] max-h-[60vh] overflow-y-auto border border-primary/10 dark:border-border touch-manipulation"
+                style={
+                  popoverTop !== undefined ? { top: `${popoverTop}px` } : undefined
+                }
+              >
+                {children}
+              </div>
+            </>,
+            document.body,
+          )
+        ) : (
+          <div
+            id={panelId}
+            role="region"
+            className={`space-y-1 ${isCollapsed ? 'hidden' : 'mt-1 pl-3'}`}
           >
             {children}
           </div>
-        </>
+        )
       ) : null}
     </div>
   );

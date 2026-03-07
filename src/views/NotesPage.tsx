@@ -108,21 +108,32 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
 
     try {
       const emptyContent = { type: 'doc', content: [] };
-      // Create note without tags - tags should be optional and not auto-added
       const newNote = await createNote({
         title: 'New Note',
         content: emptyContent,
         notebook_id: selectedNotebookId,
-        // Explicitly don't pass tag_ids - tags are a choice, not auto-added
       });
+
+      if (!newNote || typeof newNote !== 'object' || !newNote.id) {
+        throw new Error('Note creation failed: server returned invalid response');
+      }
+
       await refetch();
-      await refetchAllNotes(); // Trigger refetch in sidebar components
-      // Ensure the new note doesn't have tags by explicitly clearing them if present
+      await refetchAllNotes();
+
       const noteWithoutTags = { ...newNote, tags: [] };
       setSelectedNote(noteWithoutTags);
       announce('New note created');
     } catch (error) {
-      handleError(error, { prefix: 'Failed to create note:', fallback: 'Failed to create note. Please try again.' });
+      // Normalize empty-object errors (some libs/runtimes throw {} instead of Error)
+      const err =
+        error &&
+        typeof error === 'object' &&
+        !(error instanceof Error) &&
+        Object.keys(error).length === 0
+          ? new Error('Failed to create note. Please try again.')
+          : error;
+      handleError(err, { prefix: 'Failed to create note:', fallback: 'Failed to create note. Please try again.' });
     }
   };
 

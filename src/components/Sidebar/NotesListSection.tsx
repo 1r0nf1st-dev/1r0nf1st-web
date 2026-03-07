@@ -95,7 +95,7 @@ export const NotesListSection = (): JSX.Element => {
                 selectNote(note);
                 announce(`Opened note: ${note.title || 'Untitled'}`);
               }}
-              className="group relative flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-foreground transition-colors hover:bg-primary/5 dark:hover:bg-primary/10"
+              className="group relative flex w-full items-center gap-2 rounded-xl px-2 py-2 min-h-[44px] text-sm text-foreground transition-colors hover:bg-primary/5 dark:hover:bg-primary/10 touch-manipulation"
               aria-label={`Open note: ${note.title || 'Untitled'}`}
             >
               <FileText className="h-4 w-4 shrink-0 text-muted" aria-hidden />

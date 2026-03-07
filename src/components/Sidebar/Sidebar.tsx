@@ -43,7 +43,7 @@ export const Sidebar = (): JSX.Element => {
 
   return (
     <aside
-      className={`block sticky top-[73px] h-[calc(100vh-73px)] shrink-0 border-r border-primary/10 bg-white/80 p-2 backdrop-blur dark:bg-surface/80 ${
+      className={`block sticky top-[73px] z-10 h-[calc(100vh-73px)] shrink-0 border-r border-primary/10 bg-white/80 p-2 backdrop-blur dark:bg-surface/80 ${
         displayCollapsed ? 'w-16' : 'w-60'
       } transition-all duration-200 ease-in-out self-start`}
       aria-label="Notes sidebar navigation"

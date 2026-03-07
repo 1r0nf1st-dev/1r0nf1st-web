@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { supabase } from '../db/supabase.js';
 import { verifyWebClipperToken } from '../services/webClipperService.js';
+import { logger } from '../utils/logger.js';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -40,6 +41,10 @@ export const authenticateToken = async (
     } = await supabase.auth.getUser(token);
 
     if (error || !user) {
+      logger.warn(
+        { authError: error?.message ?? String(error), hasUser: !!user },
+        'Auth token rejected (403). Ensure SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY match the same project as NEXT_PUBLIC_SUPABASE_URL.',
+      );
       res.status(403).json({ error: 'Invalid or expired token' });
       return;
     }
