@@ -1,12 +1,18 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useState, useEffect, useRef, useId } from 'react';
+import { createContext, useCallback, useContext, useState, useEffect, useRef, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
 import type { SidebarAccordionProps } from './types';
+
+/** Context for closing the accordion popover from children (e.g. when selecting a note) */
+const SidebarAccordionCloseContext = createContext<(() => void) | null>(null);
+
+export const useSidebarAccordionClose = (): (() => void) | null =>
+  useContext(SidebarAccordionCloseContext);
 
 // Track which accordion is open on mobile to prevent multiple popovers
 let openAccordionId: string | null = null;
@@ -122,7 +128,20 @@ export const SidebarAccordion = ({
     };
   }, [isMobile, isCollapsed, isOpen, panelId]);
 
+  const closePopover = useCallback(() => {
+    if (isCollapsed && isMobile) {
+      setIsOpen(false);
+      notifyAccordionChange(null);
+    }
+  }, [isCollapsed, isMobile]);
+
   const showTooltip = isCollapsed && !isMobile;
+
+  const panelContent = (
+    <SidebarAccordionCloseContext.Provider value={closePopover}>
+      {children}
+    </SidebarAccordionCloseContext.Provider>
+  );
 
   return (
     <div ref={containerRef} className="relative">
@@ -204,7 +223,7 @@ export const SidebarAccordion = ({
                   popoverTop !== undefined ? { top: `${popoverTop}px` } : undefined
                 }
               >
-                {children}
+                {panelContent}
               </div>
             </>,
             document.body,
@@ -215,7 +234,7 @@ export const SidebarAccordion = ({
             role="region"
             className={`space-y-1 ${isCollapsed ? 'hidden' : 'mt-1 pl-3'}`}
           >
-            {children}
+            {panelContent}
           </div>
         )
       ) : null}

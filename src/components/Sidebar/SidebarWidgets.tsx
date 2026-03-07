@@ -1,11 +1,14 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Target, CheckSquare, Activity } from 'lucide-react';
 import { useNotesActions } from '../../contexts/NotesActionsContext';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useId } from 'react';
+
+const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 
 export type WidgetType = 'goals' | 'tasks' | 'strava';
 
@@ -15,16 +18,23 @@ interface WidgetItem {
   icon: typeof Target;
 }
 
-const widgets: WidgetItem[] = [
+const ALL_WIDGETS: WidgetItem[] = [
   { id: 'goals', label: 'Goals', icon: Target },
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'strava', label: 'Strava', icon: Activity },
 ];
 
 export const SidebarWidgets = (): JSX.Element => {
+  const { user } = useAuth();
   const { toggleWidget } = useNotesActions();
   const { isCollapsed } = useSidebar();
   const [isMobile, setIsMobile] = useState(false);
+
+  const isAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const widgets = useMemo(
+    () => (isAdmin ? ALL_WIDGETS : ALL_WIDGETS.filter((w) => w.id !== 'strava')),
+    [isAdmin],
+  );
 
   useEffect(() => {
     const checkMobile = () => {

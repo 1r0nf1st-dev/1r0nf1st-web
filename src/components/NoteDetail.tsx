@@ -10,6 +10,7 @@ import { AttachmentsList } from './AttachmentsList';
 import { NoteVersionHistory } from './NoteVersionHistory';
 import { ShareNoteModal } from './ShareNoteModal';
 import { ShareSettings } from './ShareSettings';
+import { SaveAsTemplateModal } from './SaveAsTemplateModal';
 import { BacklinksSection } from './BacklinksSection';
 import { tiptapToMarkdown } from '../utils/tiptapToMarkdown';
 import { createNoteTemplate } from '../useNoteTemplates';
@@ -59,10 +60,18 @@ export const NoteDetail = ({
   const [attachments, setAttachments] = useState<Note['attachments']>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+  const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false);
   const [isTagsDropdownOpen, setIsTagsDropdownOpen] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const tagsDropdownRef = useRef<HTMLDivElement>(null);
+  const shareSettingsModalRef = useRef<HTMLDivElement>(null);
   const { showAlert } = useAlert();
+
+  useEffect(() => {
+    if (showShareSettings && shareSettingsModalRef.current) {
+      shareSettingsModalRef.current.scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
+  }, [showShareSettings]);
 
   // Sally: focus title when opening a note for better keyboard flow
   useEffect(() => {
@@ -414,7 +423,7 @@ export const NoteDetail = ({
               </label>
             </div>
 
-            <div className="flex flex-wrap gap-2 pt-4 border-t border-primary/20 dark:border-border">
+            <div className="flex flex-wrap gap-2 pt-4 border-t border-primary/20 dark:border-border [&_button]:touch-manipulation">
               <button
                 type="button"
                 onClick={handleSave}
@@ -449,15 +458,24 @@ export const NoteDetail = ({
               </button>
               <button
                 type="button"
-                onClick={async () => {
+                onClick={() => setShowSaveAsTemplateModal(true)}
+                disabled={isSavingTemplate}
+                className={`${btnBase} ${btnGhost} ${btnCompact}`}
+                title="Save as template"
+              >
+                {isSavingTemplate ? '...' : 'Save as template'}
+              </button>
+              <SaveAsTemplateModal
+                isOpen={showSaveAsTemplateModal}
+                defaultName={title || 'Untitled'}
+                isSaving={isSavingTemplate}
+                onSave={async (templateName) => {
                   setIsSavingTemplate(true);
                   try {
-                    const name = window.prompt('Template name:', title || 'Untitled');
-                    if (name?.trim()) {
-                      await createNoteTemplate({ name: name.trim(), content });
-                      onNotesChanged?.();
-                      showAlert('Template saved.', 'Success');
-                    }
+                    await createNoteTemplate({ name: templateName, content });
+                    setShowSaveAsTemplateModal(false);
+                    onNotesChanged?.();
+                    showAlert('Template saved.', 'Success');
                   } catch (err) {
                     showAlert(
                       err instanceof Error ? err.message : 'Failed to save template.',
@@ -467,12 +485,8 @@ export const NoteDetail = ({
                     setIsSavingTemplate(false);
                   }
                 }}
-                disabled={isSavingTemplate}
-                className={`${btnBase} ${btnGhost} ${btnCompact}`}
-                title="Save as template"
-              >
-                {isSavingTemplate ? '...' : 'Save as template'}
-              </button>
+                onCancel={() => setShowSaveAsTemplateModal(false)}
+              />
               <button
                 type="button"
                 onClick={() => setShowShareModal(true)}
@@ -520,8 +534,11 @@ export const NoteDetail = ({
           />
         )}
         {showShareSettings && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70">
-            <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/50 dark:bg-black/70 overscroll-contain">
+            <div
+              ref={shareSettingsModalRef}
+              className="max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto"
+            >
               <ShareSettings noteId={note.id} onClose={() => setShowShareSettings(false)} />
             </div>
           </div>

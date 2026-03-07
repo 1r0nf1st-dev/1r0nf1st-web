@@ -65,7 +65,7 @@ export const AuthControls = ({ variant = 'default', onMenuClose }: AuthControlsP
         <span className="text-sm opacity-80 text-muted">
           Logged in as <strong>{userLabel}</strong>
         </span>
-        <Link href="/change-password" className={`${btnBase} ${btnGhost}`}>
+        <Link href="/notes/change-password" className={`${btnBase} ${btnGhost}`}>
           Change Password
         </Link>
         <button type="button" onClick={handleLogout} className={`${btnBase} ${btnGhost}`}>
@@ -101,7 +101,7 @@ export const AuthControls = ({ variant = 'default', onMenuClose }: AuthControlsP
           </div>
           <div className="p-2">
             <Link
-              href="/change-password"
+              href="/notes/change-password"
               className="block w-full text-left px-3 py-2.5 rounded-xl text-sm text-foreground hover:bg-surface-soft transition-colors"
               onClick={() => setIsUserMenuOpen(false)}
             >

@@ -38,24 +38,28 @@ export const VersionPreview = ({
     <article className={cardClasses}>
 
       <div className="relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className={cardTitle}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div className="min-w-0">
+            <h2 className={`${cardTitle} truncate`}>
               {isShareEvent ? 'Share' : `Version ${version.version_number}`}
             </h2>
             <p className="text-sm text-muted mt-1">{formatDate(version.created_at)}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             {!isShareEvent && (
               <button
                 type="button"
                 onClick={onRestore}
-                className={`${btnBase} ${btnPrimary} text-sm`}
+                className={`${btnBase} ${btnPrimary} text-sm min-h-[44px] touch-manipulation`}
               >
                 Restore This Version
               </button>
             )}
-            <button type="button" onClick={onClose} className={`${btnBase} ${btnGhost} text-sm`}>
+            <button
+              type="button"
+              onClick={onClose}
+              className={`${btnBase} ${btnGhost} text-sm min-h-[44px] touch-manipulation`}
+            >
               Close
             </button>
           </div>

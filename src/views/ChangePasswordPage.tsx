@@ -126,7 +126,7 @@ export const ChangePasswordPage = (): JSX.Element => {
 
   // Recovery link: no login required. Logged-in change: require login.
   if (!recoveryToken && !authLoading && !user) {
-    router.replace('/login?returnTo=/change-password');
+    router.replace('/login?returnTo=/notes/change-password');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="opacity-70">Redirecting to login…</div>

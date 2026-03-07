@@ -224,16 +224,32 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
   useEffect(() => {
     if (useChrome) return;
     const noteId = searchParams.get('id');
-    if (noteId && notes && notes.length > 0) {
-      const noteToSelect = notes.find((note) => note.id === noteId);
-      if (noteToSelect && (!selectedNote || selectedNote.id !== noteId)) {
-        handleNoteClickRef.current(noteToSelect).catch((err) => {
-          console.error('Failed to select note from query param:', err);
-        });
-      }
+    if (!noteId || (selectedNote && selectedNote.id === noteId)) return;
+
+    const noteInList = notes?.find((note) => note.id === noteId);
+    if (noteInList) {
+      handleNoteClickRef.current(noteInList).catch((err) => {
+        console.error('Failed to select note from query param:', err);
+        setSelectedNote(noteInList);
+      });
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleNoteClickRef is stable, notes and selectedNote are the real dependencies
-  }, [searchParams, notes, selectedNote, useChrome]);
+
+    // Note not in current list (e.g. shared note) — fetch by ID and select
+    void import('../useNotes').then(({ getNoteById }) => {
+      getNoteById(noteId)
+        .then((fetched: Note) => {
+          handleNoteClickRef.current(fetched).catch((err) => {
+            console.error('Failed to select note from query param:', err);
+            setSelectedNote(fetched);
+          });
+        })
+        .catch((err: unknown) => {
+          console.error('Failed to load note from id param:', err);
+        });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleNoteClickRef is stable; noteId and notes drive the effect
+  }, [searchParams, notes, selectedNote?.id, useChrome]);
 
   // Register handlers with context so sidebar items can trigger them
   useEffect(() => {
@@ -296,18 +312,19 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
     );
   }
 
-  const widgetArray = Array.from(activeWidgets);
+  const isAdmin = !!user?.email && user.email.toLowerCase() === 'admin@1r0nf1st.com';
+  const widgetArray = Array.from(activeWidgets).filter((id) => id !== 'strava' || isAdmin);
 
   return wrapWithChrome(
     <div className="w-full h-full flex flex-col min-h-0 min-h-screen">
       {showDailyView ? (
-        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
+        <div className="flex-1 min-w-0 flex flex-col overflow-y-auto overflow-x-hidden touch-scroll">
           <DailyTodoView styleTheme={styleTheme} onBack={() => setShowDailyView(false)} />
         </div>
       ) : (
         <>
           {/* Content Area */}
-          <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
+          <div className="flex-1 min-w-0 flex flex-col overflow-y-auto overflow-x-hidden touch-scroll">
             {/* Widget Grid */}
             {widgetArray.length > 0 && (
               <div className="w-full p-3 lg:p-6 border-b border-primary/10 dark:border-border">
@@ -337,7 +354,7 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
                 <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
               )}
               {selectedNote ? (
-                <div className="flex-1 min-w-0 flex flex-col overflow-y-auto p-3 lg:p-6">
+                <div className="flex-1 min-w-0 flex flex-col overflow-y-auto overflow-x-hidden touch-scroll p-3 lg:p-6">
                   <NoteDetail
                     note={selectedNote}
                     tags={tags || []}

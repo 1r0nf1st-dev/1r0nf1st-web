@@ -2,8 +2,9 @@
 
 import type { JSX } from 'react';
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { Editor } from '@tiptap/react';
-import { MoreVertical, Bold, Italic, List, ListOrdered, Link as LinkIcon, CheckSquare, Table as TableIcon, Image as ImageIcon, Undo2, Redo2, Mic } from 'lucide-react';
+import { MoreVertical, Bold, Italic, List, ListOrdered, Link as LinkIcon, CheckSquare, Table as TableIcon, Image as ImageIcon, Undo2, Redo2, Mic, Circle, Loader2 } from 'lucide-react';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { Tooltip } from './Tooltip';
 import {
@@ -32,6 +33,14 @@ interface MobileToolbarProps {
   audioTranscribeLoading?: boolean;
   /** Callback for audio transcription file input */
   onAudioTranscribeClick?: () => void;
+  /** Whether Record & transcribe is recording */
+  isRecordAndTranscribeRecording?: boolean;
+  /** Whether Record & transcribe is transcribing */
+  recordAndTranscribeLoading?: boolean;
+  /** Callback for Record & transcribe toggle */
+  onRecordAndTranscribeToggle?: () => void;
+  /** Whether Record & transcribe is supported */
+  recordAndTranscribeSupported?: boolean;
 }
 
 /**
@@ -49,21 +58,50 @@ export const MobileToolbar = ({
   onOcrClick,
   audioTranscribeLoading = false,
   onAudioTranscribeClick,
+  isRecordAndTranscribeRecording = false,
+  recordAndTranscribeLoading = false,
+  onRecordAndTranscribeToggle,
+  recordAndTranscribeSupported = true,
 }: MobileToolbarProps): JSX.Element => {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+  const moreDropdownRef = useRef<HTMLDivElement | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number } | null>(
+    null,
+  );
 
-  // Close menu when clicking outside
+  // Update dropdown position when opening
+  useEffect(() => {
+    if (moreMenuOpen && moreMenuRef.current) {
+      const rect = moreMenuRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+      });
+    } else {
+      setDropdownPosition(null);
+    }
+  }, [moreMenuOpen]);
+
+  // Close menu when clicking outside (button or portal dropdown)
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent): void => {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inButton = moreMenuRef.current?.contains(target);
+      const inDropdown = moreDropdownRef.current?.contains(target);
+      if (!inButton && !inDropdown) {
         setMoreMenuOpen(false);
       }
     };
+    const handleScroll = (): void => setMoreMenuOpen(false);
     if (moreMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      window.addEventListener('scroll', handleScroll, true);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        window.removeEventListener('scroll', handleScroll, true);
+      };
     }
   }, [moreMenuOpen]);
 
@@ -110,59 +148,32 @@ export const MobileToolbar = ({
   );
 
   return (
-    <div className="border-b border-primary/20 dark:border-border p-2 flex items-center gap-2 bg-gray-50 dark:bg-surface-soft overflow-x-auto">
-      {/* Primary tools - always visible */}
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        isActive={editor.isActive('bold')}
-        ariaLabel="Bold"
-        disabled={!editor.can().chain().focus().toggleBold().run()}
-      >
-        <Bold className="w-4 h-4" aria-hidden />
-      </ToolbarButton>
+    <div className="border-b border-primary/20 dark:border-border p-2 flex items-center gap-2 bg-gray-50 dark:bg-surface-soft overflow-x-auto touch-scroll min-w-0">
+      {/* More tools FIRST so always visible without horizontal scroll */}
+      <div ref={moreMenuRef} className="relative shrink-0">
+        <button
+          type="button"
+          onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+          className={`${btnToolbar} ${moreMenuOpen ? btnToolbarActive : btnToolbarInactive} touch-manipulation min-h-[44px] min-w-[44px]`}
+          aria-label="More tools"
+          aria-expanded={moreMenuOpen}
+        >
+          <MoreVertical className="w-4 h-4" aria-hidden />
+        </button>
 
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        isActive={editor.isActive('italic')}
-        ariaLabel="Italic"
-        disabled={!editor.can().chain().focus().toggleItalic().run()}
-      >
-        <Italic className="w-4 h-4" aria-hidden />
-      </ToolbarButton>
-
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        isActive={editor.isActive('bulletList')}
-        ariaLabel="Bullet List"
-      >
-        <List className="w-4 h-4" aria-hidden />
-      </ToolbarButton>
-
-      <ToolbarButton
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        isActive={editor.isActive('orderedList')}
-        ariaLabel="Numbered List"
-      >
-        <ListOrdered className="w-4 h-4" aria-hidden />
-      </ToolbarButton>
-
-      {/* More menu button */}
-      <div ref={moreMenuRef} className="relative ml-auto">
-        <Tooltip content="More tools">
-          <button
-            type="button"
-            onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-            className={`${btnToolbar} ${moreMenuOpen ? btnToolbarActive : btnToolbarInactive}`}
-            aria-label="More tools"
-            aria-expanded={moreMenuOpen}
-          >
-            <MoreVertical className="w-4 h-4" aria-hidden />
-          </button>
-        </Tooltip>
-
-        {moreMenuOpen && (
-          <div className="absolute right-0 top-full mt-1 z-50 w-56 max-h-96 overflow-y-auto rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface shadow-lg p-2">
-            <div className="flex flex-col gap-1">
+        {moreMenuOpen &&
+          dropdownPosition &&
+          typeof document !== 'undefined' &&
+          createPortal(
+            <div
+              ref={(el) => {
+                moreDropdownRef.current = el;
+              }}
+              role="menu"
+              className="fixed z-[9999] w-56 max-h-96 overflow-y-auto touch-scroll rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface shadow-lg p-2"
+              style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+            >
+              <div className="flex flex-col gap-1">
               {/* Link */}
               <ToolbarButton
                 onClick={() => {
@@ -274,6 +285,38 @@ export const MobileToolbar = ({
                 </ToolbarButton>
               )}
 
+              {/* Record & transcribe */}
+              {onRecordAndTranscribeToggle && recordAndTranscribeSupported && (
+                <ToolbarButton
+                  onClick={() => {
+                    onRecordAndTranscribeToggle();
+                    if (!isRecordAndTranscribeRecording && !recordAndTranscribeLoading) {
+                      setMoreMenuOpen(false);
+                    }
+                  }}
+                  isActive={isRecordAndTranscribeRecording}
+                  disabled={recordAndTranscribeLoading}
+                  ariaLabel={
+                    isRecordAndTranscribeRecording
+                      ? 'Stop recording and transcribe'
+                      : recordAndTranscribeLoading
+                        ? 'Transcribing...'
+                        : 'Record & transcribe'
+                  }
+                >
+                  <div className="flex items-center gap-2">
+                    {recordAndTranscribeLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                    ) : isRecordAndTranscribeRecording ? (
+                      <Circle className="w-4 h-4 fill-red-500 text-red-500" aria-hidden />
+                    ) : (
+                      <Mic className="w-4 h-4" aria-hidden />
+                    )}
+                    <span className="text-sm">Record & transcribe</span>
+                  </div>
+                </ToolbarButton>
+              )}
+
               {/* Additional items */}
               {moreItems.map((item, index) => (
                 <div key={index} onClick={() => setMoreMenuOpen(false)}>
@@ -281,9 +324,45 @@ export const MobileToolbar = ({
                 </div>
               ))}
             </div>
-          </div>
+          </div>,
+          document.body,
         )}
       </div>
+
+      {/* Primary tools */}
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        isActive={editor.isActive('bold')}
+        ariaLabel="Bold"
+        disabled={!editor.can().chain().focus().toggleBold().run()}
+      >
+        <Bold className="w-4 h-4" aria-hidden />
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        isActive={editor.isActive('italic')}
+        ariaLabel="Italic"
+        disabled={!editor.can().chain().focus().toggleItalic().run()}
+      >
+        <Italic className="w-4 h-4" aria-hidden />
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        isActive={editor.isActive('bulletList')}
+        ariaLabel="Bullet List"
+      >
+        <List className="w-4 h-4" aria-hidden />
+      </ToolbarButton>
+
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        isActive={editor.isActive('orderedList')}
+        ariaLabel="Numbered List"
+      >
+        <ListOrdered className="w-4 h-4" aria-hidden />
+      </ToolbarButton>
     </div>
   );
 };

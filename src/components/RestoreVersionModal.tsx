@@ -27,7 +27,7 @@ export const RestoreVersionModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 dark:bg-black/70"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/50 dark:bg-black/70 overscroll-contain"
       onClick={onCancel}
       role="dialog"
       aria-modal="true"
@@ -44,11 +44,19 @@ export const RestoreVersionModal = ({
             <strong>{formatDate(version.created_at)}</strong>. The current version will be saved as
             a new version, so you can always go back.
           </p>
-          <div className="mt-6 flex gap-3">
-            <button type="button" onClick={onConfirm} className={`${btnBase} ${btnPrimary} flex-1`}>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={onConfirm}
+              className={`${btnBase} ${btnPrimary} flex-1 min-h-[44px] touch-manipulation`}
+            >
               Restore Version
             </button>
-            <button type="button" onClick={onCancel} className={`${btnBase} ${btnGhost} flex-1`}>
+            <button
+              type="button"
+              onClick={onCancel}
+              className={`${btnBase} ${btnGhost} flex-1 min-h-[44px] touch-manipulation`}
+            >
               Cancel
             </button>
           </div>

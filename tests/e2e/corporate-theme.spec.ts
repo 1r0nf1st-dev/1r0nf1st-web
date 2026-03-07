@@ -45,7 +45,7 @@ test.describe('Corporate theme', () => {
   });
 
   test('change password page shows corporate layout', async ({ page }) => {
-    await page.goto('/change-password', { waitUntil: 'domcontentloaded' });
+    await page.goto('/notes/change-password', { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('link', { name: /01 about/i })).toBeVisible();
     await expect(

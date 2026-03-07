@@ -51,7 +51,7 @@ export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }
         <SidebarAccordion id="templates" label="From Template" icon={LayoutTemplate}>
           <TemplatesAccordion />
         </SidebarAccordion>
-        <SidebarNavItem href="/templates" label="Templates" icon={Library} />
+        <SidebarNavItem href="/notes/templates" label="Templates" icon={Library} />
       </div>
 
       <div className="mt-3 space-y-1">
@@ -101,7 +101,7 @@ export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }
       </div>
 
       <div className="mt-auto space-y-1 pt-3">
-        <SidebarNavItem href="/settings" label="Settings" icon={Settings} />
+        <SidebarNavItem href="/notes/change-password" label="Settings" icon={Settings} />
         <SidebarNavItem
           label={isLoggingOut ? 'Logging out...' : 'Log Out'}
           icon={LogOut}

@@ -1,19 +1,24 @@
 'use client';
 
 import type { JSX, ReactNode } from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Settings } from 'lucide-react';
 import { useWidgetPreferences, type WidgetId } from '../hooks/useWidgetPreferences';
+import { useAuth } from '../contexts/AuthContext';
 import { TasksWidget } from './TasksWidget';
 import { StravaWidget } from './StravaWidget';
 import { GoalTrackerWidget } from './GoalTrackerWidget';
 import { btnBase, btnGhost } from '../styles/buttons';
+
+const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 
 const WIDGET_LABELS: Record<WidgetId, string> = {
   tasks: 'Today',
   strava: 'Strava',
   goals: 'Goals',
 };
+
+const ALL_WIDGET_IDS = ['tasks', 'strava', 'goals'] as const;
 
 interface WidgetGridProps {
   styleTheme?: 'default' | 'corporate';
@@ -22,9 +27,20 @@ interface WidgetGridProps {
 }
 
 export function WidgetGrid({ styleTheme = 'default', onViewDaily }: WidgetGridProps): JSX.Element {
+  const { user } = useAuth();
   const { enabledWidgets, toggleWidget, isEnabled } = useWidgetPreferences();
   const [showCustomize, setShowCustomize] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const isAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const widgetIds = useMemo(
+    () => (isAdmin ? [...ALL_WIDGET_IDS] : (['tasks', 'goals'] as const)),
+    [isAdmin],
+  );
+  const visibleWidgets = useMemo(
+    () => enabledWidgets.filter((id) => id !== 'strava' || isAdmin),
+    [enabledWidgets, isAdmin],
+  );
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
@@ -73,7 +89,7 @@ export function WidgetGrid({ styleTheme = 'default', onViewDaily }: WidgetGridPr
               <div className="px-3 py-1 text-xs font-semibold text-muted uppercase">
                 Show widgets
               </div>
-              {(['tasks', 'strava', 'goals'] as const).map((id) => (
+              {widgetIds.map((id) => (
                 <label
                   key={id}
                   className="flex items-center gap-2 px-3 py-2 hover:bg-primary/5 cursor-pointer"
@@ -92,7 +108,7 @@ export function WidgetGrid({ styleTheme = 'default', onViewDaily }: WidgetGridPr
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {enabledWidgets.map((id) => renderWidget(id))}
+        {visibleWidgets.map((id) => renderWidget(id))}
       </div>
     </div>
   );

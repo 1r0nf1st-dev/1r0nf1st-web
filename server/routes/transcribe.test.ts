@@ -7,7 +7,9 @@ import { config } from '../config.js';
 
 vi.mock('../middleware/auth.js', () => ({
   authenticateToken: (req: express.Request, _res: express.Response, next: () => void) => {
-    (req as express.Request & { userId?: string }).userId = 'test-user-id';
+    const authReq = req as express.Request & { userId?: string; email?: string };
+    authReq.userId = 'test-user-id';
+    authReq.email = 'admin@1r0nf1st.com';
     next();
   },
 }));
