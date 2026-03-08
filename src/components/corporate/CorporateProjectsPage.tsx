@@ -11,6 +11,7 @@ import {
   Star,
   Mail,
   Shield,
+  Brain,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { CorporateNav } from './CorporateNav';
@@ -74,6 +75,15 @@ const WORKING_PROJECTS: CorporateProject[] = [
 ];
 
 const ADMIN_PROJECTS: CorporateProject[] = [
+  {
+    id: 100,
+    icon: Brain,
+    title: 'Second Brain',
+    description: 'Capture thoughts, semantic search, browse projects, people, ideas, and view digests.',
+    tags: ['Admin', 'Second Brain', 'AI'],
+    link: '/projects/second-brain',
+    adminOnly: true,
+  },
   {
     id: 101,
     icon: Mail,
@@ -173,11 +183,10 @@ export const CorporateProjectsPage = (): JSX.Element => {
 
           <ScrollReveal>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-              {WORKING_PROJECTS.filter((project) => project.id === 21) // Only show Notes project
-                .map((project) => {
+              {WORKING_PROJECTS.filter((project) => project.id === 21) // Notes only
+                .map((project, idx) => {
                   const IconComponent = project.icon;
-                  // Notes is project 001
-                  const projectIndex = 0;
+                  const projectIndex = idx;
                   return (
                     <ProjectTile key={project.id} project={project} index={projectIndex}>
                       <div

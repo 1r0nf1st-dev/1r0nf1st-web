@@ -4,14 +4,14 @@ test.describe('Projects page', () => {
   test('loads and displays projects content', async ({ page }) => {
     await page.goto('/projects', { waitUntil: 'domcontentloaded' });
 
-    await expect(page.getByRole('heading', { name: /1r0nf1st/i, level: 1 })).toBeVisible();
-    await expect(page.getByRole('link', { name: /back to home/i }).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /projects/i, level: 1 })).toBeVisible();
+    await expect(page.getByRole('link', { name: /02 project/i })).toBeVisible();
   });
 
   test('shows Notes project card', async ({ page }) => {
     await page.goto('/projects', { waitUntil: 'domcontentloaded' });
 
-    await expect(page.getByRole('heading', { name: /notes/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /view notes/i })).toBeVisible();
   });
 
   test('navigates to Notes from projects', async ({ page }) => {
@@ -27,4 +27,5 @@ test.describe('Projects page', () => {
 
     await expect(page).toHaveURL(/\/notes/);
   });
+
 });
