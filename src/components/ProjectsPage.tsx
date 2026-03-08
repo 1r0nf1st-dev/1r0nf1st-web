@@ -21,6 +21,7 @@ import {
   Server,
   Lock,
   Bell,
+  Brain,
   Heart,
   Flame,
   Sun,
@@ -283,7 +284,7 @@ export const ProjectsPage = (): JSX.Element => {
                 })}
                 {isAdmin ? (
                   <Link
-                    href="/projects/send-email"
+                    href="/projects/second-brain"
                     className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
                   >
                     <span
@@ -293,7 +294,45 @@ export const ProjectsPage = (): JSX.Element => {
                       {formatProjectNumber(1)}
                     </span>
                     <div className="flex items-center gap-4 mb-3">
-                      <Mail className="text-3xl text-primary shrink-0" />
+                      <Brain className="text-3xl text-primary shrink-0" />
+                      <h3 className="m-0 text-xl font-semibold">Second Brain</h3>
+                    </div>
+                    <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
+                      Capture thoughts, semantic search, browse projects, people, ideas, and view digests. Admin only.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
+                      <span>View project</span>
+                      <span>→</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="relative">
+                    <span
+                      className="text-xs font-mono text-muted absolute top-4 right-4 z-10"
+                      aria-hidden
+                    >
+                      {formatProjectNumber(0)}
+                    </span>
+                    <AdminOnlyPlaceholderCard
+                      title="Second Brain"
+                      description="Capture thoughts, semantic search, browse. Admin only."
+                      icon={Brain}
+                    />
+                  </div>
+                )}
+                {isAdmin ? (
+                  <Link
+                    href="/projects/send-email"
+                    className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+                  >
+                    <span
+                      className="text-xs font-mono text-muted absolute top-4 right-4"
+                      aria-hidden
+                    >
+                      {formatProjectNumber(2)}
+                    </span>
+                    <div className="flex items-center gap-4 mb-3">
+                      <Mail className="text-3xl text-primary shrink-0" aria-hidden />
                       <h3 className="m-0 text-xl font-semibold">Send Email</h3>
                     </div>
                     <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
@@ -328,7 +367,7 @@ export const ProjectsPage = (): JSX.Element => {
                       className="text-xs font-mono text-muted absolute top-4 right-4"
                       aria-hidden
                     >
-                      {formatProjectNumber(2)}
+                      {formatProjectNumber(3)}
                     </span>
                     <div className="flex items-center gap-4 mb-3">
                       <Shield className="text-3xl text-primary shrink-0" />
@@ -348,7 +387,7 @@ export const ProjectsPage = (): JSX.Element => {
                       className="text-xs font-mono text-muted absolute top-4 right-4 z-10"
                       aria-hidden
                     >
-                      {formatProjectNumber(2)}
+                      {formatProjectNumber(3)}
                     </span>
                     <AdminOnlyPlaceholderCard
                       title="Domain Auth (DKIM / DMARC)"

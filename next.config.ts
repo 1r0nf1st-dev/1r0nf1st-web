@@ -21,7 +21,7 @@ function getBuildVersion(): string {
       build = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     }
   }
-  return `${version}+${build}`;
+  return `${version}.${build}`;
 }
 
 const nextConfig: NextConfig = {

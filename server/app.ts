@@ -16,6 +16,7 @@ import { notesRouter } from './routes/notes.js';
 import { logsRouter } from './routes/logs.js';
 import { emailRouter } from './routes/email.js';
 import { contactRouter } from './routes/contact.js';
+import { secondBrainRouter } from './routes/secondBrain.js';
 import { config } from './config.js';
 import { logger } from './utils/logger.js';
 import { requestLogger } from './middleware/requestLogger.js';
@@ -97,6 +98,7 @@ app.use('/api/v1/notes', notesRouter);
 app.use('/api/logs', logsRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/contact', contactRouter);
+app.use('/api/second-brain', secondBrainRouter);
 
 // 404 handler for unmatched routes
 app.use((_req, res) => {

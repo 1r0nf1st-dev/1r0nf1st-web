@@ -30,11 +30,11 @@ function getBuildNumber(): string {
   return new Date().toISOString().slice(0, 10).replace(/-/g, '');
 }
 
-// Generate full version string: MAJOR.MINOR.PATCH+BUILD
+// Generate full version string: MAJOR.MINOR.PATCH.BUILD
 function getFullVersion(): string {
   const version = getPackageVersion();
   const build = getBuildNumber();
-  return `${version}+${build}`;
+  return `${version}.${build}`;
 }
 
 // https://vite.dev/config/
