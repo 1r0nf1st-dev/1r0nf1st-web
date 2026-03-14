@@ -1,4 +1,4 @@
-import { supabase } from '../db/supabase.js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export interface GoalMilestone {
   id: string;
@@ -52,12 +52,8 @@ export interface UpdateMilestoneInput {
   completed?: boolean;
 }
 
-export async function getGoalsByUserId(userId: string): Promise<Goal[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function getGoalsByUserId(db: SupabaseClient, userId: string): Promise<Goal[]> {
+  const { data, error } = await db
     .from('goals')
     .select('*')
     .eq('user_id', userId)
@@ -70,12 +66,12 @@ export async function getGoalsByUserId(userId: string): Promise<Goal[]> {
   return (data || []) as Goal[];
 }
 
-export async function getGoalById(goalId: string, userId: string): Promise<Goal | null> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function getGoalById(
+  db: SupabaseClient,
+  goalId: string,
+  userId: string,
+): Promise<Goal | null> {
+  const { data, error } = await db
     .from('goals')
     .select('*')
     .eq('id', goalId)
@@ -93,12 +89,12 @@ export async function getGoalById(goalId: string, userId: string): Promise<Goal 
   return data as Goal;
 }
 
-export async function getGoalWithMilestones(goalId: string, userId: string): Promise<Goal | null> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data: goal, error: goalError } = await supabase
+export async function getGoalWithMilestones(
+  db: SupabaseClient,
+  goalId: string,
+  userId: string,
+): Promise<Goal | null> {
+  const { data: goal, error: goalError } = await db
     .from('goals')
     .select('*')
     .eq('id', goalId)
@@ -112,7 +108,7 @@ export async function getGoalWithMilestones(goalId: string, userId: string): Pro
     throw new Error(`Failed to fetch goal: ${goalError.message}`);
   }
 
-  const { data: milestones, error: milestonesError } = await supabase
+  const { data: milestones, error: milestonesError } = await db
     .from('goal_milestones')
     .select('*')
     .eq('goal_id', goalId)
@@ -128,12 +124,12 @@ export async function getGoalWithMilestones(goalId: string, userId: string): Pro
   } as Goal;
 }
 
-export async function createGoal(userId: string, input: CreateGoalInput): Promise<Goal> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function createGoal(
+  db: SupabaseClient,
+  userId: string,
+  input: CreateGoalInput,
+): Promise<Goal> {
+  const { data, error } = await db
     .from('goals')
     .insert({
       user_id: userId,
@@ -154,21 +150,18 @@ export async function createGoal(userId: string, input: CreateGoalInput): Promis
 }
 
 export async function updateGoal(
+  db: SupabaseClient,
   goalId: string,
   userId: string,
   input: UpdateGoalInput,
 ): Promise<Goal> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // First verify the goal belongs to the user
-  const existingGoal = await getGoalById(goalId, userId);
+  const existingGoal = await getGoalById(db, goalId, userId);
   if (!existingGoal) {
     throw new Error('Goal not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('goals')
     .update({
       ...input,
@@ -186,18 +179,18 @@ export async function updateGoal(
   return data as Goal;
 }
 
-export async function deleteGoal(goalId: string, userId: string): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function deleteGoal(
+  db: SupabaseClient,
+  goalId: string,
+  userId: string,
+): Promise<void> {
   // First verify the goal belongs to the user
-  const existingGoal = await getGoalById(goalId, userId);
+  const existingGoal = await getGoalById(db, goalId, userId);
   if (!existingGoal) {
     throw new Error('Goal not found or access denied');
   }
 
-  const { error } = await supabase.from('goals').delete().eq('id', goalId).eq('user_id', userId);
+  const { error } = await db.from('goals').delete().eq('id', goalId).eq('user_id', userId);
 
   if (error) {
     throw new Error(`Failed to delete goal: ${error.message}`);
@@ -205,20 +198,17 @@ export async function deleteGoal(goalId: string, userId: string): Promise<void> 
 }
 
 export async function getMilestonesByGoalId(
+  db: SupabaseClient,
   goalId: string,
   userId: string,
 ): Promise<GoalMilestone[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify the goal belongs to the user
-  const goal = await getGoalById(goalId, userId);
+  const goal = await getGoalById(db, goalId, userId);
   if (!goal) {
     throw new Error('Goal not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('goal_milestones')
     .select('*')
     .eq('goal_id', goalId)
@@ -232,20 +222,17 @@ export async function getMilestonesByGoalId(
 }
 
 export async function createMilestone(
+  db: SupabaseClient,
   userId: string,
   input: CreateMilestoneInput,
 ): Promise<GoalMilestone> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify the goal belongs to the user
-  const goal = await getGoalById(input.goal_id, userId);
+  const goal = await getGoalById(db, input.goal_id, userId);
   if (!goal) {
     throw new Error('Goal not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('goal_milestones')
     .insert({
       goal_id: input.goal_id,
@@ -264,16 +251,13 @@ export async function createMilestone(
 }
 
 export async function updateMilestone(
+  db: SupabaseClient,
   milestoneId: string,
   userId: string,
   input: UpdateMilestoneInput,
 ): Promise<GoalMilestone> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // First get the milestone to verify it belongs to a goal owned by the user
-  const { data: milestone, error: fetchError } = await supabase
+  const { data: milestone, error: fetchError } = await db
     .from('goal_milestones')
     .select('goal_id')
     .eq('id', milestoneId)
@@ -283,7 +267,7 @@ export async function updateMilestone(
     throw new Error('Milestone not found');
   }
 
-  const goal = await getGoalById(milestone.goal_id, userId);
+  const goal = await getGoalById(db, milestone.goal_id, userId);
   if (!goal) {
     throw new Error('Goal not found or access denied');
   }
@@ -300,7 +284,7 @@ export async function updateMilestone(
     updateData.completed_at = null;
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('goal_milestones')
     .update(updateData)
     .eq('id', milestoneId)
@@ -314,13 +298,13 @@ export async function updateMilestone(
   return data as GoalMilestone;
 }
 
-export async function deleteMilestone(milestoneId: string, userId: string): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function deleteMilestone(
+  db: SupabaseClient,
+  milestoneId: string,
+  userId: string,
+): Promise<void> {
   // First get the milestone to verify it belongs to a goal owned by the user
-  const { data: milestone, error: fetchError } = await supabase
+  const { data: milestone, error: fetchError } = await db
     .from('goal_milestones')
     .select('goal_id')
     .eq('id', milestoneId)
@@ -330,12 +314,12 @@ export async function deleteMilestone(milestoneId: string, userId: string): Prom
     throw new Error('Milestone not found');
   }
 
-  const goal = await getGoalById(milestone.goal_id, userId);
+  const goal = await getGoalById(db, milestone.goal_id, userId);
   if (!goal) {
     throw new Error('Goal not found or access denied');
   }
 
-  const { error } = await supabase.from('goal_milestones').delete().eq('id', milestoneId);
+  const { error } = await db.from('goal_milestones').delete().eq('id', milestoneId);
 
   if (error) {
     throw new Error(`Failed to delete milestone: ${error.message}`);

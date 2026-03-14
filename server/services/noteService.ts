@@ -1,3 +1,5 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import * as notesDb from '../db/notesDb.js';
 import { supabase } from '../db/supabase.js';
 import { extractNoteIdsFromContent } from '../utils/noteLinks.js';
 
@@ -195,12 +197,12 @@ export function parseSearchOperators(search: string): ParsedSearchOperators {
 
 // ========== Notes CRUD ==========
 
-export async function getNotesByUserId(userId: string, filters?: NotesFilters): Promise<Note[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  let query = supabase.from('notes').select('*').eq('user_id', userId).is('deleted_at', null);
+export async function getNotesByUserId(
+  db: SupabaseClient,
+  userId: string,
+  filters?: NotesFilters,
+): Promise<Note[]> {
+  let query = db.from('notes').select('*').eq('user_id', userId).is('deleted_at', null);
 
   if (filters?.notebook_id) {
     query = query.eq('notebook_id', filters.notebook_id);
@@ -231,7 +233,7 @@ export async function getNotesByUserId(userId: string, filters?: NotesFilters): 
   // Filter by tag if specified
   if (filters?.tag_id) {
     // Get all note_ids that have this tag
-    const { data: noteTags, error: tagError } = await supabase
+    const { data: noteTags, error: tagError } = await db
       .from('note_tags')
       .select('note_id')
       .eq('tag_id', filters.tag_id);
@@ -276,7 +278,7 @@ export async function getNotesByUserId(userId: string, filters?: NotesFilters): 
   // Load tags for all notes (for display purposes)
   if (notes.length > 0) {
     const noteIds = notes.map((n) => n.id);
-    const { data: noteTags, error: tagsError } = await supabase
+    const { data: noteTags, error: tagsError } = await db
       .from('note_tags')
       .select('note_id, tag_id')
       .in('note_id', noteIds);
@@ -294,7 +296,7 @@ export async function getNotesByUserId(userId: string, filters?: NotesFilters): 
       // Fetch all tag details
       const allTagIds = Array.from(new Set(noteTags.map((nt) => nt.tag_id)));
       if (allTagIds.length > 0) {
-        const { data: tags, error: fetchTagsError } = await supabase
+        const { data: tags, error: fetchTagsError } = await db
           .from('tags')
           .select('*')
           .in('id', allTagIds)
@@ -317,109 +319,50 @@ export async function getNotesByUserId(userId: string, filters?: NotesFilters): 
   return notes;
 }
 
-export async function getNoteById(noteId: string, userId: string): Promise<Note | null> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
+export async function getNoteById(
+  db: SupabaseClient,
+  noteId: string,
+  userId: string,
+): Promise<Note | null> {
+  const noteRow = await notesDb.selectNoteById(db, noteId, userId);
+  if (!noteRow) return null;
 
-  const { data, error } = await supabase
-    .from('notes')
-    .select('*')
-    .eq('id', noteId)
-    .eq('user_id', userId)
-    .is('deleted_at', null)
-    .single();
+  const note = noteRow as Note;
 
-  if (error) {
-    if (error.code === 'PGRST116') {
-      return null;
-    }
-    throw new Error(`Failed to fetch note: ${error.message}`);
-  }
-
-  const note = data as Note;
-
-  // Fetch tags for this note
-  const { data: noteTags, error: tagsError } = await supabase
-    .from('note_tags')
-    .select('tag_id')
-    .eq('note_id', noteId);
-
-  if (!tagsError && noteTags && noteTags.length > 0) {
+  const noteTags = await notesDb.selectNoteTags(db, noteId);
+  if (noteTags.length > 0) {
     const tagIds = noteTags.map((nt) => nt.tag_id);
-    const { data: tags, error: fetchTagsError } = await supabase
-      .from('tags')
-      .select('*')
-      .in('id', tagIds);
-
-    if (!fetchTagsError && tags) {
-      note.tags = tags as Tag[];
-    }
+    const tags = await notesDb.selectTagsByIds(db, tagIds);
+    note.tags = tags as Tag[];
   }
 
-  // Fetch attachments for this note
-  const { data: attachments, error: attachmentsError } = await supabase
-    .from('attachments')
-    .select('*')
-    .eq('note_id', noteId)
-    .order('created_at', { ascending: true });
-
-  if (!attachmentsError && attachments) {
-    note.attachments = attachments as Attachment[];
-  }
+  const attachments = await notesDb.selectAttachmentsByNoteId(db, noteId);
+  note.attachments = attachments as Attachment[];
 
   return note;
 }
 
-export async function createNote(userId: string, input: CreateNoteInput): Promise<Note> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
+export async function createNote(
+  db: SupabaseClient,
+  userId: string,
+  input: CreateNoteInput,
+): Promise<Note> {
+  const note = await notesDb.insertNote(db, {
+    user_id: userId,
+    title: input.title || '',
+    content: input.content || {},
+    notebook_id: input.notebook_id || null,
+    is_pinned: false,
+    is_archived: false,
+  }) as Note;
 
-  const { data, error } = await supabase
-    .from('notes')
-    .insert({
-      user_id: userId,
-      title: input.title || '',
-      content: input.content || {},
-      notebook_id: input.notebook_id || null,
-      is_pinned: false,
-      is_archived: false,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to create note: ${error.message}`);
-  }
-
-  const note = data as Note;
-
-  // Link tags if provided
   if (input.tag_ids && input.tag_ids.length > 0) {
-    // Verify all tags belong to the user
-    const { data: userTags, error: tagsError } = await supabase
-      .from('tags')
-      .select('id')
-      .eq('user_id', userId)
-      .in('id', input.tag_ids);
-
-    if (tagsError) {
-      throw new Error(`Failed to verify tags: ${tagsError.message}`);
-    }
-
-    const validTagIds = (userTags || []).map((t) => t.id);
+    const validTagIds = await notesDb.selectUserTagIds(db, userId, input.tag_ids);
     if (validTagIds.length > 0) {
-      const noteTagInserts = validTagIds.map((tagId) => ({
-        note_id: note.id,
-        tag_id: tagId,
-      }));
-
-      const { error: linkError } = await supabase.from('note_tags').insert(noteTagInserts);
-
-      if (linkError) {
-        throw new Error(`Failed to link tags: ${linkError.message}`);
-      }
+      await notesDb.insertNoteTags(
+        db,
+        validTagIds.map((tagId) => ({ note_id: note.id, tag_id: tagId })),
+      );
     }
   }
 
@@ -427,116 +370,73 @@ export async function createNote(userId: string, input: CreateNoteInput): Promis
 }
 
 export async function updateNote(
+  db: SupabaseClient,
   noteId: string,
   userId: string,
   input: UpdateNoteInput,
 ): Promise<Note> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  // Verify the note belongs to the user
-  const existingNote = await getNoteById(noteId, userId);
+  const existingNote = await getNoteById(db, noteId, userId);
   if (!existingNote) {
     throw new Error('Note not found or access denied');
   }
 
-  const updateData: Partial<Note> = {};
+  const updateData: Partial<notesDb.NoteRow> = {};
   if (input.title !== undefined) updateData.title = input.title;
   if (input.content !== undefined) updateData.content = input.content;
   if (input.notebook_id !== undefined) updateData.notebook_id = input.notebook_id;
   if (input.is_pinned !== undefined) updateData.is_pinned = input.is_pinned;
   if (input.is_archived !== undefined) updateData.is_archived = input.is_archived;
 
-  const { data, error } = await supabase
-    .from('notes')
-    .update(updateData)
-    .eq('id', noteId)
-    .eq('user_id', userId)
-    .select()
-    .single();
-
-  if (error) {
-    throw new Error(`Failed to update note: ${error.message}`);
+  let data: Note;
+  if (Object.keys(updateData).length > 0) {
+    data = (await notesDb.updateNote(db, noteId, userId, updateData)) as Note;
+  } else {
+    data = existingNote;
   }
 
   if (input.content !== undefined) {
-    syncNoteLinks(noteId, userId, input.content).catch(() => {
+    syncNoteLinks(db, noteId, userId, input.content).catch(() => {
       /* best-effort; don't fail the update */
     });
   }
 
   // Update tags if provided
   if (input.tag_ids !== undefined) {
-    // Delete existing tag links
-    const { error: deleteError } = await supabase.from('note_tags').delete().eq('note_id', noteId);
+    await notesDb.deleteNoteTags(db, noteId);
 
-    if (deleteError) {
-      throw new Error(`Failed to remove existing tags: ${deleteError.message}`);
-    }
-
-    // Add new tag links
     if (input.tag_ids.length > 0) {
-      // Verify all tags belong to the user
-      const { data: userTags, error: tagsError } = await supabase
-        .from('tags')
-        .select('id')
-        .eq('user_id', userId)
-        .in('id', input.tag_ids);
-
-      if (tagsError) {
-        throw new Error(`Failed to verify tags: ${tagsError.message}`);
-      }
-
-      const validTagIds = (userTags || []).map((t) => t.id);
+      const validTagIds = await notesDb.selectUserTagIds(db, userId, input.tag_ids);
       if (validTagIds.length > 0) {
-        const noteTagInserts = validTagIds.map((tagId) => ({
-          note_id: noteId,
-          tag_id: tagId,
-        }));
-
-        const { error: linkError } = await supabase.from('note_tags').insert(noteTagInserts);
-
-        if (linkError) {
-          throw new Error(`Failed to link tags: ${linkError.message}`);
-        }
+        await notesDb.insertNoteTags(
+          db,
+          validTagIds.map((tagId) => ({ note_id: noteId, tag_id: tagId })),
+        );
       }
     }
   }
 
-  return data as Note;
+  return data;
 }
 
-export async function deleteNote(noteId: string, userId: string): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  // Verify the note belongs to the user
-  const existingNote = await getNoteById(noteId, userId);
+export async function deleteNote(
+  db: SupabaseClient,
+  noteId: string,
+  userId: string,
+): Promise<void> {
+  const existingNote = await getNoteById(db, noteId, userId);
   if (!existingNote) {
     throw new Error('Note not found or access denied');
   }
-
-  // Soft delete: set deleted_at
-  const { error } = await supabase
-    .from('notes')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', noteId)
-    .eq('user_id', userId);
-
-  if (error) {
-    throw new Error(`Failed to delete note: ${error.message}`);
-  }
+  await notesDb.softDeleteNote(db, noteId, userId);
 }
 
-export async function restoreNote(noteId: string, userId: string): Promise<Note> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function restoreNote(
+  db: SupabaseClient,
+  noteId: string,
+  userId: string,
+): Promise<Note> {
   // Verify the note belongs to the user (including deleted ones)
-  const { data: note, error: fetchError } = await supabase
+  const { data: note, error: fetchError } = await db
     .from('notes')
     .select('*')
     .eq('id', noteId)
@@ -547,7 +447,7 @@ export async function restoreNote(noteId: string, userId: string): Promise<Note>
     throw new Error('Note not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('notes')
     .update({ deleted_at: null })
     .eq('id', noteId)
@@ -562,13 +462,13 @@ export async function restoreNote(noteId: string, userId: string): Promise<Note>
   return data as Note;
 }
 
-export async function searchNotes(userId: string, query: string): Promise<Note[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function searchNotes(
+  db: SupabaseClient,
+  userId: string,
+  query: string,
+): Promise<Note[]> {
   // Use PostgreSQL full-text search
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('notes')
     .select('*')
     .eq('user_id', userId)
@@ -578,7 +478,7 @@ export async function searchNotes(userId: string, query: string): Promise<Note[]
   if (error) {
     // Fallback to simple filtering if full-text search fails
     const searchLower = query.toLowerCase();
-    const { data: allNotes, error: fetchError } = await supabase
+    const { data: allNotes, error: fetchError } = await db
       .from('notes')
       .select('*')
       .eq('user_id', userId)
@@ -601,12 +501,11 @@ export async function searchNotes(userId: string, query: string): Promise<Note[]
 
 // ========== Notebooks CRUD ==========
 
-export async function getNotebooksByUserId(userId: string): Promise<Notebook[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function getNotebooksByUserId(
+  db: SupabaseClient,
+  userId: string,
+): Promise<Notebook[]> {
+  const { data, error } = await db
     .from('notebooks')
     .select('*')
     .eq('user_id', userId)
@@ -620,14 +519,11 @@ export async function getNotebooksByUserId(userId: string): Promise<Notebook[]> 
 }
 
 export async function getNotebookById(
+  db: SupabaseClient,
   notebookId: string,
   userId: string,
 ): Promise<Notebook | null> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('notebooks')
     .select('*')
     .eq('id', notebookId)
@@ -645,22 +541,19 @@ export async function getNotebookById(
 }
 
 export async function createNotebook(
+  db: SupabaseClient,
   userId: string,
   input: CreateNotebookInput,
 ): Promise<Notebook> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify parent notebook belongs to user if specified
   if (input.parent_id) {
-    const parent = await getNotebookById(input.parent_id, userId);
+    const parent = await getNotebookById(db, input.parent_id, userId);
     if (!parent) {
       throw new Error('Parent notebook not found or access denied');
     }
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('notebooks')
     .insert({
       user_id: userId,
@@ -679,23 +572,20 @@ export async function createNotebook(
 }
 
 export async function updateNotebook(
+  db: SupabaseClient,
   notebookId: string,
   userId: string,
   input: UpdateNotebookInput,
 ): Promise<Notebook> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify the notebook belongs to the user
-  const existingNotebook = await getNotebookById(notebookId, userId);
+  const existingNotebook = await getNotebookById(db, notebookId, userId);
   if (!existingNotebook) {
     throw new Error('Notebook not found or access denied');
   }
 
   // Verify parent notebook belongs to user if specified
   if (input.parent_id !== undefined && input.parent_id !== null) {
-    const parent = await getNotebookById(input.parent_id, userId);
+    const parent = await getNotebookById(db, input.parent_id, userId);
     if (!parent) {
       throw new Error('Parent notebook not found or access denied');
     }
@@ -710,7 +600,7 @@ export async function updateNotebook(
   if (input.parent_id !== undefined) updateData.parent_id = input.parent_id;
   if (input.color !== undefined) updateData.color = input.color;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('notebooks')
     .update(updateData)
     .eq('id', notebookId)
@@ -725,19 +615,19 @@ export async function updateNotebook(
   return data as Notebook;
 }
 
-export async function deleteNotebook(notebookId: string, userId: string): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function deleteNotebook(
+  db: SupabaseClient,
+  notebookId: string,
+  userId: string,
+): Promise<void> {
   // Verify the notebook belongs to the user
-  const existingNotebook = await getNotebookById(notebookId, userId);
+  const existingNotebook = await getNotebookById(db, notebookId, userId);
   if (!existingNotebook) {
     throw new Error('Notebook not found or access denied');
   }
 
   // Check if notebook has notes
-  const { data: notes, error: notesError } = await supabase
+  const { data: notes, error: notesError } = await db
     .from('notes')
     .select('id')
     .eq('notebook_id', notebookId)
@@ -752,7 +642,7 @@ export async function deleteNotebook(notebookId: string, userId: string): Promis
     throw new Error('Cannot delete notebook that contains notes');
   }
 
-  const { error } = await supabase
+  const { error } = await db
     .from('notebooks')
     .delete()
     .eq('id', notebookId)
@@ -765,12 +655,8 @@ export async function deleteNotebook(notebookId: string, userId: string): Promis
 
 // ========== Tags CRUD ==========
 
-export async function getTagsByUserId(userId: string): Promise<Tag[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function getTagsByUserId(db: SupabaseClient, userId: string): Promise<Tag[]> {
+  const { data, error } = await db
     .from('tags')
     .select('*')
     .eq('user_id', userId)
@@ -783,12 +669,12 @@ export async function getTagsByUserId(userId: string): Promise<Tag[]> {
   return (data || []) as Tag[];
 }
 
-export async function getTagById(tagId: string, userId: string): Promise<Tag | null> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function getTagById(
+  db: SupabaseClient,
+  tagId: string,
+  userId: string,
+): Promise<Tag | null> {
+  const { data, error } = await db
     .from('tags')
     .select('*')
     .eq('id', tagId)
@@ -805,12 +691,12 @@ export async function getTagById(tagId: string, userId: string): Promise<Tag | n
   return data as Tag;
 }
 
-export async function createTag(userId: string, input: CreateTagInput): Promise<Tag> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function createTag(
+  db: SupabaseClient,
+  userId: string,
+  input: CreateTagInput,
+): Promise<Tag> {
+  const { data, error } = await db
     .from('tags')
     .insert({
       user_id: userId,
@@ -832,16 +718,13 @@ export async function createTag(userId: string, input: CreateTagInput): Promise<
 }
 
 export async function updateTag(
+  db: SupabaseClient,
   tagId: string,
   userId: string,
   input: UpdateTagInput,
 ): Promise<Tag> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify the tag belongs to the user
-  const existingTag = await getTagById(tagId, userId);
+  const existingTag = await getTagById(db, tagId, userId);
   if (!existingTag) {
     throw new Error('Tag not found or access denied');
   }
@@ -850,7 +733,7 @@ export async function updateTag(
   if (input.name !== undefined) updateData.name = input.name.trim();
   if (input.color !== undefined) updateData.color = input.color;
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('tags')
     .update(updateData)
     .eq('id', tagId)
@@ -869,19 +752,19 @@ export async function updateTag(
   return data as Tag;
 }
 
-export async function deleteTag(tagId: string, userId: string): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function deleteTag(
+  db: SupabaseClient,
+  tagId: string,
+  userId: string,
+): Promise<void> {
   // Verify the tag belongs to the user
-  const existingTag = await getTagById(tagId, userId);
+  const existingTag = await getTagById(db, tagId, userId);
   if (!existingTag) {
     throw new Error('Tag not found or access denied');
   }
 
   // Delete will cascade to note_tags due to foreign key constraint
-  const { error } = await supabase.from('tags').delete().eq('id', tagId).eq('user_id', userId);
+  const { error } = await db.from('tags').delete().eq('id', tagId).eq('user_id', userId);
 
   if (error) {
     throw new Error(`Failed to delete tag: ${error.message}`);
@@ -892,18 +775,18 @@ export async function deleteTag(tagId: string, userId: string): Promise<void> {
 
 // ========== Note Versions ==========
 
-export async function getNoteVersions(noteId: string, userId: string): Promise<NoteVersion[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function getNoteVersions(
+  db: SupabaseClient,
+  noteId: string,
+  userId: string,
+): Promise<NoteVersion[]> {
   // Verify note belongs to user
-  const note = await getNoteById(noteId, userId);
+  const note = await getNoteById(db, noteId, userId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('note_versions')
     .select('*')
     .eq('note_id', noteId)
@@ -924,20 +807,17 @@ export const SHARE_HISTORY_PREFIX = 'Shared with ';
  * Call after creating a share; does not update the note content.
  */
 export async function addShareToNoteHistory(
+  db: SupabaseClient,
   noteId: string,
   ownerId: string,
   details: { recipientLabel: string; permission: string; viewLink?: string | null },
 ): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const note = await getNoteById(noteId, ownerId);
+  const note = await getNoteById(db, noteId, ownerId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
 
-  const { data: maxRow } = await supabase
+  const { data: maxRow } = await db
     .from('note_versions')
     .select('version_number')
     .eq('note_id', noteId)
@@ -961,7 +841,7 @@ export async function addShareToNoteHistory(
     })),
   };
 
-  const { error } = await supabase.from('note_versions').insert({
+  const { error } = await db.from('note_versions').insert({
     note_id: noteId,
     content,
     content_text: contentText,
@@ -974,21 +854,18 @@ export async function addShareToNoteHistory(
 }
 
 export async function getNoteVersion(
+  db: SupabaseClient,
   noteId: string,
   versionNumber: number,
   userId: string,
 ): Promise<NoteVersion | null> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify note belongs to user
-  const note = await getNoteById(noteId, userId);
+  const note = await getNoteById(db, noteId, userId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('note_versions')
     .select('*')
     .eq('note_id', noteId)
@@ -1006,22 +883,19 @@ export async function getNoteVersion(
 }
 
 export async function restoreNoteVersion(
+  db: SupabaseClient,
   noteId: string,
   versionNumber: number,
   userId: string,
 ): Promise<Note> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify note belongs to user
-  const note = await getNoteById(noteId, userId);
+  const note = await getNoteById(db, noteId, userId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
 
   // Get the version to restore
-  const version = await getNoteVersion(noteId, versionNumber, userId);
+  const version = await getNoteVersion(db, noteId, versionNumber, userId);
   if (!version) {
     throw new Error('Version not found');
   }
@@ -1033,7 +907,7 @@ export async function restoreNoteVersion(
 
   // Update the note with the version's content
   // This will trigger the versioning trigger, creating a new version with the current content
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('notes')
     .update({
       content: version.content,
@@ -1054,6 +928,7 @@ export async function restoreNoteVersion(
 // ========== Note Sharing ==========
 
 export async function shareNoteWithUser(
+  db: SupabaseClient,
   noteId: string,
   ownerId: string,
   input: CreateShareInput,
@@ -1063,7 +938,7 @@ export async function shareNoteWithUser(
   }
 
   // Verify note belongs to owner
-  const note = await getNoteById(noteId, ownerId);
+  const note = await getNoteById(db, noteId, ownerId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
@@ -1142,7 +1017,7 @@ export async function shareNoteWithUser(
     expires_at: input.expires_at || null,
   };
 
-  const { data, error } = await supabase.from('shared_notes').insert(shareData).select().single();
+  const { data, error } = await db.from('shared_notes').insert(shareData).select().single();
 
   if (error) {
     // Handle unique constraint violation (already shared with this user)
@@ -1175,18 +1050,22 @@ export async function shareNoteWithUser(
   return share;
 }
 
-export async function getNoteShares(noteId: string, ownerId: string): Promise<SharedNote[]> {
+export async function getNoteShares(
+  db: SupabaseClient,
+  noteId: string,
+  ownerId: string,
+): Promise<SharedNote[]> {
   if (!supabase) {
     throw new Error('Database not configured');
   }
 
   // Verify note belongs to owner
-  const note = await getNoteById(noteId, ownerId);
+  const note = await getNoteById(db, noteId, ownerId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('shared_notes')
     .select('*')
     .eq('note_id', noteId)
@@ -1224,14 +1103,10 @@ export async function getNoteShares(noteId: string, ownerId: string): Promise<Sh
   return shares;
 }
 
-export async function getSharedNotes(userId: string): Promise<Note[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function getSharedNotes(db: SupabaseClient, userId: string): Promise<Note[]> {
   // Get notes shared with this user (not expired)
   const now = new Date().toISOString();
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('shared_notes')
     .select('note_id')
     .eq('shared_with_user_id', userId)
@@ -1246,7 +1121,7 @@ export async function getSharedNotes(userId: string): Promise<Note[]> {
   }
 
   const noteIds = data.map((s) => s.note_id);
-  const { data: notes, error: notesError } = await supabase
+  const { data: notes, error: notesError } = await db
     .from('notes')
     .select('*')
     .in('id', noteIds)
@@ -1261,7 +1136,7 @@ export async function getSharedNotes(userId: string): Promise<Note[]> {
 
   // Fetch attachments for all notes
   if (notesWithAttachments.length > 0) {
-    const { data: attachments, error: attachmentsError } = await supabase
+    const { data: attachments, error: attachmentsError } = await db
       .from('attachments')
       .select('*')
       .in('note_id', noteIds)
@@ -1287,14 +1162,10 @@ export async function getSharedNotes(userId: string): Promise<Note[]> {
   return notesWithAttachments;
 }
 
-export async function getSharedNotesCount(userId: string): Promise<number> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function getSharedNotesCount(db: SupabaseClient, userId: string): Promise<number> {
   // Get notes shared with this user (not expired)
   const now = new Date().toISOString();
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('shared_notes')
     .select('note_id')
     .eq('shared_with_user_id', userId)
@@ -1310,7 +1181,7 @@ export async function getSharedNotesCount(userId: string): Promise<number> {
 
   // Filter out deleted notes to match what getSharedNotes returns
   const noteIds = data.map((s) => s.note_id);
-  const { count, error: notesError } = await supabase
+  const { count, error: notesError } = await db
     .from('notes')
     .select('*', { count: 'exact', head: true })
     .in('id', noteIds)
@@ -1372,16 +1243,13 @@ export async function getSharedNoteByToken(token: string): Promise<Note | null> 
 }
 
 export async function updateSharePermission(
+  db: SupabaseClient,
   shareId: string,
   ownerId: string,
   permission: 'view' | 'edit',
 ): Promise<SharedNote> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify share belongs to owner
-  const { data: share, error: shareError } = await supabase
+  const { data: share, error: shareError } = await db
     .from('shared_notes')
     .select('owner_id')
     .eq('id', shareId)
@@ -1391,7 +1259,7 @@ export async function updateSharePermission(
     throw new Error('Share not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('shared_notes')
     .update({ permission })
     .eq('id', shareId)
@@ -1405,13 +1273,13 @@ export async function updateSharePermission(
   return data as SharedNote;
 }
 
-export async function unshareNote(shareId: string, ownerId: string): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function unshareNote(
+  db: SupabaseClient,
+  shareId: string,
+  ownerId: string,
+): Promise<void> {
   // Verify share belongs to owner
-  const { data: share, error: shareError } = await supabase
+  const { data: share, error: shareError } = await db
     .from('shared_notes')
     .select('owner_id')
     .eq('id', shareId)
@@ -1421,7 +1289,7 @@ export async function unshareNote(shareId: string, ownerId: string): Promise<voi
     throw new Error('Share not found or access denied');
   }
 
-  const { error } = await supabase.from('shared_notes').delete().eq('id', shareId);
+  const { error } = await db.from('shared_notes').delete().eq('id', shareId);
 
   if (error) {
     throw new Error(`Failed to unshare note: ${error.message}`);
@@ -1431,20 +1299,17 @@ export async function unshareNote(shareId: string, ownerId: string): Promise<voi
 // ========== Attachments ==========
 
 export async function getAttachmentsByNoteId(
+  db: SupabaseClient,
   noteId: string,
   userId: string,
 ): Promise<Attachment[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify the note belongs to the user
-  const note = await getNoteById(noteId, userId);
+  const note = await getNoteById(db, noteId, userId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('attachments')
     .select('*')
     .eq('note_id', noteId)
@@ -1458,6 +1323,7 @@ export async function getAttachmentsByNoteId(
 }
 
 export async function createAttachment(
+  db: SupabaseClient,
   noteId: string,
   userId: string,
   fileData: {
@@ -1468,17 +1334,13 @@ export async function createAttachment(
     mime_type?: string;
   },
 ): Promise<Attachment> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   // Verify the note belongs to the user
-  const note = await getNoteById(noteId, userId);
+  const note = await getNoteById(db, noteId, userId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('attachments')
     .insert({
       note_id: noteId,
@@ -1498,13 +1360,13 @@ export async function createAttachment(
   return data as Attachment;
 }
 
-export async function deleteAttachment(attachmentId: string, userId: string): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
+export async function deleteAttachment(
+  db: SupabaseClient,
+  attachmentId: string,
+  userId: string,
+): Promise<void> {
   // Get attachment to verify it belongs to a note owned by the user and get file path
-  const { data: attachment, error: fetchError } = await supabase
+  const { data: attachment, error: fetchError } = await db
     .from('attachments')
     .select('note_id, file_path')
     .eq('id', attachmentId)
@@ -1514,13 +1376,13 @@ export async function deleteAttachment(attachmentId: string, userId: string): Pr
     throw new Error('Attachment not found');
   }
 
-  const note = await getNoteById(attachment.note_id, userId);
+  const note = await getNoteById(db, attachment.note_id, userId);
   if (!note) {
     throw new Error('Note not found or access denied');
   }
 
   // Delete file from storage
-  const { error: storageError } = await supabase.storage
+  const { error: storageError } = await db.storage
     .from('note-attachments')
     .remove([attachment.file_path]);
 
@@ -1530,7 +1392,7 @@ export async function deleteAttachment(attachmentId: string, userId: string): Pr
   }
 
   // Delete attachment record
-  const { error } = await supabase.from('attachments').delete().eq('id', attachmentId);
+  const { error } = await db.from('attachments').delete().eq('id', attachmentId);
 
   if (error) {
     throw new Error(`Failed to delete attachment: ${error.message}`);
@@ -1547,12 +1409,11 @@ export interface SavedSearch {
   created_at: string;
 }
 
-export async function getSavedSearches(userId: string): Promise<SavedSearch[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function getSavedSearches(
+  db: SupabaseClient,
+  userId: string,
+): Promise<SavedSearch[]> {
+  const { data, error } = await db
     .from('saved_searches')
     .select('*')
     .eq('user_id', userId)
@@ -1566,14 +1427,12 @@ export async function getSavedSearches(userId: string): Promise<SavedSearch[]> {
 }
 
 export async function createSavedSearch(
+  db: SupabaseClient,
   userId: string,
   input: { name: string; query: string },
 ): Promise<SavedSearch> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('saved_searches')
     .insert({
       user_id: userId,
@@ -1591,14 +1450,11 @@ export async function createSavedSearch(
 }
 
 export async function deleteSavedSearch(
+  db: SupabaseClient,
   savedSearchId: string,
   userId: string,
 ): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { error } = await supabase
+  const { error } = await db
     .from('saved_searches')
     .delete()
     .eq('id', savedSearchId)
@@ -1612,13 +1468,12 @@ export async function deleteSavedSearch(
 // ========== Note Links (Backlinks) ==========
 
 export async function syncNoteLinks(
+  db: SupabaseClient,
   sourceNoteId: string,
   userId: string,
   content: Record<string, unknown>,
 ): Promise<void> {
-  if (!supabase) return;
-
-  const note = await getNoteById(sourceNoteId, userId);
+  const note = await getNoteById(db, sourceNoteId, userId);
   if (!note) return;
 
   const targetIds = extractNoteIdsFromContent(content);
@@ -1626,32 +1481,32 @@ export async function syncNoteLinks(
 
   for (const targetId of targetIds) {
     if (targetId === sourceNoteId) continue;
-    const target = await getNoteById(targetId, userId);
+    const target = await getNoteById(db, targetId, userId);
     if (target) validTargetIds.push(targetId);
   }
 
-  await supabase.from('note_links').delete().eq('source_note_id', sourceNoteId);
+  await db.from('note_links').delete().eq('source_note_id', sourceNoteId);
 
   if (validTargetIds.length > 0) {
     const rows = validTargetIds.map((target_note_id) => ({
       source_note_id: sourceNoteId,
       target_note_id,
     }));
-    await supabase.from('note_links').upsert(rows, {
+    await db.from('note_links').upsert(rows, {
       onConflict: 'source_note_id,target_note_id',
     });
   }
 }
 
-export async function getBacklinks(noteId: string, userId: string): Promise<Note[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const note = await getNoteById(noteId, userId);
+export async function getBacklinks(
+  db: SupabaseClient,
+  noteId: string,
+  userId: string,
+): Promise<Note[]> {
+  const note = await getNoteById(db, noteId, userId);
   if (!note) return [];
 
-  const { data: links, error } = await supabase
+  const { data: links, error } = await db
     .from('note_links')
     .select('source_note_id')
     .eq('target_note_id', noteId);
@@ -1662,7 +1517,7 @@ export async function getBacklinks(noteId: string, userId: string): Promise<Note
   const notes: Note[] = [];
 
   for (const id of sourceIds) {
-    const n = await getNoteById(id, userId);
+    const n = await getNoteById(db, id, userId);
     if (n) notes.push(n);
   }
 
@@ -1681,12 +1536,11 @@ export interface NoteTemplate {
   updated_at: string;
 }
 
-export async function getNoteTemplates(userId: string): Promise<NoteTemplate[]> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { data, error } = await supabase
+export async function getNoteTemplates(
+  db: SupabaseClient,
+  userId: string,
+): Promise<NoteTemplate[]> {
+  const { data, error } = await db
     .from('note_templates')
     .select('*')
     .eq('user_id', userId)
@@ -1700,19 +1554,16 @@ export async function getNoteTemplates(userId: string): Promise<NoteTemplate[]> 
 }
 
 export async function createNoteTemplate(
+  db: SupabaseClient,
   userId: string,
   input: { name: string; content: Record<string, unknown> },
 ): Promise<NoteTemplate> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
   const content =
     input.content && typeof input.content === 'object' && input.content.type === 'doc'
       ? input.content
       : { type: 'doc' as const, content: [] };
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('note_templates')
     .insert({
       user_id: userId,
@@ -1730,14 +1581,11 @@ export async function createNoteTemplate(
 }
 
 export async function deleteNoteTemplate(
+  db: SupabaseClient,
   templateId: string,
   userId: string,
 ): Promise<void> {
-  if (!supabase) {
-    throw new Error('Database not configured');
-  }
-
-  const { error } = await supabase
+  const { error } = await db
     .from('note_templates')
     .delete()
     .eq('id', templateId)

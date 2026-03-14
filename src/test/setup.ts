@@ -56,5 +56,6 @@ beforeEach(() => {
   localStorageMock.clear();
 });
 
-// Mock window.fetch globally
+// Mock window.fetch globally. Tests that need fetch (e.g. API calls) must mock it
+// in their own scope (beforeEach) and restore in afterEach if needed.
 global.fetch = vi.fn();

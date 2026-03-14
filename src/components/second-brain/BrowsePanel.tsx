@@ -131,7 +131,66 @@ export const BrowsePanel = (): JSX.Element => {
     }
   };
 
+  const handleToggleComplete = async (row: Record<string, unknown>): Promise<void> => {
+    const id = row.id as string | undefined;
+    if (!id) return;
+    if (activeTable === 'projects') {
+      const current = String(row.status ?? 'active');
+      const next = current === 'done' ? 'active' : 'done';
+      setActionLoading(true);
+      setActionError(null);
+      try {
+        await getJson<{ id: string }>(`/api/second-brain/projects/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: next }),
+        });
+        fetchData();
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : 'Failed to update');
+      } finally {
+        setActionLoading(false);
+      }
+    } else if (activeTable === 'admin') {
+      const current = String(row.status ?? 'pending');
+      const next = current === 'done' ? 'pending' : 'done';
+      setActionLoading(true);
+      setActionError(null);
+      try {
+        await getJson<{ id: string }>(`/api/second-brain/admin/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: next }),
+        });
+        fetchData();
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : 'Failed to update');
+      } finally {
+        setActionLoading(false);
+      }
+    } else if (activeTable === 'ideas') {
+      const current = String(row.status ?? 'raw');
+      const next = current === 'done' ? 'raw' : 'done';
+      setActionLoading(true);
+      setActionError(null);
+      try {
+        await getJson<{ id: string }>(`/api/second-brain/ideas/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: next }),
+        });
+        fetchData();
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : 'Failed to update');
+      } finally {
+        setActionLoading(false);
+      }
+    }
+  };
+
   const showActions = activeTable === 'thoughts';
+  const showStatusActions =
+    activeTable === 'projects' || activeTable === 'admin' || activeTable === 'ideas';
   const columns = data[0]
     ? (Object.keys(data[0]) as string[]).filter((k) => !['embedding'].includes(k))
     : [];
@@ -167,6 +226,11 @@ export const BrowsePanel = (): JSX.Element => {
           Click <strong>Edit</strong> to change text, <strong>Re-route</strong> to classify and move to the correct box, or <strong>Delete</strong> to remove.
         </p>
       )}
+      {showStatusActions && !loading && !error && data.length > 0 && (
+        <p className="rounded-lg border border-border bg-surface-soft/50 px-4 py-3 text-sm text-muted">
+          Click <strong>Complete</strong> to mark as done, or <strong>Reopen</strong> to move back to active.
+        </p>
+      )}
       {actionError && (
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">
           {actionError}
@@ -189,7 +253,7 @@ export const BrowsePanel = (): JSX.Element => {
                     {k}
                   </th>
                 ))}
-                {showActions && (
+                {(showActions || showStatusActions) && (
                   <th className="px-4 py-2 text-left font-medium text-foreground min-w-[140px]">
                     Actions
                   </th>
@@ -255,6 +319,23 @@ export const BrowsePanel = (): JSX.Element => {
                           Delete
                         </button>
                       </div>
+                    </td>
+                  )}
+                  {showStatusActions && !showActions && (
+                    <td className="px-4 py-2 align-top">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleComplete(row)}
+                        className={`${btnBase} ${btnGhost} px-2 py-1 text-xs`}
+                        disabled={actionLoading}
+                        title={
+                          String(row.status ?? '') === 'done'
+                            ? 'Reopen'
+                            : 'Mark as complete'
+                        }
+                      >
+                        {String(row.status ?? '') === 'done' ? 'Reopen' : 'Complete'}
+                      </button>
                     </td>
                   )}
                 </tr>

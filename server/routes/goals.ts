@@ -26,12 +26,12 @@ goalsRouter.use(authenticateToken);
 // Get all goals for the authenticated user
 goalsRouter.get('/', async (req: AuthRequest, res) => {
   try {
-    if (!req.userId) {
+    if (!req.userId || !req.supabase) {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
-    const goals = await getGoalsByUserId(req.userId);
+    const goals = await getGoalsByUserId(req.supabase, req.userId);
     res.json(goals);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch goals';
@@ -48,7 +48,11 @@ goalsRouter.get('/:id', async (req: AuthRequest, res) => {
     }
 
     const goalId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const goal = await getGoalWithMilestones(goalId, req.userId);
+    if (!req.supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    const goal = await getGoalWithMilestones(req.supabase, goalId, req.userId);
     if (!goal) {
       res.status(404).json({ error: 'Goal not found' });
       return;
@@ -76,7 +80,11 @@ goalsRouter.post('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    const goal = await createGoal(req.userId, {
+    if (!req.supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    const goal = await createGoal(req.supabase, req.userId, {
       title: sanitizeFreeText(title.trim(), GOAL_TITLE_MAX_LENGTH),
       description:
         description != null && typeof description === 'string'
@@ -105,7 +113,11 @@ goalsRouter.put('/:id', async (req: AuthRequest, res) => {
     const goalId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { title, description, target_date, progress_percentage, status } = req.body;
 
-    const goal = await updateGoal(goalId, req.userId, {
+    if (!req.supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    const goal = await updateGoal(req.supabase, goalId, req.userId, {
       title:
         title != null && typeof title === 'string'
           ? sanitizeFreeText(title.trim(), GOAL_TITLE_MAX_LENGTH)
@@ -136,7 +148,11 @@ goalsRouter.delete('/:id', async (req: AuthRequest, res) => {
     }
 
     const goalId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await deleteGoal(goalId, req.userId);
+    if (!req.supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    await deleteGoal(req.supabase, goalId, req.userId);
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete goal';
@@ -154,7 +170,11 @@ goalsRouter.get('/:id/milestones', async (req: AuthRequest, res) => {
     }
 
     const goalId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const milestones = await getMilestonesByGoalId(goalId, req.userId);
+    if (!req.supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    const milestones = await getMilestonesByGoalId(req.supabase, goalId, req.userId);
     res.json(milestones);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch milestones';
@@ -178,7 +198,11 @@ goalsRouter.post('/:id/milestones', async (req: AuthRequest, res) => {
       return;
     }
 
-    const milestone = await createMilestone(req.userId, {
+    if (!req.supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    const milestone = await createMilestone(req.supabase, req.userId, {
       goal_id: goalId,
       title: sanitizeFreeText(title.trim(), MILESTONE_TITLE_MAX_LENGTH),
       description:
@@ -207,7 +231,11 @@ goalsRouter.put('/milestones/:milestoneId', async (req: AuthRequest, res) => {
       : req.params.milestoneId;
     const { title, description, completed } = req.body;
 
-    const milestone = await updateMilestone(milestoneId, req.userId, {
+    if (!req.supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    const milestone = await updateMilestone(req.supabase, milestoneId, req.userId, {
       title:
         title != null && typeof title === 'string'
           ? sanitizeFreeText(title.trim(), MILESTONE_TITLE_MAX_LENGTH)
@@ -238,7 +266,11 @@ goalsRouter.delete('/milestones/:milestoneId', async (req: AuthRequest, res) => 
     const milestoneId = Array.isArray(req.params.milestoneId)
       ? req.params.milestoneId[0]
       : req.params.milestoneId;
-    await deleteMilestone(milestoneId, req.userId);
+    if (!req.supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    await deleteMilestone(req.supabase, milestoneId, req.userId);
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete milestone';

@@ -54,6 +54,7 @@ import {
 import { buildClipContent } from '../utils/clipContent.js';
 import { sendTransactionalEmail } from '../services/brevoService.js';
 import { config } from '../config.js';
+import { supabase } from '../db/supabase.js';
 import { createWebClipperToken } from '../services/webClipperService.js';
 import { transcribeRouter } from './transcribe.js';
 
@@ -73,14 +74,14 @@ const upload = multer({
   },
 });
 
-// GET /api/notes/clip/notebooks - List notebooks for Web Clipper extension
+// GET /api/notes/clip/notebooks - List notebooks for Web Clipper extension (uses service role; no JWT)
 notesRouter.get('/clip/notebooks', authenticateWebClipper, async (req: AuthRequest, res) => {
   try {
-    if (!req.userId) {
-      res.status(401).json({ error: 'Web Clipper token invalid' });
+    if (!req.userId || !supabase) {
+      res.status(req.userId ? 503 : 401).json({ error: req.userId ? 'Database not configured' : 'Web Clipper token invalid' });
       return;
     }
-    const notebooks = await getNotebooksByUserId(req.userId);
+    const notebooks = await getNotebooksByUserId(supabase, req.userId);
     res.json(notebooks);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch notebooks';
@@ -110,8 +111,8 @@ notesRouter.post('/clip', authenticateWebClipper, async (req: AuthRequest, res) 
     const sourceTitle = typeof body.source_title === 'string' ? body.source_title : title;
 
     let notebookId: string | null = null;
-    if (body.notebook_id && typeof body.notebook_id === 'string') {
-      const notebook = await getNotebookById(req.userId, body.notebook_id);
+    if (body.notebook_id && typeof body.notebook_id === 'string' && supabase) {
+      const notebook = await getNotebookById(supabase, body.notebook_id, req.userId);
       if (!notebook) {
         res.status(400).json({ error: 'Notebook not found or access denied' });
         return;
@@ -120,7 +121,11 @@ notesRouter.post('/clip', authenticateWebClipper, async (req: AuthRequest, res) 
     }
 
     const content = buildClipContent(rawContent, sourceUrl, sourceTitle);
-    const note = await createNote(req.userId, { title, content, notebook_id: notebookId ?? undefined });
+    if (!supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+    const note = await createNote(supabase, req.userId, { title, content, notebook_id: notebookId ?? undefined });
     res.status(201).json(note);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to clip note';
@@ -136,12 +141,12 @@ notesRouter.use(authenticateToken);
 // GET /api/notes/shared - Get notes shared with current user (must be before /:id)
 notesRouter.get('/shared', async (req: AuthRequest, res) => {
   try {
-    if (!req.userId) {
+    if (!req.userId || !req.supabase) {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
 
-    const notes = await getSharedNotes(req.userId);
+    const notes = await getSharedNotes(req.supabase, req.userId);
     res.json(notes);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch shared notes';
@@ -152,7 +157,7 @@ notesRouter.get('/shared', async (req: AuthRequest, res) => {
 // GET /api/notes/shared/count - Get shared notes unread count
 notesRouter.get('/shared/count', async (req: AuthRequest, res) => {
   try {
-    if (!req.userId) {
+    if (!req.userId || !req.supabase) {
       res.status(401).json({
         data: null,
         error: { message: 'User not authenticated', code: 'UNAUTHORIZED' },
@@ -160,7 +165,7 @@ notesRouter.get('/shared/count', async (req: AuthRequest, res) => {
       return;
     }
 
-    const count = await getSharedNotesCount(req.userId);
+    const count = await getSharedNotesCount(req.supabase!, req.userId);
     res.json({ data: { count }, error: null });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch shared notes count';
@@ -218,14 +223,14 @@ notesRouter.get('/', async (req: AuthRequest, res) => {
     if (parsed) {
       if (parsed.archived !== undefined) archived = parsed.archived;
       if (parsed.tagName) {
-        const tags = await getTagsByUserId(req.userId);
+        const tags = await getTagsByUserId(req.supabase!, req.userId);
         const tag = tags.find(
           (t) => t.name.toLowerCase().trim() === parsed!.tagName!.toLowerCase().trim(),
         );
         if (tag) tag_id = tag.id;
       }
       if (parsed.notebookName) {
-        const notebooks = await getNotebooksByUserId(req.userId);
+        const notebooks = await getNotebooksByUserId(req.supabase!, req.userId);
         const nb = notebooks.find(
           (n) => n.name.toLowerCase().trim() === parsed!.notebookName!.toLowerCase().trim(),
         );
@@ -252,7 +257,7 @@ notesRouter.get('/', async (req: AuthRequest, res) => {
       'Fetching notes with filters',
     );
 
-    const notes = await getNotesByUserId(req.userId, filters);
+    const notes = await getNotesByUserId(req.supabase!, req.userId, filters);
     res.json(notes);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch notes';
@@ -277,7 +282,7 @@ notesRouter.get('/search', async (req: AuthRequest, res) => {
       return;
     }
 
-    const notes = await searchNotes(req.userId, query);
+    const notes = await searchNotes(req.supabase!, req.userId, query);
     res.json(notes);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to search notes';
@@ -310,7 +315,7 @@ notesRouter.get('/saved-searches', async (req: AuthRequest, res) => {
       return;
     }
 
-    const savedSearches = await getSavedSearches(req.userId);
+    const savedSearches = await getSavedSearches(req.supabase!, req.userId);
     res.json(savedSearches);
   } catch (error) {
     const message =
@@ -336,7 +341,7 @@ notesRouter.post('/saved-searches', async (req: AuthRequest, res) => {
       return;
     }
 
-    const savedSearch = await createSavedSearch(req.userId, {
+    const savedSearch = await createSavedSearch(req.supabase!, req.userId, {
       name: sanitizePlainText(name, 255),
       query: sanitizePlainText(query, NOTE_SEARCH_MAX_LENGTH),
     });
@@ -355,7 +360,7 @@ notesRouter.get('/templates', async (req: AuthRequest, res) => {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
-    const templates = await getNoteTemplates(req.userId);
+    const templates = await getNoteTemplates(req.supabase!, req.userId);
     res.json(templates);
   } catch (error) {
     const message =
@@ -376,7 +381,7 @@ notesRouter.post('/templates', async (req: AuthRequest, res) => {
       res.status(400).json({ error: 'Name is required' });
       return;
     }
-    const template = await createNoteTemplate(req.userId, {
+    const template = await createNoteTemplate(req.supabase!, req.userId, {
       name: sanitizePlainText(name.trim(), 255),
       content: content && typeof content === 'object' ? content : { type: 'doc', content: [] },
     });
@@ -396,7 +401,7 @@ notesRouter.delete('/templates/:id', async (req: AuthRequest, res) => {
       return;
     }
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await deleteNoteTemplate(id, req.userId);
+    await deleteNoteTemplate(req.supabase!, id, req.userId);
     res.status(204).send();
   } catch (error) {
     const message =
@@ -415,7 +420,7 @@ notesRouter.delete('/saved-searches/:id', async (req: AuthRequest, res) => {
     }
 
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await deleteSavedSearch(id, req.userId);
+    await deleteSavedSearch(req.supabase!, id, req.userId);
     res.status(204).send();
   } catch (error) {
     const message =
@@ -434,7 +439,7 @@ notesRouter.get('/notebooks', async (req: AuthRequest, res) => {
       return;
     }
 
-    const notebooks = await getNotebooksByUserId(req.userId);
+    const notebooks = await getNotebooksByUserId(req.supabase!, req.userId);
     res.json(notebooks);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch notebooks';
@@ -451,7 +456,7 @@ notesRouter.get('/notebooks/:id', async (req: AuthRequest, res) => {
     }
 
     const notebookId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const notebook = await getNotebookById(notebookId, req.userId);
+    const notebook = await getNotebookById(req.supabase!, notebookId, req.userId);
     if (!notebook) {
       res.status(404).json({ error: 'Notebook not found' });
       return;
@@ -479,7 +484,7 @@ notesRouter.post('/notebooks', async (req: AuthRequest, res) => {
       return;
     }
 
-    const notebook = await createNotebook(req.userId, {
+    const notebook = await createNotebook(req.supabase!, req.userId, {
       name: sanitizeFreeText(name.trim(), NOTEBOOK_NAME_MAX_LENGTH),
       parent_id,
       color,
@@ -503,7 +508,7 @@ notesRouter.put('/notebooks/:id', async (req: AuthRequest, res) => {
     const notebookId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { name, parent_id, color } = req.body;
 
-    const notebook = await updateNotebook(notebookId, req.userId, {
+    const notebook = await updateNotebook(req.supabase!, notebookId, req.userId, {
       name:
         name != null && typeof name === 'string'
           ? sanitizeFreeText(name.trim(), NOTEBOOK_NAME_MAX_LENGTH)
@@ -529,7 +534,7 @@ notesRouter.delete('/notebooks/:id', async (req: AuthRequest, res) => {
     }
 
     const notebookId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await deleteNotebook(notebookId, req.userId);
+    await deleteNotebook(req.supabase!, notebookId, req.userId);
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete notebook';
@@ -548,7 +553,7 @@ notesRouter.get('/tags', async (req: AuthRequest, res) => {
       return;
     }
 
-    const tags = await getTagsByUserId(req.userId);
+    const tags = await getTagsByUserId(req.supabase!, req.userId);
     res.json(tags);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch tags';
@@ -565,7 +570,7 @@ notesRouter.get('/tags/:id', async (req: AuthRequest, res) => {
     }
 
     const tagId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const tag = await getTagById(tagId, req.userId);
+    const tag = await getTagById(req.supabase!, tagId, req.userId);
     if (!tag) {
       res.status(404).json({ error: 'Tag not found' });
       return;
@@ -593,7 +598,7 @@ notesRouter.post('/tags', async (req: AuthRequest, res) => {
       return;
     }
 
-    const tag = await createTag(req.userId, {
+    const tag = await createTag(req.supabase!, req.userId, {
       name: sanitizeFreeText(name.trim(), TAG_NAME_MAX_LENGTH),
       color,
     });
@@ -617,7 +622,7 @@ notesRouter.put('/tags/:id', async (req: AuthRequest, res) => {
     const tagId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { name, color } = req.body;
 
-    const tag = await updateTag(tagId, req.userId, {
+    const tag = await updateTag(req.supabase!, tagId, req.userId, {
       name:
         name != null && typeof name === 'string'
           ? sanitizeFreeText(name.trim(), TAG_NAME_MAX_LENGTH)
@@ -648,7 +653,7 @@ notesRouter.delete('/tags/:id', async (req: AuthRequest, res) => {
     }
 
     const tagId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await deleteTag(tagId, req.userId);
+    await deleteTag(req.supabase!, tagId, req.userId);
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete tag';
@@ -665,7 +670,7 @@ notesRouter.get('/:id/backlinks', async (req: AuthRequest, res) => {
       return;
     }
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const notes = await getBacklinks(noteId, req.userId);
+    const notes = await getBacklinks(req.supabase!, noteId, req.userId);
     res.json(notes);
   } catch (error) {
     const message =
@@ -684,7 +689,7 @@ notesRouter.get('/:id', async (req: AuthRequest, res) => {
     }
 
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const note = await getNoteById(noteId, req.userId);
+    const note = await getNoteById(req.supabase!, noteId, req.userId);
     if (!note) {
       res.status(404).json({ error: 'Note not found' });
       return;
@@ -707,7 +712,7 @@ notesRouter.post('/', async (req: AuthRequest, res) => {
 
     const { title, content, notebook_id, tag_ids } = req.body;
 
-    const note = await createNote(req.userId, {
+    const note = await createNote(req.supabase!, req.userId, {
       title: typeof title === 'string' ? sanitizeFreeText(title, NOTE_TITLE_MAX_LENGTH) : undefined,
       content,
       notebook_id,
@@ -732,7 +737,7 @@ notesRouter.put('/:id', async (req: AuthRequest, res) => {
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { title, content, notebook_id, tag_ids, is_pinned, is_archived } = req.body;
 
-    const note = await updateNote(noteId, req.userId, {
+    const note = await updateNote(req.supabase!, noteId, req.userId, {
       title: typeof title === 'string' ? sanitizeFreeText(title, NOTE_TITLE_MAX_LENGTH) : undefined,
       content,
       notebook_id,
@@ -758,7 +763,7 @@ notesRouter.delete('/:id', async (req: AuthRequest, res) => {
     }
 
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await deleteNote(noteId, req.userId);
+    await deleteNote(req.supabase!, noteId, req.userId);
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete note';
@@ -776,7 +781,7 @@ notesRouter.post('/:id/restore', async (req: AuthRequest, res) => {
     }
 
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const note = await restoreNote(noteId, req.userId);
+    const note = await restoreNote(req.supabase!, noteId, req.userId);
     res.json(note);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to restore note';
@@ -796,7 +801,7 @@ notesRouter.get('/:id/versions', async (req: AuthRequest, res) => {
     }
 
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const versions = await getNoteVersions(noteId, req.userId);
+    const versions = await getNoteVersions(req.supabase!, noteId, req.userId);
     res.json(versions);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch note versions';
@@ -824,7 +829,7 @@ notesRouter.get('/:id/versions/:versionNumber', async (req: AuthRequest, res) =>
       return;
     }
 
-    const version = await getNoteVersion(noteId, versionNumber, req.userId);
+    const version = await getNoteVersion(req.supabase!, noteId, versionNumber, req.userId);
     if (!version) {
       res.status(404).json({ error: 'Version not found' });
       return;
@@ -857,7 +862,7 @@ notesRouter.post('/:id/versions/:versionNumber/restore', async (req: AuthRequest
       return;
     }
 
-    const note = await restoreNoteVersion(noteId, versionNumber, req.userId);
+    const note = await restoreNoteVersion(req.supabase!, noteId, versionNumber, req.userId);
     res.json(note);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to restore version';
@@ -877,7 +882,7 @@ notesRouter.get('/:id/attachments', async (req: AuthRequest, res) => {
     }
 
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const attachments = await getAttachmentsByNoteId(noteId, req.userId);
+    const attachments = await getAttachmentsByNoteId(req.supabase!, noteId, req.userId);
     res.json(attachments);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch attachments';
@@ -920,7 +925,7 @@ notesRouter.post(
 
       // Verify note belongs to user
       const { getNoteById, createAttachment } = await import('../services/noteService.js');
-      const note = await getNoteById(noteId, req.userId);
+      const note = await getNoteById(req.supabase!, noteId, req.userId);
       if (!note) {
         res.status(404).json({ error: 'Note not found or access denied' });
         return;
@@ -930,10 +935,9 @@ notesRouter.post(
       const timestamp = Date.now();
       const filePath = `notes/${req.userId}/${noteId}/${timestamp}-${sanitizedFileName}`;
 
-      // Upload file directly to Supabase Storage using service role key (bypasses RLS)
-      const { supabase } = await import('../db/supabase.js');
+      // Upload file to Supabase Storage (use user-scoped client for RLS)
       const { logger } = await import('../utils/logger.js');
-      if (!supabase) {
+      if (!req.supabase) {
         res.status(503).json({ error: 'Storage not configured' });
         return;
       }
@@ -953,7 +957,7 @@ notesRouter.post(
       let uploadError: { message: string; statusCode?: number } | null = null;
 
       try {
-        const result = await supabase.storage
+        const result = await req.supabase!.storage
           .from('note-attachments')
           .upload(filePath, file.buffer, {
             contentType: file.mimetype || 'application/octet-stream',
@@ -1003,7 +1007,7 @@ notesRouter.post(
 
         if (isBucketNotFound) {
           errorMessage +=
-            ' Create the bucket: Supabase Dashboard → Storage → New bucket → name "note-attachments", disable RLS. See server/db/migrations/009_setup_storage_bucket.md.';
+            ' Create the bucket: Supabase Dashboard → Storage → New bucket → name "note-attachments". See scripts/DATABASE.md.';
         } else if (isRlsOrForbidden) {
           errorMessage +=
             ' Storage RLS may be blocking. Try: Storage → Buckets → note-attachments → disable RLS. See RUN_MIGRATIONS.md.';
@@ -1016,7 +1020,7 @@ notesRouter.post(
       logger.debug({ filePath, uploadData }, 'File uploaded successfully');
 
       // Create attachment metadata (use sanitized name for display/storage)
-      const attachment = await createAttachment(noteId, req.userId, {
+      const attachment = await createAttachment(req.supabase!, noteId, req.userId, {
         file_name: sanitizedFileName,
         file_path: filePath,
         file_type: file.mimetype || 'application/octet-stream',
@@ -1072,7 +1076,7 @@ notesRouter.post('/:id/attachments', async (req: AuthRequest, res) => {
       return;
     }
 
-    const attachment = await createAttachment(noteId, req.userId, {
+    const attachment = await createAttachment(req.supabase!, noteId, req.userId, {
       file_name,
       file_path: String(file_path).trim(),
       file_type: String(file_type).trim(),
@@ -1099,16 +1103,13 @@ notesRouter.get('/attachments/:id/download', async (req: AuthRequest, res) => {
     const attachmentId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
     // Get attachment to verify ownership
-    const { getNoteById } = await import('../services/noteService.js');
-    const { supabase } = await import('../db/supabase.js');
-
-    if (!supabase) {
+    if (!req.supabase) {
       res.status(503).json({ error: 'Storage not configured' });
       return;
     }
 
-    // Find attachment
-    const { data: attachment, error: fetchError } = await supabase
+    // Find attachment (use user-scoped client for RLS)
+    const { data: attachment, error: fetchError } = await req.supabase
       .from('attachments')
       .select('note_id, file_path, file_name, file_type, mime_type')
       .eq('id', attachmentId)
@@ -1120,14 +1121,14 @@ notesRouter.get('/attachments/:id/download', async (req: AuthRequest, res) => {
     }
 
     // Verify user owns the note
-    const note = await getNoteById(attachment.note_id, req.userId);
+    const note = await getNoteById(req.supabase!, attachment.note_id, req.userId);
     if (!note) {
       res.status(403).json({ error: 'Access denied' });
       return;
     }
 
     // Generate signed URL for download (valid for 1 hour)
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+    const { data: signedUrlData, error: signedUrlError } = await req.supabase.storage
       .from('note-attachments')
       .createSignedUrl(attachment.file_path, 3600);
 
@@ -1171,14 +1172,14 @@ notesRouter.post('/:id/share', async (req: AuthRequest, res) => {
       return;
     }
 
-    const share = await shareNoteWithUser(noteId, req.userId, {
+    const share = await shareNoteWithUser(req.supabase!, noteId, req.userId, {
       shared_with_user_id,
       shared_with_user_email,
       permission: permission || 'view',
       expires_at: expires_at || undefined,
     });
 
-    const note = await getNoteById(noteId, req.userId);
+    const note = await getNoteById(req.supabase!, noteId, req.userId);
     const noteTitle = note?.title?.trim() || 'A note';
 
     // Send notification email (don't fail share if email fails)
@@ -1232,7 +1233,7 @@ notesRouter.post('/:id/share', async (req: AuthRequest, res) => {
       ? `${config.siteUrl}/notes/shared/${share.share_token}`
       : null;
     try {
-      await addShareToNoteHistory(noteId, req.userId, {
+      await addShareToNoteHistory(req.supabase!, noteId, req.userId, {
         recipientLabel,
         permission: share.permission,
         viewLink,
@@ -1262,7 +1263,7 @@ notesRouter.get('/:id/shares', async (req: AuthRequest, res) => {
     }
 
     const noteId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const shares = await getNoteShares(noteId, req.userId);
+    const shares = await getNoteShares(req.supabase!, noteId, req.userId);
     res.json(shares);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to fetch note shares';
@@ -1287,7 +1288,7 @@ notesRouter.put('/shares/:shareId', async (req: AuthRequest, res) => {
       return;
     }
 
-    const share = await updateSharePermission(shareId, req.userId, permission);
+    const share = await updateSharePermission(req.supabase!, shareId, req.userId, permission);
     res.json(share);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update share permission';
@@ -1305,7 +1306,7 @@ notesRouter.delete('/shares/:shareId', async (req: AuthRequest, res) => {
     }
 
     const shareId = Array.isArray(req.params.shareId) ? req.params.shareId[0] : req.params.shareId;
-    await unshareNote(shareId, req.userId);
+    await unshareNote(req.supabase!, shareId, req.userId);
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to unshare note';
@@ -1325,12 +1326,11 @@ notesRouter.delete('/attachments/:id', async (req: AuthRequest, res) => {
     const attachmentId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
     // Get attachment info before deletion to delete file from storage
-    const { supabase } = await import('../db/supabase.js');
     const { getNoteById } = await import('../services/noteService.js');
 
-    if (supabase) {
+    if (req.supabase) {
       // Get attachment to get file path
-      const { data: attachment } = await supabase
+      const { data: attachment } = await req.supabase
         .from('attachments')
         .select('note_id, file_path')
         .eq('id', attachmentId)
@@ -1338,15 +1338,15 @@ notesRouter.delete('/attachments/:id', async (req: AuthRequest, res) => {
 
       if (attachment) {
         // Verify user owns the note before deleting file
-        const note = await getNoteById(attachment.note_id, req.userId);
+        const note = await getNoteById(req.supabase!, attachment.note_id, req.userId);
         if (note) {
           // Delete file from storage
-          await supabase.storage.from('note-attachments').remove([attachment.file_path]);
+          await req.supabase!.storage.from('note-attachments').remove([attachment.file_path]);
         }
       }
     }
 
-    await deleteAttachment(attachmentId, req.userId);
+    await deleteAttachment(req.supabase!, attachmentId, req.userId);
     res.status(204).send();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete attachment';

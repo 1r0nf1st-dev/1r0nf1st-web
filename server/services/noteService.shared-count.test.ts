@@ -1,19 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mocks = vi.hoisted(() => ({
-  selectMock: vi.fn(),
-  eqMock: vi.fn(),
-  orMock: vi.fn(),
-  inMock: vi.fn(),
-  isMock: vi.fn(),
-  fromMock: vi.fn(),
-}));
-
-vi.mock('../db/supabase.js', () => ({
-  supabase: {
-    from: mocks.fromMock,
-  },
-}));
+const mocks = vi.hoisted(() => {
+  const fromMock = vi.fn();
+  return {
+    selectMock: vi.fn(),
+    eqMock: vi.fn(),
+    orMock: vi.fn(),
+    inMock: vi.fn(),
+    isMock: vi.fn(),
+    fromMock,
+    mockSupabase: { from: fromMock },
+  };
+});
+vi.mock('../db/supabase.js', () => ({ supabase: mocks.mockSupabase }));
 
 import { getSharedNotesCount } from './noteService.js';
 
@@ -59,7 +58,7 @@ describe('getSharedNotesCount', () => {
   });
 
   it('returns exact count from Supabase', async () => {
-    const count = await getSharedNotesCount('user-1');
+    const count = await getSharedNotesCount(mocks.mockSupabase as never, 'user-1');
     expect(count).toBe(7);
     expect(mocks.fromMock).toHaveBeenCalledWith('shared_notes');
     expect(mocks.fromMock).toHaveBeenCalledWith('notes');
@@ -79,7 +78,7 @@ describe('getSharedNotesCount', () => {
       return { select: vi.fn() };
     });
     
-    await expect(getSharedNotesCount('user-1')).resolves.toBe(0);
+    await expect(getSharedNotesCount(mocks.mockSupabase as never, 'user-1')).resolves.toBe(0);
   });
 
   it('throws when Supabase returns an error', async () => {
@@ -96,7 +95,7 @@ describe('getSharedNotesCount', () => {
       return { select: vi.fn() };
     });
     
-    await expect(getSharedNotesCount('user-1')).rejects.toThrow(
+    await expect(getSharedNotesCount(mocks.mockSupabase as never, 'user-1')).rejects.toThrow(
       'Failed to fetch shared notes count: boom',
     );
   });

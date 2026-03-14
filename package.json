@@ -27,6 +27,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:smoke": "playwright test --grep @smoke",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "db:reset": "node -r dotenv/config scripts/run-db-script.mjs scripts/db-reset.sql",
+    "db:bootstrap": "node -r dotenv/config scripts/run-db-script.mjs scripts/db-bootstrap.sql",
     "validate:styles": "node scripts/validate-styles.js",
     "generate:corporate-assets": "node scripts/generate-corporate-assets.mjs"
   },
@@ -99,6 +102,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^17.1.0",
     "happy-dom": "^15.11.7",
+    "pg": "^8.20.0",
     "pino-pretty": "^13.1.3",
     "postcss": "^8.5.6",
     "prettier": "^3.8.1",

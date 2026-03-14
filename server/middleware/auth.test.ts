@@ -13,6 +13,10 @@ vi.mock('../db/supabase', () => {
   };
 });
 
+vi.mock('../db/createUserClient.js', () => ({
+  createUserClient: () => ({}),
+}));
+
 import { authenticateToken, type AuthRequest } from './auth.js';
 import { supabase } from '../db/supabase.js';
 
@@ -94,6 +98,7 @@ describe('authenticateToken', () => {
     expect(mockRequest.userId).toBe('123');
     expect(mockRequest.email).toBe('test@example.com');
     expect(mockRequest.user).toEqual(mockUser);
+    expect(mockRequest.supabase).toBeDefined();
     expect(mockResponse.status).not.toHaveBeenCalled();
   });
 
