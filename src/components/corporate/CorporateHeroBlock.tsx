@@ -22,8 +22,8 @@ export const CorporateHeroBlock = (): JSX.Element => {
           <span className="block">BY 1R0NF1ST</span>
         </h1>
         <p className="mt-6 text-muted text-center max-w-xl text-lg">
-          A dynamic portfolio of projects built with Next.js, React, TypeScript, and modern web
-          technologies.
+          A collection of tools and web experiences I use, built with Next.js, React, TypeScript,
+          and modern web technologies.
         </p>
         <Link
           href="/projects"
@@ -32,16 +32,6 @@ export const CorporateHeroBlock = (): JSX.Element => {
         >
           View projects
         </Link>
-      </div>
-      <div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1"
-        aria-label="Scroll to discover more content"
-      >
-        <span className="text-xs text-muted uppercase tracking-wider">(SCROLL)</span>
-        <ChevronDown
-          className="text-2xl text-muted animate-bounce motion-reduce:animate-none"
-          aria-hidden
-        />
       </div>
     </section>
   );

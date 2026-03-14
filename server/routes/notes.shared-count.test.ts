@@ -17,7 +17,9 @@ vi.mock('../middleware/auth.js', () => ({
       res.status(401).json({ error: 'Access token required' });
       return;
     }
-    (req as express.Request & { userId?: string }).userId = 'test-user';
+    const r = req as express.Request & { userId?: string; supabase?: unknown };
+    r.userId = 'test-user';
+    r.supabase = {}; // Mock user-scoped client; getSharedNotesCount is mocked
     next();
   },
   authenticateWebClipper: (

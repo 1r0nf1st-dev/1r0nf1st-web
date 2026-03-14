@@ -149,7 +149,7 @@ E2E tests run automatically in GitHub Actions when Vercel deploys. **If your Ver
 1. Create a Supabase project at https://supabase.com.
 2. Enable **Email/Password** auth in Authentication → Providers.
 3. Copy **Project URL**, **anon**, and **service_role** keys from Settings → API into `.env`.
-4. Run migrations for notes, attachments, and storage – see `server/db/migrations/RUN_MIGRATIONS.md` for steps and RLS/Storage setup.
+4. Run database scripts – see `scripts/DATABASE.md` for reset and bootstrap. Create the `note-attachments` bucket in Supabase Storage.
 
 See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for detailed auth setup.
 
@@ -237,7 +237,7 @@ See [SUPABASE_AUTH_SETUP.md](./SUPABASE_AUTH_SETUP.md) for detailed auth setup.
 - JWT-based protected routes and API endpoints
 - CORS config via `ALLOWED_ORIGINS` in production
 - Sensitive values in `.env` (git-ignored)
-- RLS and storage policies – see `server/db/migrations/RUN_MIGRATIONS.md`
+- RLS and storage – see `scripts/DATABASE.md`
 
 ### Creating your first user
 

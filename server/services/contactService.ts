@@ -1,4 +1,9 @@
 import { supabase } from '../db/supabase.js';
+
+function requireSupabase(): NonNullable<typeof supabase> {
+  if (!supabase) throw new Error('Database not configured');
+  return supabase;
+}
 import { createNote } from './noteService.js';
 import { sendTransactionalEmail } from './brevoService.js';
 import { sanitizeFreeText } from '../utils/sanitize.js';
@@ -170,7 +175,7 @@ export async function submitContact(
   const title = `Contact from ${submission.name}`;
   const content = buildNoteContent(submission, requestContext);
 
-  await createNote(adminUserId, {
+  await createNote(requireSupabase(), adminUserId, {
     title,
     content,
   });

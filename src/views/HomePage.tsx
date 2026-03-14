@@ -26,12 +26,12 @@ export const HomePage = (): JSX.Element => {
       <main id="main-content" className="flex-1 flex items-stretch justify-center pt-7" tabIndex={-1}>
         <section
           className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-[1080px]"
-          aria-label="Portfolio content"
+          aria-label="Tools and live data"
         >
           <InfoCard title="About">
-            Welcome to my personal portfolio. Here you&apos;ll find my latest coding projects, blog
-            posts, music I&apos;m listening to, fitness activities, and more. Everything is powered
-            by live data from various APIs.
+            Welcome to my personal toolbox. This site brings together the tools and dashboards I use
+            every day: notes, live data feeds, integrations, and small experiments—all powered by
+            real APIs.
           </InfoCard>
 
           <InfoCard title="Tech Stack">

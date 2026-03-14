@@ -114,7 +114,7 @@ describe('Hero', () => {
     expect(changePasswordLinks.length).toBeGreaterThan(0);
   });
 
-  it('should render portfolio pill', () => {
+  it('should render tech pill', () => {
     vi.mocked(authContextModule.useAuth).mockReturnValue({
       user: null,
       token: null,
@@ -126,6 +126,6 @@ describe('Hero', () => {
     });
 
     renderHero();
-    expect(screen.getByText('Portfolio · Next.js + React')).toBeInTheDocument();
+    expect(screen.getByText('Tools · Next.js + React')).toBeInTheDocument();
   });
 });

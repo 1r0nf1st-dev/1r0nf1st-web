@@ -1,4 +1,7 @@
-import { supabase } from '../db/supabase.js';
+import * as secondBrainDb from '../db/secondBrainDb.js';
+import type { SearchResult } from '../db/secondBrainDb.js';
+
+export type { SearchResult };
 import { config } from '../config.js';
 import { logger } from '../utils/logger.js';
 
@@ -18,14 +21,6 @@ export interface ClassificationResult {
   extracted: Record<string, unknown>;
 }
 
-export interface SearchResult {
-  table_name: string;
-  record_id: string;
-  label: string;
-  detail: string | null;
-  similarity: number;
-  created_at: string;
-}
 
 const CLASSIFIER_PROMPT =
   'You are a classification engine for a personal Second Brain system.\n\n' +
@@ -76,11 +71,12 @@ async function callGeminiEmbedContent(text: string): Promise<number[]> {
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not configured');
   }
-  // gemini-embedding-001 supports outputDimensionality 768 to match our vector schema
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${apiKey}`;
+  // text-embedding-004 deprecated; use gemini-embedding-001 with output_dimensionality 768
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${apiKey}`;
   const body: Record<string, unknown> = {
-    model: 'models/text-embedding-004',
+    model: 'models/gemini-embedding-001',
     content: { parts: [{ text: text }] },
+    output_dimensionality: 768,
   };
   const res = await fetch(url, {
     method: 'POST',
@@ -193,7 +189,6 @@ export async function captureThought(
   rawText: string,
   source: 'web' | 'manual',
 ): Promise<{ thoughtId: string; category: SecondBrainCategory; routed: boolean }> {
-  if (!supabase) throw new Error('Database not configured');
   if (!rawText?.trim()) throw new Error('rawText is required');
 
   let classification: ClassificationResult;
@@ -202,6 +197,9 @@ export async function captureThought(
   try {
     classification = await classifyText(rawText.trim());
   } catch (err) {
+    // #region agent log
+    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Classification failed',data:{errMsg:err instanceof Error?err.message:'unknown'},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     logger.warn({ err }, 'Classification failed, defaulting to REVIEW');
     classification = {
       category: 'REVIEW',
@@ -212,37 +210,57 @@ export async function captureThought(
     };
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Classification result',data:{category:classification.category,confidence:classification.confidence},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
   try {
     embedding = await getEmbedding(rawText.trim());
   } catch (err) {
+    // #region agent log
+    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Embedding failed',data:{errMsg:err instanceof Error?err.message:'unknown'},hypothesisId:'H3',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     logger.warn({ err }, 'Embedding failed, storing without embedding');
   }
 
-  const { data: thought, error: thoughtErr } = await supabase
-    .from('sb_thoughts')
-    .insert({
+  let thought: { id: string };
+  try {
+    thought = await secondBrainDb.insertThought({
       raw_text: rawText.trim(),
       source,
       category: classification.category,
       confidence: classification.confidence,
       routed: false,
       embedding: embedding ?? null,
-    })
-    .select('id')
-    .single();
+    });
+  } catch (err) {
+    // #region agent log
+    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'insertThought failed',data:{errMsg:err instanceof Error?err.message:'unknown'},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    throw err;
+  }
 
-  if (thoughtErr) throw new Error(`Failed to store thought: ${thoughtErr.message}`);
+  // #region agent log
+  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'insertThought ok',data:{thoughtId:thought.id},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 
   let routed = false;
-  if (classification.category !== 'REVIEW' && classification.confidence >= 60) {
+  const willAttemptRoute = classification.category !== 'REVIEW' && classification.confidence >= 60;
+  // #region agent log
+  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Routing check',data:{willAttemptRoute,category:classification.category,confidence:classification.confidence},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+  if (willAttemptRoute) {
     try {
       await routeToTable(classification, rawText.trim(), embedding);
-      await supabase
-        .from('sb_thoughts')
-        .update({ routed: true })
-        .eq('id', thought.id);
+      await secondBrainDb.updateThought(thought.id, { routed: true });
       routed = true;
+      // #region agent log
+      fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'routing succeeded',data:{},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Routing failed',data:{errMsg:err instanceof Error?err.message:'unknown'},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       logger.warn({ err }, 'Routing failed, thought remains in inbox');
     }
   }
@@ -259,14 +277,12 @@ async function routeToTable(
   rawText: string,
   embedding: number[] | null,
 ): Promise<void> {
-  if (!supabase) throw new Error('Database not configured');
   const ext = (classification.extracted ?? {}) as Record<string, unknown>;
-  // pgvector expects number[] for inserts (Supabase docs), not string
   const embedVal = embedding ?? null;
 
   switch (classification.category) {
-    case 'PROJECTS': {
-      const { error } = await supabase.from('sb_projects').insert({
+    case 'PROJECTS':
+      await secondBrainDb.insertProject({
         name: (ext.name as string) ?? classification.title,
         goal: (ext.goal as string) ?? null,
         next_action: (ext.next_action as string) ?? null,
@@ -275,73 +291,56 @@ async function routeToTable(
         notes: (ext.notes as string) ?? classification.detail,
         embedding: embedVal,
       });
-      if (error) throw error;
       break;
-    }
-    case 'PEOPLE': {
-      const { error } = await supabase.from('sb_people').insert({
+    case 'PEOPLE':
+      await secondBrainDb.insertPerson({
         name: (ext.name as string) ?? classification.title,
         relationship: (ext.relationship as string) ?? null,
         notes: (ext.notes as string) ?? classification.detail,
         follow_up_date: (ext.follow_up_date as string) ?? null,
         embedding: embedVal,
       });
-      if (error) throw error;
       break;
-    }
-    case 'IDEAS': {
-      const { error } = await supabase.from('sb_ideas').insert({
+    case 'IDEAS':
+      await secondBrainDb.insertIdea({
         title: (ext.title as string) ?? classification.title,
         body: (ext.body as string) ?? rawText,
         area: (ext.area as string) ?? null,
         embedding: embedVal,
       });
-      if (error) throw error;
       break;
-    }
-    case 'ADMIN': {
-      const { error } = await supabase.from('sb_admin').insert({
+    case 'ADMIN':
+      await secondBrainDb.insertAdmin({
         task: (ext.task as string) ?? classification.title,
         due_date: (ext.due_date as string) ?? null,
         notes: (ext.notes as string) ?? null,
         embedding: embedVal,
       });
-      if (error) throw error;
       break;
-    }
     case 'RESOURCES': {
       const tags = ext.tags;
       const tagsArr = Array.isArray(tags) ? tags.map(String) : [];
-      const { error } = await supabase.from('sb_resources').insert({
+      await secondBrainDb.insertResource({
         title: (ext.title as string) ?? classification.title,
         url: (ext.url as string) ?? null,
         summary: (ext.summary as string) ?? classification.detail,
         tags: tagsArr.length > 0 ? tagsArr : null,
         embedding: embedVal,
       });
-      if (error) throw error;
       break;
     }
     default:
-      // REVIEW stays in thoughts
       break;
   }
 }
 
 export async function semanticSearch(
   query: string,
-  matchThreshold = 0.7,
+  matchThreshold = 0.6,
   matchCount = 10,
 ): Promise<SearchResult[]> {
-  if (!supabase) throw new Error('Database not configured');
   const embedding = await getEmbedding(query);
-  const { data, error } = await supabase.rpc('sb_search_all', {
-    query_embedding: embedding,
-    match_threshold: matchThreshold,
-    match_count: matchCount,
-  });
-  if (error) throw new Error(`Search failed: ${error.message}`);
-  return (data ?? []) as SearchResult[];
+  return secondBrainDb.searchAll(embedding, matchThreshold, matchCount);
 }
 
 export async function queryWithRag(
@@ -350,7 +349,7 @@ export async function queryWithRag(
 ): Promise<string> {
   let results: SearchResult[] = [];
   try {
-    results = await semanticSearch(question, 0.65, matchCount);
+    results = await semanticSearch(question, 0.6, matchCount);
   } catch (err) {
     logger.warn({ err }, 'Semantic search failed, answering with empty context');
     // Continue with empty context so user gets "I don't have that stored" instead of 500
@@ -385,41 +384,174 @@ Rules:
   }
 }
 
-type SbTable = 'sb_projects' | 'sb_people' | 'sb_ideas' | 'sb_admin' | 'sb_resources' | 'sb_thoughts';
-
-async function listTable<T>(table: SbTable, limit = 50): Promise<T[]> {
-  if (!supabase) throw new Error('Database not configured');
-  const { data, error } = await supabase
-    .from(table)
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(limit);
-  if (error) throw new Error(`Failed to list ${table}: ${error.message}`);
-  return (data ?? []) as T[];
-}
-
 export async function listProjects(limit?: number) {
-  return listTable<Record<string, unknown>>('sb_projects', limit ?? 50);
+  return secondBrainDb.listTable<Record<string, unknown>>('sb_projects', limit ?? 50);
 }
 
 export async function listPeople(limit?: number) {
-  return listTable<Record<string, unknown>>('sb_people', limit ?? 50);
+  return secondBrainDb.listTable<Record<string, unknown>>('sb_people', limit ?? 50);
 }
 
 export async function listIdeas(limit?: number) {
-  return listTable<Record<string, unknown>>('sb_ideas', limit ?? 50);
+  return secondBrainDb.listTable<Record<string, unknown>>('sb_ideas', limit ?? 50);
 }
 
 export async function listAdmin(limit?: number) {
-  return listTable<Record<string, unknown>>('sb_admin', limit ?? 50);
+  return secondBrainDb.listTable<Record<string, unknown>>('sb_admin', limit ?? 50);
 }
 
 export async function listResources(limit?: number) {
-  return listTable<Record<string, unknown>>('sb_resources', limit ?? 50);
+  return secondBrainDb.listTable<Record<string, unknown>>('sb_resources', limit ?? 50);
 }
 
 export async function listThoughts(limit?: number) {
-  return listTable<Record<string, unknown>>('sb_thoughts', limit ?? 50);
+  return secondBrainDb.listTable<Record<string, unknown>>('sb_thoughts', limit ?? 50);
+}
+
+const PROJECT_STATUSES = ['active', 'paused', 'done'] as const;
+const ADMIN_STATUSES = ['pending', 'done'] as const;
+const IDEA_STATUSES = ['raw', 'developing', 'done'] as const;
+
+export async function updateProject(
+  id: string,
+  input: {
+    status?: (typeof PROJECT_STATUSES)[number];
+    name?: string;
+    goal?: string;
+    next_action?: string;
+    due_date?: string | null;
+    area?: string | null;
+    notes?: string | null;
+  },
+): Promise<{ id: string }> {
+  const updates: Record<string, unknown> = {};
+  if (input.status !== undefined && PROJECT_STATUSES.includes(input.status)) {
+    updates.status = input.status;
+  }
+  if (input.name !== undefined) updates.name = input.name.trim();
+  if (input.goal !== undefined) updates.goal = input.goal || null;
+  if (input.next_action !== undefined) updates.next_action = input.next_action || null;
+  if (input.due_date !== undefined) updates.due_date = input.due_date || null;
+  if (input.area !== undefined) updates.area = input.area || null;
+  if (input.notes !== undefined) updates.notes = input.notes || null;
+  if (Object.keys(updates).length === 0) return { id };
+  await secondBrainDb.updateProject(id, updates);
+  return { id };
+}
+
+export async function updateAdmin(
+  id: string,
+  input: {
+    status?: (typeof ADMIN_STATUSES)[number];
+    task?: string;
+    due_date?: string | null;
+    notes?: string | null;
+  },
+): Promise<{ id: string }> {
+  const updates: Record<string, unknown> = {};
+  if (input.status !== undefined && ADMIN_STATUSES.includes(input.status)) {
+    updates.status = input.status;
+  }
+  if (input.task !== undefined) updates.task = input.task.trim();
+  if (input.due_date !== undefined) updates.due_date = input.due_date || null;
+  if (input.notes !== undefined) updates.notes = input.notes || null;
+  if (Object.keys(updates).length === 0) return { id };
+  await secondBrainDb.updateAdmin(id, updates);
+  return { id };
+}
+
+export async function updateIdea(
+  id: string,
+  input: {
+    status?: (typeof IDEA_STATUSES)[number];
+    title?: string;
+    body?: string | null;
+    area?: string | null;
+  },
+): Promise<{ id: string }> {
+  const updates: Record<string, unknown> = {};
+  if (input.status !== undefined && IDEA_STATUSES.includes(input.status)) {
+    updates.status = input.status;
+  }
+  if (input.title !== undefined) updates.title = input.title.trim();
+  if (input.body !== undefined) updates.body = input.body || null;
+  if (input.area !== undefined) updates.area = input.area || null;
+  if (Object.keys(updates).length === 0) return { id };
+  await secondBrainDb.updateIdea(id, updates);
+  return { id };
+}
+
+async function backfillEmbeddingsForTable(
+  table: secondBrainDb.SbTable,
+  selectColumns: string,
+  buildText: (row: Record<string, unknown>) => string,
+  batchSize = 50,
+): Promise<number> {
+  let updatedCount = 0;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const rows = await secondBrainDb.selectRowsNullEmbedding(table, selectColumns, batchSize);
+    if (rows.length === 0) break;
+
+    for (const row of rows) {
+      const id = row.id as string | undefined;
+      if (!id) continue;
+      const text = buildText(row).trim();
+      if (!text) continue;
+      try {
+        const embedding = await getEmbedding(text);
+        await secondBrainDb.updateRowEmbedding(table, id, embedding);
+        updatedCount += 1;
+      } catch (err) {
+        logger.warn({ table, id, err }, 'Error computing embedding during backfill');
+      }
+    }
+    if (rows.length < batchSize) break;
+  }
+  return updatedCount;
+}
+
+export async function backfillSecondBrainEmbeddings(): Promise<{
+  projects: number;
+  people: number;
+  ideas: number;
+  admin: number;
+  resources: number;
+}> {
+  const [projects, people, ideas, admin, resources] = await Promise.all([
+    backfillEmbeddingsForTable(
+      'sb_projects',
+      'id, name, goal, notes',
+      (row) =>
+        `${row.name ?? ''}\n${row.goal ?? ''}\n${row.notes ?? ''}`,
+    ),
+    backfillEmbeddingsForTable(
+      'sb_people',
+      'id, name, relationship, notes',
+      (row) =>
+        `${row.name ?? ''}\n${row.relationship ?? ''}\n${row.notes ?? ''}`,
+    ),
+    backfillEmbeddingsForTable(
+      'sb_ideas',
+      'id, title, body, area',
+      (row) =>
+        `${row.title ?? ''}\n${row.body ?? ''}\n${row.area ?? ''}`,
+    ),
+    backfillEmbeddingsForTable(
+      'sb_admin',
+      'id, task, notes',
+      (row) =>
+        `${row.task ?? ''}\n${row.notes ?? ''}`,
+    ),
+    backfillEmbeddingsForTable(
+      'sb_resources',
+      'id, title, summary, url, tags',
+      (row) =>
+        `${row.title ?? ''}\n${row.summary ?? ''}\n${row.url ?? ''}\n${Array.isArray(row.tags) ? row.tags.join(', ') : ''}`,
+    ),
+  ]);
+
+  return { projects, people, ideas, admin, resources };
 }
 
 export interface UpdateThoughtInput {
@@ -432,7 +564,6 @@ export async function updateThought(
   id: string,
   input: UpdateThoughtInput,
 ): Promise<{ id: string }> {
-  if (!supabase) throw new Error('Database not configured');
   const updates: Record<string, unknown> = {};
 
   if (input.rawText !== undefined) {
@@ -456,12 +587,7 @@ export async function updateThought(
     }
   }
 
-  const { error } = await supabase
-    .from('sb_thoughts')
-    .update(updates)
-    .eq('id', id);
-
-  if (error) throw new Error(`Failed to update thought: ${error.message}`);
+  await secondBrainDb.updateThought(id, updates);
   return { id };
 }
 
@@ -474,29 +600,14 @@ export async function routeThought(
   id: string,
   rawText?: string,
 ): Promise<RouteThoughtResult> {
-  if (!supabase) throw new Error('Database not configured');
-
   let text: string;
-  let thoughtRow: { raw_text: string; id: string } | null;
 
   if (rawText !== undefined && rawText.trim()) {
     text = rawText.trim();
-    const { data: updated, error: updateErr } = await supabase
-      .from('sb_thoughts')
-      .update({ raw_text: text })
-      .eq('id', id)
-      .select('id, raw_text')
-      .single();
-    if (updateErr || !updated) throw new Error(`Failed to update thought: ${updateErr?.message ?? 'unknown'}`);
-    thoughtRow = updated as { raw_text: string; id: string };
+    await secondBrainDb.updateThought(id, { raw_text: text });
   } else {
-    const { data, error } = await supabase
-      .from('sb_thoughts')
-      .select('id, raw_text')
-      .eq('id', id)
-      .single();
-    if (error || !data) throw new Error(`Thought not found: ${error?.message ?? id}`);
-    thoughtRow = data as { raw_text: string; id: string };
+    const thoughtRow = await secondBrainDb.getThought(id);
+    if (!thoughtRow) throw new Error(`Thought not found: ${id}`);
     text = thoughtRow.raw_text;
   }
 
@@ -517,14 +628,18 @@ export async function routeThought(
   }
 
   if (embedding) {
-    await supabase.from('sb_thoughts').update({ embedding, category: classification.category, confidence: classification.confidence }).eq('id', id);
+    await secondBrainDb.updateThought(id, {
+      embedding,
+      category: classification.category,
+      confidence: classification.confidence,
+    });
   }
 
   let routed = false;
   if (classification.category !== 'REVIEW' && classification.confidence >= 60) {
     try {
       await routeToTable(classification, text, embedding);
-      await supabase.from('sb_thoughts').update({ routed: true }).eq('id', id);
+      await secondBrainDb.updateThought(id, { routed: true });
       routed = true;
     } catch (err) {
       logger.warn({ err }, 'Routing failed, thought remains in inbox');
@@ -535,9 +650,7 @@ export async function routeThought(
 }
 
 export async function deleteThought(id: string): Promise<void> {
-  if (!supabase) throw new Error('Database not configured');
-  const { error } = await supabase.from('sb_thoughts').delete().eq('id', id);
-  if (error) throw new Error(`Failed to delete thought: ${error.message}`);
+  await secondBrainDb.deleteThought(id);
 }
 
 export interface DigestData {
@@ -547,21 +660,7 @@ export interface DigestData {
 }
 
 export async function getDigestData(): Promise<DigestData> {
-  if (!supabase) throw new Error('Database not configured');
-  const today = new Date().toISOString().slice(0, 10);
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-
-  const [projectsRes, tasksRes, ideasRes] = await Promise.all([
-    supabase.from('sb_projects').select('name,goal,next_action,due_date').eq('status', 'active'),
-    supabase.from('sb_admin').select('task,due_date').eq('status', 'pending').lte('due_date', today),
-    supabase.from('sb_ideas').select('title,body').gte('created_at', sevenDaysAgo),
-  ]);
-
-  return {
-    projects: (projectsRes.data ?? []) as Record<string, unknown>[],
-    tasksDue: (tasksRes.data ?? []) as Record<string, unknown>[],
-    ideasRecent: (ideasRes.data ?? []) as Record<string, unknown>[],
-  };
+  return secondBrainDb.getDigestData();
 }
 
 export async function getReviewData(): Promise<{
@@ -570,23 +669,7 @@ export async function getReviewData(): Promise<{
   ideasNew: Record<string, unknown>[];
   peopleFollowUp: Record<string, unknown>[];
 }> {
-  if (!supabase) throw new Error('Database not configured');
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const today = new Date().toISOString().slice(0, 10);
-
-  const [projectsRes, tasksRes, ideasRes, peopleRes] = await Promise.all([
-    supabase.from('sb_projects').select('*').gte('updated_at', weekAgo),
-    supabase.from('sb_admin').select('*').eq('status', 'done').gte('created_at', weekAgo),
-    supabase.from('sb_ideas').select('*').gte('created_at', weekAgo),
-    supabase.from('sb_people').select('*').not('follow_up_date', 'is', null).lte('follow_up_date', today),
-  ]);
-
-  return {
-    projectsUpdated: (projectsRes.data ?? []) as Record<string, unknown>[],
-    tasksCompleted: (tasksRes.data ?? []) as Record<string, unknown>[],
-    ideasNew: (ideasRes.data ?? []) as Record<string, unknown>[],
-    peopleFollowUp: (peopleRes.data ?? []) as Record<string, unknown>[],
-  };
+  return secondBrainDb.getReviewData();
 }
 
 const MORNING_DIGEST_PROMPT = `You are a supportive productivity coach delivering a personal morning briefing.
