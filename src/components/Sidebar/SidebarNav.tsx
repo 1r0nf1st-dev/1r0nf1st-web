@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Archive,
   BookOpen,
+  Brain,
   FilePlus,
   Library,
   LogOut,
@@ -47,7 +48,17 @@ export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }
   return (
     <div className="flex h-full flex-col">
       <div className="space-y-1">
-        <SidebarNavItem label="New Note" icon={FilePlus} onClick={() => createNote()} />
+        <SidebarNavItem
+          label="New Note"
+          icon={FilePlus}
+          onClick={async () => {
+            if (!pathname?.startsWith('/notes')) {
+              router.push('/notes?create=1');
+              return;
+            }
+            await createNote();
+          }}
+        />
         <SidebarAccordion id="templates" label="From Template" icon={LayoutTemplate}>
           <TemplatesAccordion />
         </SidebarAccordion>
@@ -87,6 +98,12 @@ export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }
           isActive={pathname === '/notes/shared'}
           badge={sharedUnreadCount}
           ariaLabel={sharedAriaLabel}
+        />
+        <SidebarNavItem
+          href="/projects/second-brain"
+          label="Second Brain"
+          icon={Brain}
+          isActive={pathname === '/projects/second-brain'}
         />
         <SidebarAccordion id="search" label="Search" icon={Search} defaultOpen onClick={openSearch}>
           <SavedSearchesSection />

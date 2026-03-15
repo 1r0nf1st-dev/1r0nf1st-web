@@ -6,6 +6,7 @@ import { Clipboard, Copy } from 'lucide-react';
 import { getJson } from '../apiClient';
 import { getApiBase } from '../config';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
+import { BrandName } from './BrandName';
 
 export interface WebClipperSectionProps {
   /** Compact layout for sidebar (smaller spacing, collapsible setup guide) */
@@ -67,7 +68,7 @@ export const WebClipperSection = ({
             {compact ? 'Setup guide' : 'Step-by-step setup guide'}
           </summary>
           <p className="mt-2 text-xs text-muted">
-            Use the <strong>1r0nf1st Notes Clipper</strong>—not in the Chrome Web Store;
+            Use the <strong><BrandName /> Notes Clipper</strong>—not in the Chrome Web Store;
             not the Evernote extension.
           </p>
           <ol className="mt-3 space-y-2 text-sm text-muted list-decimal list-inside pl-2">

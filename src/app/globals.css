@@ -70,17 +70,17 @@
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-/* CSS variables for design system */
+/* Design tokens – single source for layout/typography */
 :root {
   color-scheme: light;
   /* RGB values for rgba() usage in TipTap and gradients */
   --color-primary-rgb: 37, 99, 235;
   --touch-target-min: 44px;
-  /* Corporate-specific variables (keep as they're theme-specific) */
-  --corporate-letter-spacing-tight: -0.025em;
-  --corporate-letter-spacing-wide: 0.05em;
-  --corporate-letter-spacing-wider: 0.1em;
-  --corporate-section-padding-y: 6rem;
+  /* Typography and layout tokens */
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+  --section-padding-y: 6rem;
 }
 
 .dark {

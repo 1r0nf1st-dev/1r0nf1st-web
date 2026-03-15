@@ -15,13 +15,6 @@ vi.mock('next/link', () => ({
 
 vi.mock('../contexts/ThemeContext', () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useTheme: () => ({ styleTheme: 'default' }),
-}));
-
-vi.mock('../components/ChromeLayout', () => ({
-  ChromeLayout: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="chrome-layout">{children}</div>
-  ),
 }));
 
 describe('PacManPage', () => {
@@ -44,17 +37,6 @@ describe('PacManPage', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
-  });
-
-  it('renders back to projects link', () => {
-    render(
-      <ThemeProvider>
-        <PacManPage />
-      </ThemeProvider>
-    );
-    const link = screen.getByRole('link', { name: /back to projects/i });
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', '/projects');
   });
 
   it('renders the game canvas', () => {

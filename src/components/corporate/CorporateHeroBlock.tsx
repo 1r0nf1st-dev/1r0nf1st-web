@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 import { btnBase, btnPrimary } from '../../styles/buttons';
+import { BrandName } from '../BrandName';
 
 export const CorporateHeroBlock = (): JSX.Element => {
   return (
@@ -15,14 +16,14 @@ export const CorporateHeroBlock = (): JSX.Element => {
         <h1
           id="hero-headline"
           className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-tight"
-          style={{ letterSpacing: 'var(--corporate-letter-spacing-tight, -0.025em)' }}
+          style={{ letterSpacing: 'var(--letter-spacing-tight)' }}
         >
           <span className="block">WEB EXPERIENCES</span>
           <span className="block">CRAFTED</span>
-          <span className="block">BY 1R0NF1ST</span>
+          <span className="block">BY <BrandName /></span>
         </h1>
         <p className="mt-6 text-muted text-center max-w-xl text-lg">
-          A collection of tools and web experiences I use, built with Next.js, React, TypeScript,
+          A collection of tools and web experiences <BrandName /> uses, built with Next.js, React, TypeScript,
           and modern web technologies.
         </p>
         <Link

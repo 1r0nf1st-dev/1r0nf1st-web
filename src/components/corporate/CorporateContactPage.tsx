@@ -102,13 +102,14 @@ export const CorporateContactPage = (): JSX.Element => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen min-w-0 flex flex-col overflow-x-hidden">
       <CorporateNav />
-      <main className="flex-1 px-4 sm:px-6 py-16 md:py-24">
-        <div className="max-w-xl mx-auto">
+      <main className="flex-1 w-full min-w-0">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
+          <div className="max-w-xl mx-auto">
           <h1
             className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight"
-            style={{ letterSpacing: 'var(--corporate-letter-spacing-tight, -0.025em)' }}
+            style={{ letterSpacing: 'var(--letter-spacing-tight)' }}
           >
             CONTACT
           </h1>
@@ -225,6 +226,7 @@ export const CorporateContactPage = (): JSX.Element => {
               </button>
             </form>
           )}
+          </div>
           </div>
         </div>
       </main>

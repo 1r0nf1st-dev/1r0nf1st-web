@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ThemeToggle } from './Navigation/ThemeToggle';
 import { AuthControls } from './Navigation/AuthControls';
 import { btnBase, btnPrimary } from '../styles/buttons';
+import { BrandName } from './BrandName';
 
 export const Hero = (): JSX.Element => {
   const pathname = usePathname();
@@ -25,13 +26,13 @@ export const Hero = (): JSX.Element => {
             <div className="flex items-center gap-3">
               <ThemeToggle />
               <div className="hidden sm:flex items-center gap-2">
-                <AuthControls variant="default" />
+                <AuthControls />
               </div>
             </div>
           </div>
-          <Link href="/" className="no-underline text-inherit flex items-center gap-4 mt-4 mb-2">
+          <Link href="/" className="no-underline text-inherit flex items-center gap-4 mt-4 mb-2" aria-label="1r0nf1st">
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight cursor-pointer">
-              1r0nf1st
+              <BrandName />
             </h1>
           </Link>
           <p className="mb-6 max-w-md text-muted leading-relaxed">
@@ -49,7 +50,7 @@ export const Hero = (): JSX.Element => {
               </Link>
             )}
             <div className="sm:hidden">
-              <AuthControls variant="default" />
+              <AuthControls />
             </div>
           </div>
         </div>

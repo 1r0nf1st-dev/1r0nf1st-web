@@ -358,7 +358,7 @@ CREATE TABLE IF NOT EXISTS public.sb_thoughts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   raw_text TEXT NOT NULL,
   source TEXT, category TEXT, confidence INT, routed BOOLEAN DEFAULT FALSE,
-  embedding vector(768), created_at TIMESTAMPTZ DEFAULT NOW()
+  embedding vector(768), created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE TABLE IF NOT EXISTS public.sb_projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -374,7 +374,7 @@ CREATE TABLE IF NOT EXISTS public.sb_people (
 CREATE TABLE IF NOT EXISTS public.sb_ideas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL, body TEXT, area TEXT, status TEXT DEFAULT 'raw',
-  embedding vector(768), created_at TIMESTAMPTZ DEFAULT NOW()
+  embedding vector(768), created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE TABLE IF NOT EXISTS public.sb_admin (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -410,6 +410,12 @@ DROP TRIGGER IF EXISTS update_sb_projects_updated_at ON public.sb_projects;
 CREATE TRIGGER update_sb_projects_updated_at BEFORE UPDATE ON public.sb_projects FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 DROP TRIGGER IF EXISTS update_sb_people_updated_at ON public.sb_people;
 CREATE TRIGGER update_sb_people_updated_at BEFORE UPDATE ON public.sb_people FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_sb_thoughts_updated_at ON public.sb_thoughts;
+CREATE TRIGGER update_sb_thoughts_updated_at BEFORE UPDATE ON public.sb_thoughts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_sb_ideas_updated_at ON public.sb_ideas;
+CREATE TRIGGER update_sb_ideas_updated_at BEFORE UPDATE ON public.sb_ideas FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_sb_resources_updated_at ON public.sb_resources;
+CREATE TRIGGER update_sb_resources_updated_at BEFORE UPDATE ON public.sb_resources FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 ALTER TABLE public.sb_thoughts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sb_projects ENABLE ROW LEVEL SECURITY;

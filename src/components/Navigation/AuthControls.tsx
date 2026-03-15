@@ -9,8 +9,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { btnBase, btnGhost } from '../../styles/buttons';
 
 interface AuthControlsProps {
-  /** Variant: 'default' for Hero style, 'corporate' for CorporateNav style */
-  variant?: 'default' | 'corporate';
   /** Callback when menu closes (for mobile) */
   onMenuClose?: () => void;
 }
@@ -19,7 +17,7 @@ interface AuthControlsProps {
  * Authentication controls component.
  * Shows login button or user menu based on auth state.
  */
-export const AuthControls = ({ variant = 'default', onMenuClose }: AuthControlsProps): JSX.Element => {
+export const AuthControls = ({ onMenuClose }: AuthControlsProps): JSX.Element => {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -59,23 +57,6 @@ export const AuthControls = ({ variant = 'default', onMenuClose }: AuthControlsP
     );
   }
 
-  if (variant === 'default') {
-    return (
-      <>
-        <span className="text-sm opacity-80 text-muted">
-          Logged in as <strong>{userLabel}</strong>
-        </span>
-        <Link href="/notes/change-password" className={`${btnBase} ${btnGhost}`}>
-          Change Password
-        </Link>
-        <button type="button" onClick={handleLogout} className={`${btnBase} ${btnGhost}`}>
-          Logout
-        </button>
-      </>
-    );
-  }
-
-  // Corporate variant with dropdown
   return (
     <div className="relative" ref={userMenuRef}>
       <button

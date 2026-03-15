@@ -3,10 +3,9 @@
 import type { JSX } from 'react';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { StickyNote, Calendar, Lock } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useNotesActions } from '../contexts/NotesActionsContext';
 import { useLiveRegion } from '../contexts/LiveRegionContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
@@ -35,8 +34,8 @@ interface NotesPageProps {
 
 export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { user } = useAuth();
-  const { styleTheme } = useTheme();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const { registerHandlers, registerRefetch, refetchAllNotes, isWebClipperOpen, closeWebClipper, isSearchOpen, closeSearch } = useNotesActions();
   const { announce } = useLiveRegion();
@@ -220,6 +219,19 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
   const handleToggleWidgetRef = useRef(handleToggleWidget);
   handleToggleWidgetRef.current = handleToggleWidget;
 
+  // Create note when navigated from sidebar "New Note" while on another page (e.g. Second Brain)
+  useEffect(() => {
+    if (useChrome) return;
+    if (searchParams.get('create') !== '1' || !user) return;
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('create');
+    const newPath = params.toString() ? `/notes?${params}` : '/notes';
+    router.replace(newPath);
+
+    handleCreateNoteRef.current();
+  }, [searchParams, useChrome, user, router]);
+
   // Handle note selection from query parameter (e.g., when navigating from shared notes)
   useEffect(() => {
     if (useChrome) return;
@@ -319,7 +331,7 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
     <div className="w-full h-full flex flex-col min-h-0 min-h-screen">
       {showDailyView ? (
         <div className="flex-1 min-w-0 flex flex-col overflow-y-auto overflow-x-hidden touch-scroll">
-          <DailyTodoView styleTheme={styleTheme} onBack={() => setShowDailyView(false)} />
+          <DailyTodoView onBack={() => setShowDailyView(false)} />
         </div>
       ) : (
         <>
@@ -334,9 +346,9 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
                       key={widgetId}
                       className="rounded-xl border border-primary/10 dark:border-border bg-white dark:bg-surface p-3 lg:p-4 min-w-[280px] max-w-[400px] flex-1"
                     >
-                      {widgetId === 'goals' && <GoalTrackerWidget styleTheme={styleTheme} />}
-                      {widgetId === 'tasks' && <TasksWidget styleTheme={styleTheme} />}
-                      {widgetId === 'strava' && <StravaWidget styleTheme={styleTheme} />}
+                      {widgetId === 'goals' && <GoalTrackerWidget />}
+                      {widgetId === 'tasks' && <TasksWidget />}
+                      {widgetId === 'strava' && <StravaWidget />}
                     </div>
                   ))}
                 </div>

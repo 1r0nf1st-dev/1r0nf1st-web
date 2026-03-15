@@ -162,18 +162,22 @@ function AdminPlaceholderTile({
   );
 }
 
-export const CorporateProjectsPage = (): JSX.Element => {
+interface CorporateProjectsPageProps {
+  /** When true, render only content (no Nav/Footer) for embedding in shared layout */
+  embedInLayout?: boolean;
+}
+
+export const CorporateProjectsPage = ({
+  embedInLayout = false,
+}: CorporateProjectsPageProps): JSX.Element => {
   const { user } = useAuth();
   const isAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <CorporateNav />
-      <main className="flex-1 px-4 sm:px-6 py-16 md:py-24">
-        <div className="max-w-6xl mx-auto">
+  const content = (
+    <div className="w-full max-w-6xl mx-auto">
           <h1
             className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight"
-            style={{ letterSpacing: 'var(--corporate-letter-spacing-tight, -0.025em)' }}
+            style={{ letterSpacing: 'var(--letter-spacing-tight)' }}
           >
             PROJECTS
           </h1>
@@ -233,7 +237,16 @@ export const CorporateProjectsPage = (): JSX.Element => {
             </div>
           </ScrollReveal>
         </div>
-      </main>
+  );
+
+  if (embedInLayout) {
+    return <div className="py-10 md:py-16">{content}</div>;
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <CorporateNav />
+      <main className="flex-1 w-full min-w-0 max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">{content}</main>
       <CorporateFooter />
     </div>
   );

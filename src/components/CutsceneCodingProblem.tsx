@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { cardClasses, cardBody } from '../styles/cards';
+import { BrandName } from './BrandName';
 import { btnBase, btnPrimary } from '../styles/buttons';
 
 type ScenePhase = 'problem' | 'robot-enter' | 'solving' | 'fixed' | 'done';
@@ -110,7 +111,7 @@ export const CutsceneCodingProblem = ({ onComplete }: CutsceneCodingProblemProps
         </div>
 
         {phase === 'fixed' && (
-          <p className="mt-3 text-foreground font-medium">1r0nf1st fixed it!</p>
+          <p className="mt-3 text-foreground font-medium"><BrandName /> fixed it!</p>
         )}
 
         <div className="mt-6 flex gap-3">

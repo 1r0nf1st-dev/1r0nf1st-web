@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { Hero } from './Hero';
 import * as authContextModule from '../contexts/AuthContext';
@@ -40,7 +41,7 @@ describe('Hero', () => {
     });
 
     renderHero();
-    expect(screen.getByText('1r0nf1st')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '1r0nf1st' })).toBeInTheDocument();
   });
 
   it('should show login button when user is not logged in', () => {
@@ -72,14 +73,12 @@ describe('Hero', () => {
     });
 
     renderHero();
-    // AuthControls renders twice (desktop + mobile), so use getAllByText
-    const loggedInTexts = screen.getAllByText(/Logged in as/);
-    expect(loggedInTexts.length).toBeGreaterThan(0);
+    // AuthControls uses dropdown; username is shown in the account menu button
     const usernameTexts = screen.getAllByText('testuser');
     expect(usernameTexts.length).toBeGreaterThan(0);
   });
 
-  it('should show logout button when user is logged in', () => {
+  it('should show logout button when user is logged in and menu is open', async () => {
     const mockLogout = vi.fn();
     vi.mocked(authContextModule.useAuth).mockReturnValue({
       user: { id: '1', username: 'testuser' },
@@ -92,12 +91,13 @@ describe('Hero', () => {
     });
 
     renderHero();
-    // AuthControls renders twice (desktop + mobile), so use getAllByText
+    const accountButtons = screen.getAllByRole('button', { name: 'Account menu' });
+    await userEvent.click(accountButtons[0]!);
     const logoutButtons = screen.getAllByText('Logout');
     expect(logoutButtons.length).toBeGreaterThan(0);
   });
 
-  it('should show change password link when user is logged in', () => {
+  it('should show Settings link when user is logged in and menu is open', async () => {
     vi.mocked(authContextModule.useAuth).mockReturnValue({
       user: { id: '1', username: 'testuser' },
       token: 'test-token',
@@ -109,9 +109,10 @@ describe('Hero', () => {
     });
 
     renderHero();
-    // AuthControls renders twice (desktop + mobile), so use getAllByText
-    const changePasswordLinks = screen.getAllByText('Change Password');
-    expect(changePasswordLinks.length).toBeGreaterThan(0);
+    const accountButtons = screen.getAllByRole('button', { name: 'Account menu' });
+    await userEvent.click(accountButtons[0]!);
+    const settingsLinks = screen.getAllByText('Settings');
+    expect(settingsLinks.length).toBeGreaterThan(0);
   });
 
   it('should render tech pill', () => {

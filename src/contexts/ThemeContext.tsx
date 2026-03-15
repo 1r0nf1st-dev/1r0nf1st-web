@@ -13,8 +13,6 @@ interface ThemePreferences {
 
 interface ThemeContextType {
   colorMode: ColorMode;
-  /** Always 'corporate'; kept for compatibility with components that expect styleTheme */
-  styleTheme: 'corporate';
   setColorMode: (mode: ColorMode) => void;
   setStyleTheme: () => void;
   toggleColorMode: () => void;
@@ -117,7 +115,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }): ReactNode 
   }, []);
 
   const setStyleTheme = useCallback((_theme?: string) => {
-    /* No-op: only corporate style is supported */
+    /* No-op: design tokens centralized in globals.css */
   }, []);
 
   const toggleColorMode = useCallback(() => {
@@ -134,7 +132,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }): ReactNode 
     <ThemeContext.Provider
       value={{
         colorMode: preferences.colorMode,
-        styleTheme: 'corporate' as const,
         setColorMode,
         setStyleTheme,
         toggleColorMode,

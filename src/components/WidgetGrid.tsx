@@ -21,12 +21,11 @@ const WIDGET_LABELS: Record<WidgetId, string> = {
 const ALL_WIDGET_IDS = ['tasks', 'strava', 'goals'] as const;
 
 interface WidgetGridProps {
-  styleTheme?: 'default' | 'corporate';
   /** When provided, TasksWidget shows "Daily view" link */
   onViewDaily?: () => void;
 }
 
-export function WidgetGrid({ styleTheme = 'default', onViewDaily }: WidgetGridProps): JSX.Element {
+export function WidgetGrid({ onViewDaily }: WidgetGridProps): JSX.Element {
   const { user } = useAuth();
   const { enabledWidgets, toggleWidget, isEnabled } = useWidgetPreferences();
   const [showCustomize, setShowCustomize] = useState(false);
@@ -55,11 +54,11 @@ export function WidgetGrid({ styleTheme = 'default', onViewDaily }: WidgetGridPr
   const renderWidget = (id: WidgetId): ReactNode => {
     switch (id) {
       case 'tasks':
-        return <TasksWidget key="tasks" styleTheme={styleTheme} onViewDaily={onViewDaily} />;
+        return <TasksWidget key="tasks" onViewDaily={onViewDaily} />;
       case 'strava':
-        return <StravaWidget key="strava" styleTheme={styleTheme} />;
+        return <StravaWidget key="strava" />;
       case 'goals':
-        return <GoalTrackerWidget key="goals" styleTheme={styleTheme} />;
+        return <GoalTrackerWidget key="goals" />;
       default:
         return null;
     }

@@ -53,14 +53,10 @@ function getNextDay(isoDate: string): string {
 }
 
 export interface DailyTodoViewProps {
-  styleTheme?: 'default' | 'corporate';
   onBack?: () => void;
 }
 
-export function DailyTodoView({
-  styleTheme = 'default',
-  onBack,
-}: DailyTodoViewProps): JSX.Element {
+export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
   const { user } = useAuth();
   const { showAlert } = useAlert();
   const { goals, isLoading, error, refetch } = useGoals();
@@ -68,8 +64,6 @@ export function DailyTodoView({
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const isCorporate = styleTheme === 'corporate';
 
   const tasksForDate = useMemo(() => {
     if (!goals) return [];
@@ -206,7 +200,7 @@ export function DailyTodoView({
     return (
       <div
         className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
       >
         <div className="flex items-center gap-2 mb-4">
@@ -233,7 +227,7 @@ export function DailyTodoView({
     return (
       <div
         className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
       >
         <div className="flex items-center gap-2 mb-4">
@@ -256,7 +250,7 @@ export function DailyTodoView({
     return (
       <div
         className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
       >
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-2">
@@ -270,7 +264,7 @@ export function DailyTodoView({
   return (
     <div
       className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 ${
-        isCorporate ? 'md:px-8 lg:px-10' : ''
+        'md:px-8 lg:px-10'
       }`}
     >
       <div className="flex flex-col gap-4 mb-6">
@@ -292,7 +286,7 @@ export function DailyTodoView({
             <Target className="w-4 h-4 text-primary shrink-0" aria-hidden />
             <h2
               className={`text-sm font-semibold uppercase tracking-wider text-muted ${
-                isCorporate ? 'tracking-widest' : ''
+                'tracking-widest'
               }`}
             >
               Daily tasks

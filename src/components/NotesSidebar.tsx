@@ -40,7 +40,6 @@ export interface NotesSidebarProps {
   onApplySavedSearch: (query: string) => void;
   notebooks: Array<{ id: string; name: string }> | undefined;
   tags: Array<{ id: string; name: string }> | undefined;
-  styleTheme?: 'default' | 'corporate';
   /** Compact layout (smaller spacing for mobile slide-out) */
   compact?: boolean;
   /** Called when user selects notebook/tag in slide-out (e.g. close sidebar on mobile) */
@@ -68,7 +67,6 @@ export const NotesSidebar = ({
   onApplySavedSearch,
   notebooks = [],
   tags = [],
-  styleTheme = 'default',
   compact = false,
   onFilterSelect,
 }: NotesSidebarProps): JSX.Element => {
@@ -107,7 +105,7 @@ export const NotesSidebar = ({
   return (
     <div className="flex flex-col h-full">
       <Link
-        href={styleTheme === 'corporate' ? '/projects' : '/'}
+        href="/projects"
         className={`${btnBase} ${btnGhost} text-sm py-1.5 px-2 mb-3 self-start`}
       >
         ← Back
