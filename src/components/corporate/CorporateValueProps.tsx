@@ -42,7 +42,7 @@ function ValuePropBlock({ icon: Icon, title, description }: ValueProp): JSX.Elem
       />
       <h3
         className="text-sm font-semibold text-foreground uppercase tracking-wider"
-        style={{ letterSpacing: 'var(--corporate-letter-spacing-wider, 0.1em)' }}
+        style={{ letterSpacing: 'var(--letter-spacing-wider)' }}
       >
         {title}
       </h3>
@@ -61,7 +61,7 @@ export const CorporateValueProps = (): JSX.Element => {
         <h2
           id="value-props-heading"
           className="text-2xl md:text-3xl font-bold text-foreground mb-10 tracking-tight"
-          style={{ letterSpacing: 'var(--corporate-letter-spacing-tight, -0.025em)' }}
+          style={{ letterSpacing: 'var(--letter-spacing-tight)' }}
         >
           What we deliver
         </h2>

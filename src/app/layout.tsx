@@ -55,7 +55,7 @@ export default function RootLayout({
                 }
                 if (colorMode === 'dark') document.documentElement.classList.add('dark');
                 else document.documentElement.classList.remove('dark');
-                var favicon = '/favicon.ico?v=3';
+                var favicon = '/favicon.ico?v=5';
                 var links = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
                 if (links.length) { links.forEach(function(l) { l.href = favicon; }); }
                 else { var l = document.createElement('link'); l.rel = 'icon'; l.href = favicon; document.head.appendChild(l); }
@@ -69,7 +69,7 @@ export default function RootLayout({
           <Providers>
             <SkipLink />
             <AuthHashErrorHandler />
-            <div className="min-h-screen relative z-[1]">{children}</div>
+            <div className="min-h-screen min-w-0 overflow-x-hidden relative z-[1]">{children}</div>
           </Providers>
         </ErrorBoundary>
         <SpeedInsights />

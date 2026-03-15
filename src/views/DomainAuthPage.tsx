@@ -1,12 +1,9 @@
 'use client';
 
 import type { JSX } from 'react';
-import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
-import { ChromeLayout } from '../components/ChromeLayout';
 import { DomainAuthCheckCard } from '../components/DomainAuthCheckCard';
 import { AdminOnlyPlaceholderCard } from '../components/AdminOnlyPlaceholderCard';
-import { btnBase, btnGhost } from '../styles/buttons';
 import { Shield } from 'lucide-react';
 
 const ADMIN_EMAIL = 'admin@1r0nf1st.com';
@@ -16,16 +13,7 @@ export const DomainAuthPage = (): JSX.Element => {
   const isAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   return (
-    <ChromeLayout>
-      <section className="w-full max-w-[1080px] mx-auto" aria-label="Domain Auth (DKIM / DMARC)">
-        <div className="mb-6">
-          <Link
-            href="/projects"
-            className={`${btnBase} ${btnGhost} text-sm py-2 px-4 inline-flex items-center gap-2`}
-          >
-            ← Back to Projects
-          </Link>
-        </div>
+    <section aria-label="Domain Auth (DKIM / DMARC)">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {isAdmin ? (
             <DomainAuthCheckCard />
@@ -38,7 +26,6 @@ export const DomainAuthPage = (): JSX.Element => {
             />
           )}
         </div>
-      </section>
-    </ChromeLayout>
+    </section>
   );
 };

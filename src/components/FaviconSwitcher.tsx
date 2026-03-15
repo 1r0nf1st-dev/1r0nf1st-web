@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 
 const FAVICON = '/favicon.ico';
-const CACHE_BUST = '?v=3';
+const CACHE_BUST = '?v=5';
 
 /**
  * Ensures the document favicon is set.

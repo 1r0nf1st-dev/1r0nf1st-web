@@ -2,24 +2,13 @@
 
 import type { JSX } from 'react';
 import { useState } from 'react';
-import Link from 'next/link';
 import { Weather } from '../components/Weather';
-import { ChromeLayout } from '../components/ChromeLayout';
-import { btnBase, btnGhost } from '../styles/buttons';
-
 export const WeatherPage = (): JSX.Element => {
   const [city, setCity] = useState('London');
 
   return (
-    <ChromeLayout>
-      <section className="w-full max-w-[1080px] mx-auto" aria-label="Weather Dashboard">
+    <section aria-label="Weather Dashboard">
         <div className="mb-6 flex flex-wrap items-center gap-4">
-          <Link
-            href="/projects"
-            className={`${btnBase} ${btnGhost} text-sm py-2 px-4 inline-flex items-center gap-2`}
-          >
-            ← Back to Projects
-          </Link>
           <label className="flex items-center gap-2 text-sm">
             <span className="opacity-80">City:</span>
             <input
@@ -38,7 +27,6 @@ export const WeatherPage = (): JSX.Element => {
             <Weather city={city || 'London'} />
           </div>
         </div>
-      </section>
-    </ChromeLayout>
+    </section>
   );
 };

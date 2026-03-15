@@ -10,6 +10,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { ThemeToggle } from '../Navigation/ThemeToggle';
 import { AuthControls } from '../Navigation/AuthControls';
 import { UnifiedMobileMenu } from '../UnifiedMobileMenu';
+import { BrandName } from '../BrandName';
 import { btnBase, btnGhost } from '../../styles/buttons';
 
 const linkClass = (active: boolean) =>
@@ -20,7 +21,8 @@ const linkClass = (active: boolean) =>
 export const CorporateNav = (): JSX.Element => {
   const pathname = usePathname();
   const mobileMenu = useMobileMenu();
-  const isNotesPage = pathname?.startsWith('/notes') ?? false;
+  const isAppShellPage =
+    (pathname?.startsWith('/notes') || pathname?.startsWith('/projects')) ?? false;
 
 
   const navLinks = (
@@ -56,10 +58,8 @@ export const CorporateNav = (): JSX.Element => {
         className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center"
         aria-label="Main navigation"
       >
-        <Link href="/" className="flex items-center gap-2 no-underline text-inherit shrink-0">
-          <span className="font-semibold text-foreground text-lg tracking-tight">
-            1r0nf1st
-          </span>
+        <Link href="/" className="flex items-center gap-2 no-underline text-inherit shrink-0" aria-label="1r0nf1st">
+          <BrandName className="font-semibold text-foreground text-lg tracking-tight" />
         </Link>
 
         <div className="hidden lg:flex items-center gap-5 xl:gap-8" role="navigation">
@@ -68,7 +68,7 @@ export const CorporateNav = (): JSX.Element => {
 
         <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0 min-w-0">
           <ThemeToggle />
-          <AuthControls variant="corporate" />
+          <AuthControls />
         </div>
 
         <div
@@ -76,7 +76,7 @@ export const CorporateNav = (): JSX.Element => {
           style={{ minWidth: 0 }}
         >
           <ThemeToggle />
-          {isNotesPage ? (
+          {isAppShellPage ? (
             <UnifiedMobileMenu />
           ) : (
             <button
@@ -102,7 +102,7 @@ export const CorporateNav = (): JSX.Element => {
       </nav>
 
       {typeof document !== 'undefined' &&
-        !isNotesPage &&
+        !isAppShellPage &&
         mobileMenu.isOpen &&
         createPortal(
           <div
@@ -134,10 +134,9 @@ export const CorporateNav = (): JSX.Element => {
                 href="/"
                 onClick={mobileMenu.close}
                 className="flex items-center gap-2 no-underline text-inherit"
+                aria-label="1r0nf1st"
               >
-                <span className="font-semibold text-foreground text-lg tracking-tight">
-                  1r0nf1st
-                </span>
+                <BrandName className="font-semibold text-foreground text-lg tracking-tight" />
               </Link>
               <button
                 type="button"
@@ -158,7 +157,7 @@ export const CorporateNav = (): JSX.Element => {
             {/* Footer: auth */}
             <div className="shrink-0 border-t border-border px-6 py-6 flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <AuthControls variant="corporate" onMenuClose={mobileMenu.close} />
+                <AuthControls onMenuClose={mobileMenu.close} />
               </div>
             </div>
           </div>

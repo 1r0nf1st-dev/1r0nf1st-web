@@ -9,6 +9,7 @@ import { Menu, X } from 'lucide-react';
 import { useMobileMenu } from '../hooks/useMobileMenu';
 import { ThemeToggle } from './Navigation/ThemeToggle';
 import { AuthControls } from './Navigation/AuthControls';
+import { BrandName } from './BrandName';
 
 /**
  * Unified mobile menu for notes pages.
@@ -18,7 +19,8 @@ import { AuthControls } from './Navigation/AuthControls';
 export const UnifiedMobileMenu = (): JSX.Element => {
   const pathname = usePathname();
   const mobileMenu = useMobileMenu();
-  const isNotesPage = pathname?.startsWith('/notes') ?? false;
+  const isAppShellPage =
+    (pathname?.startsWith('/notes') || pathname?.startsWith('/projects')) ?? false;
   const [shouldRender, setShouldRender] = useState(false);
 
   // Keep menu mounted during close animation
@@ -34,7 +36,7 @@ export const UnifiedMobileMenu = (): JSX.Element => {
     }
   }, [mobileMenu.isOpen, shouldRender]);
 
-  if (!isNotesPage) {
+  if (!isAppShellPage) {
     return <></>;
   }
 
@@ -122,8 +124,9 @@ export const UnifiedMobileMenu = (): JSX.Element => {
                       href="/"
                       onClick={mobileMenu.close}
                       className="flex items-center gap-2 no-underline text-inherit"
+                      aria-label="1r0nf1st"
                     >
-                      <span className="font-semibold text-foreground text-lg tracking-tight">1r0nf1st</span>
+                      <BrandName className="font-semibold text-foreground text-lg tracking-tight" />
                     </Link>
                     <div className="flex items-center gap-2">
                       <ThemeToggle />
@@ -146,7 +149,7 @@ export const UnifiedMobileMenu = (): JSX.Element => {
 
                   {/* Footer: Auth */}
                   <div className="shrink-0 border-t border-border px-6 py-6">
-                    <AuthControls variant="corporate" onMenuClose={mobileMenu.close} />
+                    <AuthControls onMenuClose={mobileMenu.close} />
                   </div>
                 </div>
               </div>

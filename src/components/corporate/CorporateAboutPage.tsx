@@ -3,23 +3,25 @@
 import type { JSX } from 'react';
 import Link from 'next/link';
 import { CorporateNav } from './CorporateNav';
+import { BrandName } from '../BrandName';
 import { CorporateFooter } from './CorporateFooter';
 import { btnBase, btnGhost } from '../../styles/buttons';
 
 export const CorporateAboutPage = (): JSX.Element => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen min-w-0 flex flex-col overflow-x-hidden">
       <CorporateNav />
-      <main className="flex-1 px-4 sm:px-6 py-16 md:py-24">
-        <div className="max-w-2xl mx-auto">
+      <main className="flex-1 w-full min-w-0">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
+          <div className="max-w-2xl mx-auto">
           <h1
             className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight"
-            style={{ letterSpacing: 'var(--corporate-letter-spacing-tight, -0.025em)' }}
+            style={{ letterSpacing: 'var(--letter-spacing-tight)' }}
           >
             ABOUT
           </h1>
           <p className="text-muted mb-8">
-            Welcome to my personal portfolio. Here you&apos;ll find my latest coding projects, blog
+            Welcome to <BrandName />. Here you&apos;ll find my latest coding projects, blog
             posts, and activity. Everything is powered by live data from various APIs.
           </p>
           <div className="space-y-6 text-foreground">
@@ -38,6 +40,7 @@ export const CorporateAboutPage = (): JSX.Element => {
           >
             View projects
           </Link>
+          </div>
         </div>
       </main>
       <CorporateFooter />

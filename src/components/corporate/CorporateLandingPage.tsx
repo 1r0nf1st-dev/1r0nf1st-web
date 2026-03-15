@@ -25,7 +25,7 @@ export const CorporateLandingPage = (): JSX.Element => {
               <h2
                 id="projects-teaser-heading"
                 className="text-2xl md:text-3xl font-bold text-foreground mb-4 tracking-tight"
-                style={{ letterSpacing: 'var(--corporate-letter-spacing-tight, -0.025em)' }}
+                style={{ letterSpacing: 'var(--letter-spacing-tight)' }}
               >
                 Selected work
               </h2>

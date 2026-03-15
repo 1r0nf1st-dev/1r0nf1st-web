@@ -13,13 +13,7 @@ import { useAlert } from '../contexts/AlertContext';
 
 const ACTIVE_LIMIT = 5;
 
-interface GoalTrackerWidgetProps {
-  styleTheme?: 'default' | 'corporate';
-}
-
-export function GoalTrackerWidget({
-  styleTheme = 'default',
-}: GoalTrackerWidgetProps): JSX.Element {
+export function GoalTrackerWidget(): JSX.Element {
   const { user } = useAuth();
   const { showAlert } = useAlert();
   const { goals, isLoading, error, refetch } = useGoals();
@@ -30,8 +24,6 @@ export function GoalTrackerWidget({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editProgress, setEditProgress] = useState<number>(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const isCorporate = styleTheme === 'corporate';
 
   const activeGoals = goals?.filter((g) => g.status === 'active') || [];
   const displayedGoals = activeGoals.slice(0, ACTIVE_LIMIT);
@@ -92,7 +84,7 @@ export function GoalTrackerWidget({
     return (
       <section
         className={`rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 p-4 ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
         aria-labelledby="goals-widget-heading"
       >
@@ -123,7 +115,7 @@ export function GoalTrackerWidget({
     return (
       <section
         className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
         aria-labelledby="goals-widget-heading"
       >
@@ -149,7 +141,7 @@ export function GoalTrackerWidget({
     return (
       <section
         className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
         aria-labelledby="goals-widget-heading"
       >
@@ -167,7 +159,7 @@ export function GoalTrackerWidget({
   return (
     <section
       className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-        isCorporate ? 'md:rounded-xl' : ''
+        'md:rounded-xl'
       }`}
       aria-labelledby="goals-widget-heading"
     >
@@ -177,7 +169,7 @@ export function GoalTrackerWidget({
           <h2
             id="goals-widget-heading"
             className={`text-sm font-semibold uppercase tracking-wider text-muted ${
-              isCorporate ? 'tracking-widest' : ''
+              'tracking-widest'
             }`}
           >
             Goals

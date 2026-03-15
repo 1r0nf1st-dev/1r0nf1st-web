@@ -28,7 +28,6 @@ export interface NotesHomeViewProps {
   onNewNoteFromTemplate?: (template: NoteTemplate) => void;
   templates?: NoteTemplate[];
   onFocusSearch: () => void;
-  styleTheme?: 'default' | 'corporate';
   /** When provided, TasksWidget shows "Daily view" link */
   onViewDaily?: () => void;
 }
@@ -41,13 +40,11 @@ function TemplateDropdown({
   onSelect,
   btnBase,
   btnPrimary,
-  isCorporate,
 }: {
   templates: NoteTemplate[];
   onSelect: (t: NoteTemplate) => void;
   btnBase: string;
   btnPrimary: string;
-  isCorporate: boolean;
 }): JSX.Element {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -123,43 +120,27 @@ function formatRelativeDate(dateStr: string): string {
 function NoteCardCompact({
   note,
   onClick,
-  styleTheme,
 }: {
   note: Note;
   onClick: () => void;
-  styleTheme?: 'default' | 'corporate';
 }): JSX.Element {
   const preview = note.content_text
     ? note.content_text.substring(0, 100) + (note.content_text.length > 100 ? '...' : '')
     : '';
 
-  const isCorporate = styleTheme === 'corporate';
-
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-full text-left rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface hover:border-primary/40 dark:hover:border-primary/30 hover:shadow-md transition-all duration-200 p-3 md:p-4 active:scale-[0.98] ${
-        isCorporate ? 'md:rounded-xl shadow-sm hover:shadow-md' : ''
-      }`}
+      className="w-full text-left rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface hover:border-primary/40 dark:hover:border-primary/30 hover:shadow-md transition-all duration-200 p-3 md:p-4 active:scale-[0.98] md:rounded-xl shadow-sm hover:shadow-md"
       aria-label={`Open note: ${note.title || 'Untitled'}`}
     >
       <div className="flex items-start gap-3">
-        <div
-          className={`shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center ${
-            isCorporate
-              ? 'bg-primary/10 dark:bg-primary/20 text-primary'
-              : 'bg-primary/15 dark:bg-primary/20 text-primary-strong dark:text-primary'
-          }`}
-        >
+        <div className="shrink-0 w-10 h-10 md:w-11 md:h-11 rounded-xl flex items-center justify-center bg-primary/10 dark:bg-primary/20 text-primary">
           <StickyNote className="w-4 h-4" aria-hidden />
         </div>
         <div className="flex-1 min-w-0">
-          <h3
-            className={`font-medium text-foreground truncate text-sm md:text-base ${
-              isCorporate ? 'tracking-tight' : ''
-            }`}
-          >
+          <h3 className="font-medium text-foreground truncate text-sm md:text-base tracking-tight">
             {note.title || 'Untitled'}
           </h3>
           {preview && (
@@ -188,7 +169,6 @@ export const NotesHomeView = ({
   onNewNoteFromTemplate,
   templates = [],
   onFocusSearch,
-  styleTheme = 'default',
   onViewDaily,
 }: NotesHomeViewProps): JSX.Element => {
   const pinned = notes.filter((n) => n.is_pinned).slice(0, PINNED_MAX);
@@ -197,32 +177,19 @@ export const NotesHomeView = ({
     .slice(0, RECENT_MAX);
 
   const hasNotes = notes.length > 0;
-  const isCorporate = styleTheme === 'corporate';
 
   return (
-    <div
-      className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 ${
-        isCorporate ? 'md:px-8 lg:px-10' : ''
-      }`}
-    >
+    <div className="flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 md:px-8 lg:px-10">
       {/* Quick actions - always visible */}
-      <div
-        className={`flex flex-wrap gap-3 mb-6 md:mb-8 ${
-          isCorporate ? 'gap-4' : ''
-        }`}
-      >
+      <div className="flex flex-wrap gap-4 mb-6 md:mb-8">
         <div className="flex">
           <button
             type="button"
             onClick={onNewNote}
             className={`${btnBase} ${btnPrimary} flex items-center gap-2 px-4 py-2.5 md:px-5 md:py-3 text-sm md:text-base font-medium shadow-md hover:shadow-lg transition-shadow ${
               templates.length > 0 && onNewNoteFromTemplate
-                ? isCorporate
-                  ? 'rounded-l-xl rounded-r-none'
-                  : 'rounded-l-lg rounded-r-none'
-                : isCorporate
-                  ? 'rounded-xl'
-                  : 'rounded-xl'
+                ? 'rounded-l-xl rounded-r-none'
+                : 'rounded-xl'
             }`}
             aria-label="Create new note"
           >
@@ -235,16 +202,13 @@ export const NotesHomeView = ({
               onSelect={onNewNoteFromTemplate}
               btnBase={btnBase}
               btnPrimary={btnPrimary}
-              isCorporate={isCorporate}
             />
           )}
         </div>
         <button
           type="button"
           onClick={onFocusSearch}
-          className={`${btnBase} ${btnGhost} flex items-center gap-2 px-4 py-2.5 md:px-5 md:py-3 text-sm md:text-base border border-primary/30 dark:border-border hover:bg-primary/5 transition-colors ${
-            isCorporate ? 'rounded-xl' : ''
-          }`}
+          className={`${btnBase} ${btnGhost} flex items-center gap-2 px-4 py-2.5 md:px-5 md:py-3 text-sm md:text-base border border-primary/30 dark:border-border hover:bg-primary/5 transition-colors rounded-xl`}
           aria-label="Focus search"
         >
           <Search className="w-4 h-4 shrink-0" aria-hidden />
@@ -254,7 +218,7 @@ export const NotesHomeView = ({
 
       {!hasNotes ? (
         <div className="flex flex-col gap-8">
-          <WidgetGrid styleTheme={styleTheme} onViewDaily={onViewDaily} />
+          <WidgetGrid onViewDaily={onViewDaily} />
           <div
             className={`flex-1 flex flex-col items-center justify-center py-12 md:py-16 ${
               cardClasses
@@ -263,13 +227,7 @@ export const NotesHomeView = ({
           >
 
           <div className="relative z-10 text-center max-w-sm">
-            <div
-              className={`inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full mb-4 ${
-                isCorporate
-                  ? 'bg-primary/10 dark:bg-primary/20 text-primary'
-                  : 'bg-primary/15 dark:bg-primary/20 text-primary-strong dark:text-primary'
-              }`}
-            >
+            <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full mb-4 bg-primary/10 dark:bg-primary/20 text-primary">
               <StickyNote className="w-7 h-7 md:w-8 md:h-8" aria-hidden />
             </div>
             <h2 className={`${cardTitle} text-lg md:text-xl mb-2`}>
@@ -283,9 +241,7 @@ export const NotesHomeView = ({
               <button
                 type="button"
                 onClick={onNewNote}
-                className={`${btnBase} ${btnPrimary} px-6 py-3 ${
-                  isCorporate ? 'rounded-xl' : 'rounded-xl'
-                }`}
+                className={`${btnBase} ${btnPrimary} px-6 py-3 rounded-xl`}
               >
                 Create your first note
               </button>
@@ -298,9 +254,7 @@ export const NotesHomeView = ({
                         key={t.id}
                         type="button"
                         onClick={() => onNewNoteFromTemplate(t)}
-                        className={`${btnBase} ${btnPrimary} px-4 py-2 text-sm ${
-                          isCorporate ? 'rounded-xl' : 'rounded-xl'
-                        }`}
+                        className={`${btnBase} ${btnPrimary} px-4 py-2 text-sm rounded-xl`}
                       >
                         {t.name}
                       </button>
@@ -314,7 +268,7 @@ export const NotesHomeView = ({
         </div>
       ) : (
         <div className="flex flex-col gap-8 md:gap-10">
-          <WidgetGrid styleTheme={styleTheme} onViewDaily={onViewDaily} />
+          <WidgetGrid onViewDaily={onViewDaily} />
           {pinned.length > 0 && (
             <section aria-labelledby="home-pinned-heading">
               <div className="flex items-center gap-2 mb-3 md:mb-4">
@@ -324,9 +278,7 @@ export const NotesHomeView = ({
                 />
                 <h2
                   id="home-pinned-heading"
-                  className={`text-sm font-semibold uppercase tracking-wider text-muted ${
-                    isCorporate ? 'tracking-widest' : ''
-                  }`}
+                  className="text-sm font-semibold uppercase tracking-wider text-muted tracking-widest"
                 >
                   Pinned
                 </h2>
@@ -337,7 +289,6 @@ export const NotesHomeView = ({
                     key={note.id}
                     note={note}
                     onClick={() => onNoteClick(note)}
-                    styleTheme={styleTheme}
                   />
                 ))}
               </div>
@@ -353,9 +304,7 @@ export const NotesHomeView = ({
                 />
                 <h2
                   id="home-recent-heading"
-                  className={`text-sm font-semibold uppercase tracking-wider text-muted ${
-                    isCorporate ? 'tracking-widest' : ''
-                  }`}
+                  className="text-sm font-semibold uppercase tracking-wider text-muted tracking-widest"
                 >
                   Recent
                 </h2>
@@ -366,7 +315,6 @@ export const NotesHomeView = ({
                     key={note.id}
                     note={note}
                     onClick={() => onNoteClick(note)}
-                    styleTheme={styleTheme}
                   />
                 ))}
               </div>

@@ -25,20 +25,17 @@ function formatTaskDate(dateStr: string | null): string {
 }
 
 interface TasksWidgetProps {
-  styleTheme?: 'default' | 'corporate';
   /** When provided, shows "Daily view" link to open full daily todo view */
   onViewDaily?: () => void;
 }
 
-export function TasksWidget({ styleTheme = 'default', onViewDaily }: TasksWidgetProps): JSX.Element {
+export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
   const { user } = useAuth();
   const { showAlert } = useAlert();
   const { goals, isLoading, error, refetch } = useGoals();
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const isCorporate = styleTheme === 'corporate';
 
   const todayGoals =
     goals?.filter((g) => g.status === 'active' && g.target_date === TODAY) || [];
@@ -106,7 +103,7 @@ export function TasksWidget({ styleTheme = 'default', onViewDaily }: TasksWidget
     return (
       <section
         className={`rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 p-4 ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
         aria-labelledby="tasks-widget-heading"
       >
@@ -137,7 +134,7 @@ export function TasksWidget({ styleTheme = 'default', onViewDaily }: TasksWidget
     return (
       <section
         className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
         aria-labelledby="tasks-widget-heading"
       >
@@ -163,7 +160,7 @@ export function TasksWidget({ styleTheme = 'default', onViewDaily }: TasksWidget
     return (
       <section
         className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-          isCorporate ? 'md:rounded-xl' : ''
+          'md:rounded-xl'
         }`}
         aria-labelledby="tasks-widget-heading"
       >
@@ -230,7 +227,7 @@ export function TasksWidget({ styleTheme = 'default', onViewDaily }: TasksWidget
   return (
     <section
       className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-        isCorporate ? 'md:rounded-xl' : ''
+        'md:rounded-xl'
       }`}
       aria-labelledby="tasks-widget-heading"
     >
@@ -240,7 +237,7 @@ export function TasksWidget({ styleTheme = 'default', onViewDaily }: TasksWidget
           <h2
             id="tasks-widget-heading"
             className={`text-sm font-semibold uppercase tracking-wider text-muted ${
-              isCorporate ? 'tracking-widest' : ''
+              'tracking-widest'
             }`}
           >
             Today

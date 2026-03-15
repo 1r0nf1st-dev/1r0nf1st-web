@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Hero } from './Hero';
 import { Footer } from './Footer';
 import { InfoCard } from './InfoCard';
+import { BrandName } from './BrandName';
 import { btnBase, btnGhost } from '../styles/buttons';
 
 export const DefaultAboutPage = (): JSX.Element => {
@@ -16,7 +17,7 @@ export const DefaultAboutPage = (): JSX.Element => {
       <main className="flex-1 flex justify-center pt-7">
         <section className="w-full max-w-[1080px] space-y-4">
           <InfoCard title="About">
-            Welcome to my personal portfolio. Here you&apos;ll find my latest coding projects, blog
+            Welcome to <BrandName />. Here you&apos;ll find my latest coding projects, blog
             posts, music I&apos;m listening to, fitness activities, and more. Everything is powered
             by live data from various APIs.
           </InfoCard>

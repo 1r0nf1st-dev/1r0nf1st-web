@@ -4,6 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { CutsceneCodingProblem } from './CutsceneCodingProblem';
 import { RobotWalkRaiseAnimation } from './RobotWalkRaiseAnimation';
 import { cardClasses, cardTitle, cardBody } from '../styles/cards';
+import { BrandName } from './BrandName';
 import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 type Step = 'boot' | 'intro' | 'cutscene' | 'theme';
@@ -90,7 +91,7 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
 
           <div className="relative z-10 flex flex-col items-center text-center">
             <RobotWalkRaiseAnimation width={140} loop className="mb-4" />
-            <h1 className={cardTitle}>Hi, I&apos;m 1r0nf1st</h1>
+            <h1 className={cardTitle}>Hi, I&apos;m <BrandName /></h1>
             <p className={cardBody}>I&apos;m here to help. Ready?</p>
             <button
               type="button"

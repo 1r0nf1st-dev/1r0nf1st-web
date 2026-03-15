@@ -15,17 +15,11 @@ function formatTime(seconds: number): string {
   return `${mins}m`;
 }
 
-interface StravaWidgetProps {
-  styleTheme?: 'default' | 'corporate';
-}
-
-export function StravaWidget({ styleTheme = 'default' }: StravaWidgetProps): JSX.Element {
+export function StravaWidget(): JSX.Element {
   const { totals, isLoading, error } = useStravaStats();
-  const isCorporate = styleTheme === 'corporate';
 
-  const cardClass = `rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-    isCorporate ? 'md:rounded-xl' : ''
-  }`;
+  const cardClass =
+    'rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 md:rounded-xl';
 
   if (isLoading) {
     return (
