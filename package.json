@@ -30,6 +30,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:reset": "node -r dotenv/config scripts/run-db-script.mjs scripts/db-reset.sql",
     "db:bootstrap": "node -r dotenv/config scripts/run-db-script.mjs scripts/db-bootstrap.sql",
+    "db:reset-bootstrap": "pnpm db:reset && pnpm db:bootstrap",
     "validate:styles": "node scripts/validate-styles.js",
     "generate:corporate-assets": "node scripts/generate-corporate-assets.mjs"
   },
@@ -54,6 +55,7 @@
     "@types/multer": "^2.0.0",
     "@upstash/redis": "^1.36.3",
     "@vercel/speed-insights": "^1.3.1",
+    "@xyflow/react": "^12.10.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dompurify": "^3.3.1",
@@ -68,7 +70,9 @@
     "pino-http": "^11.0.0",
     "react": "^19",
     "react-dom": "^19",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.0",
+    "remark-gfm": "^4.0.1",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {

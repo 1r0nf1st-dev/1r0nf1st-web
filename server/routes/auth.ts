@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../db/supabase.js';
 import { authenticateToken, type AuthRequest } from '../middleware/auth.js';
-import { authRateLimiter } from '../middleware/rateLimiter.js';
+import { authRateLimiter, refreshRateLimiter } from '../middleware/rateLimiter.js';
 import { logger } from '../utils/logger.js';
 
 export const authRouter = Router();
@@ -29,8 +29,8 @@ authRouter.get('/verify', authenticateToken, (req: AuthRequest, res) => {
 });
 
 // Refresh token endpoint — kept as a server-side fallback; the Supabase client
-// SDK also handles token refresh automatically.
-authRouter.post('/refresh', async (req, res) => {
+// SDK also handles token refresh automatically. Stricter rate limit to reduce impact of token theft.
+authRouter.post('/refresh', refreshRateLimiter, async (req, res) => {
   if (!supabase) {
     res.status(503).json({ error: 'Database not configured. Please set Supabase credentials.' });
     return;
@@ -67,7 +67,8 @@ authRouter.post('/refresh', async (req, res) => {
   }
 });
 
-// Logout endpoint — server-side session cleanup.
+// Logout endpoint — client clears localStorage; server-side we could revoke refresh tokens
+// via Auth API when supported (e.g. auth.admin.revokeUserSessions in newer Supabase client).
 authRouter.post('/logout', authenticateToken, async (req: AuthRequest, res) => {
   if (!supabase) {
     res.status(503).json({ error: 'Database not configured. Please set Supabase credentials.' });
@@ -75,13 +76,7 @@ authRouter.post('/logout', authenticateToken, async (req: AuthRequest, res) => {
   }
 
   try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (token) {
-      await supabase.auth.signOut();
-    }
-
+    // Client will clear authToken/refreshToken; server acknowledges logout.
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
     logger.error({ error, path: '/logout', userId: req.userId }, 'Logout error');

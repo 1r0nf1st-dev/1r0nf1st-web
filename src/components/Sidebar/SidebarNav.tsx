@@ -7,6 +7,7 @@ import {
   Archive,
   BookOpen,
   Brain,
+  Compass,
   FilePlus,
   Library,
   LogOut,
@@ -18,6 +19,7 @@ import {
   FileText,
   CalendarDays,
   Cog,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotesActions } from '../../contexts/NotesActionsContext';
@@ -104,6 +106,18 @@ export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }
           label="Second Brain"
           icon={Brain}
           isActive={pathname === '/projects/second-brain'}
+        />
+        <SidebarNavItem
+          href="/brain"
+          label="Open Brain"
+          icon={Sparkles}
+          isActive={pathname?.startsWith('/brain') ?? false}
+        />
+        <SidebarNavItem
+          href="/explore"
+          label="Explore"
+          icon={Compass}
+          isActive={pathname === '/explore'}
         />
         <SidebarAccordion id="search" label="Search" icon={Search} defaultOpen onClick={openSearch}>
           <SavedSearchesSection />

@@ -135,3 +135,12 @@ export const authRateLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 minute
   message: 'Too many authentication attempts. Please try again later.',
 });
+
+/**
+ * Refresh token rate limiter: 10 requests per minute per IP (stricter than general auth)
+ */
+export const refreshRateLimiter = createRateLimiter({
+  max: 10,
+  windowMs: 60 * 1000, // 1 minute
+  message: 'Too many token refresh attempts. Please try again later.',
+});

@@ -21,6 +21,27 @@ DROP TABLE IF EXISTS goals CASCADE;
 DROP TABLE IF EXISTS web_clipper_tokens CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
+-- OpenBrain (ob_*) tables and objects — drop before sb_* so ob_search_all_brain can be dropped
+DROP TABLE IF EXISTS public.ob_reactions CASCADE;
+DROP TABLE IF EXISTS public.ob_edges CASCADE;
+DROP TABLE IF EXISTS public.ob_node_collections CASCADE;
+DROP TABLE IF EXISTS public.ob_collections CASCADE;
+DROP TABLE IF EXISTS public.ob_ai_sessions CASCADE;
+DROP TABLE IF EXISTS public.ob_nodes CASCADE;
+DROP TABLE IF EXISTS public.ob_profiles CASCADE;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_ob ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_ob_user() CASCADE;
+DROP FUNCTION IF EXISTS public.ob_search_nodes CASCADE;
+DROP FUNCTION IF EXISTS public.ob_search_all_brain CASCADE;
+
+DROP TYPE IF EXISTS public.ob_reaction_type CASCADE;
+DROP TYPE IF EXISTS public.ob_session_type CASCADE;
+DROP TYPE IF EXISTS public.ob_edge_creator CASCADE;
+DROP TYPE IF EXISTS public.ob_edge_type CASCADE;
+DROP TYPE IF EXISTS public.ob_visibility CASCADE;
+DROP TYPE IF EXISTS public.ob_node_type CASCADE;
+
 -- Public schema Second Brain tables
 DROP TABLE IF EXISTS public.sb_thoughts CASCADE;
 DROP TABLE IF EXISTS public.sb_projects CASCADE;
