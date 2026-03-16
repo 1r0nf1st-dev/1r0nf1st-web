@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
   stripHtmlAndScripts,
+  stripHtmlAndScriptsPreserveNewlines,
   sanitizePlainText,
   sanitizeFreeText,
+  sanitizeFreeTextPreserveNewlines,
   sanitizeFileName,
   isSafeStoragePath,
   isAllowedMimeType,
@@ -37,6 +39,36 @@ describe('sanitize', () => {
       expect(sanitizeFreeText('  <b>hi</b>  ', 20)).toBe('hi');
       expect(sanitizeFreeText('<script>alert(1)</script>Hello', 50)).toBe('Hello');
       expect(sanitizeFreeText('ab'.repeat(100), 5)).toBe('ababa');
+    });
+
+    it('collapses newlines to single space', () => {
+      expect(sanitizeFreeText('line1\nline2\nline3')).toBe('line1 line2 line3');
+    });
+  });
+
+  describe('stripHtmlAndScriptsPreserveNewlines', () => {
+    it('removes script tags but keeps newlines', () => {
+      expect(
+        stripHtmlAndScriptsPreserveNewlines('a\nb\nc<script>x</script>d'),
+      ).toBe('a\nb\ncd');
+    });
+
+    it('preserves markdown-style line breaks', () => {
+      const markdown = '# Title\n\nParagraph one.\n\nParagraph two.';
+      expect(stripHtmlAndScriptsPreserveNewlines(markdown)).toBe(markdown);
+    });
+  });
+
+  describe('sanitizeFreeTextPreserveNewlines', () => {
+    it('preserves newlines and limits length', () => {
+      const input = 'line1\nline2\nline3';
+      expect(sanitizeFreeTextPreserveNewlines(input, 100)).toBe(input);
+    });
+
+    it('strips dangerous content', () => {
+      expect(
+        sanitizeFreeTextPreserveNewlines('ok<script>alert(1)</script>end', 100),
+      ).toBe('okend');
     });
   });
 

@@ -25,6 +25,30 @@ export function stripHtmlAndScripts(input: string): string {
   return s;
 }
 
+/**
+ * Like stripHtmlAndScripts but preserves newlines (for markdown/plain-text bodies).
+ * Collapses only horizontal whitespace (spaces/tabs), not line breaks.
+ */
+export function stripHtmlAndScriptsPreserveNewlines(input: string): string {
+  if (typeof input !== 'string') return '';
+  let s = input;
+  // Remove script tags and content
+  s = s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+  // Remove style tags and content
+  s = s.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '');
+  // Remove javascript:, data:, vbscript: URLs
+  s = s.replace(/\s*(javascript|data|vbscript):\s*[^\s]*/gi, '');
+  // Remove event handlers
+  s = s.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '');
+  s = s.replace(/\s+on\w+\s*=\s*[^\s>]+/gi, '');
+  // Strip remaining HTML tags (replace with space so words don't run together)
+  s = s.replace(/<[^>]+>/g, ' ');
+  // Collapse only horizontal whitespace (spaces/tabs), preserve newlines
+  s = s.replace(/[ \t]+/g, ' ');
+  // Trim start/end (including newlines)
+  return s.trim();
+}
+
 /** Remove control characters and limit length. Use for plain-text fields (titles, names). */
 export function sanitizePlainText(input: string, maxLength = 10000): string {
   if (typeof input !== 'string') return '';
@@ -36,6 +60,18 @@ export function sanitizePlainText(input: string, maxLength = 10000): string {
 /** Sanitize for storage/display: strip HTML/scripts then plain-text sanitize. */
 export function sanitizeFreeText(input: string, maxLength = 10000): string {
   return sanitizePlainText(stripHtmlAndScripts(input), maxLength);
+}
+
+/**
+ * Sanitize markdown/body text: strip dangerous content but preserve newlines.
+ * Use for node body, descriptions, or any field where line breaks must be kept.
+ */
+export function sanitizeFreeTextPreserveNewlines(
+  input: string,
+  maxLength = 10000,
+): string {
+  const stripped = stripHtmlAndScriptsPreserveNewlines(input);
+  return sanitizePlainText(stripped, maxLength);
 }
 
 /** Sanitize file name: only allow safe characters, no path separators. */

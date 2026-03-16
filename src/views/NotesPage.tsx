@@ -399,10 +399,10 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
         </>
       )}
 
-      {/* Mobile bottom nav */}
+      {/* Mobile bottom nav - left-16 so it doesn't overlap sidebar column, keeping sidebar style consistent */}
       {useChrome ? (
         <nav
-          className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around gap-1 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-white/95 dark:bg-surface/95 border-t border-primary/15 dark:border-border backdrop-blur-sm"
+          className="lg:hidden fixed bottom-0 left-16 right-0 z-40 flex items-center justify-around gap-1 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] bg-white/95 dark:bg-surface/95 border-t border-primary/15 dark:border-border backdrop-blur-sm"
           aria-label="Quick actions"
         >
           <button

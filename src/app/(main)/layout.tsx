@@ -23,6 +23,8 @@ function useShowSidebar(): boolean {
   if (!pathname) return false;
   if (pathname.startsWith('/notes')) return true;
   if (pathname === '/projects/second-brain') return true;
+  if (pathname.startsWith('/brain')) return true;
+  if (pathname === '/explore') return true;
   return false;
 }
 

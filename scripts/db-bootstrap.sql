@@ -400,6 +400,7 @@ LANGUAGE sql STABLE AS $$
   ORDER BY similarity DESC LIMIT match_count;
 $$;
 
+CREATE INDEX IF NOT EXISTS idx_sb_thoughts_emb ON public.sb_thoughts USING hnsw (embedding vector_cosine_ops);
 CREATE INDEX IF NOT EXISTS idx_sb_projects_emb ON public.sb_projects USING hnsw (embedding vector_cosine_ops);
 CREATE INDEX IF NOT EXISTS idx_sb_people_emb ON public.sb_people USING hnsw (embedding vector_cosine_ops);
 CREATE INDEX IF NOT EXISTS idx_sb_ideas_emb ON public.sb_ideas USING hnsw (embedding vector_cosine_ops);
@@ -423,3 +424,273 @@ ALTER TABLE public.sb_people ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sb_ideas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sb_admin ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sb_resources ENABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
+-- OpenBrain: public knowledge graph (ob_*)
+-- ---------------------------------------------------------------------------
+CREATE TYPE ob_node_type AS ENUM ('note', 'concept', 'question', 'source', 'project');
+CREATE TYPE ob_visibility AS ENUM ('public', 'private', 'shared');
+CREATE TYPE ob_edge_type AS ENUM ('supports', 'contradicts', 'extends', 'inspired_by', 'references');
+CREATE TYPE ob_edge_creator AS ENUM ('user', 'ai');
+CREATE TYPE ob_reaction_type AS ENUM ('resonates', 'challenges', 'expands', 'bookmarks');
+CREATE TYPE ob_session_type AS ENUM ('search', 'chat', 'synthesis', 'challenge');
+
+CREATE TABLE IF NOT EXISTS public.ob_nodes (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL,
+  body         TEXT,
+  node_type    ob_node_type NOT NULL DEFAULT 'note',
+  visibility   ob_visibility NOT NULL DEFAULT 'private',
+  embedding    vector(768),
+  ai_summary   TEXT,
+  ai_tags      TEXT[] DEFAULT '{}',
+  user_tags    TEXT[] DEFAULT '{}',
+  source_url   TEXT,
+  linked_note_id UUID REFERENCES public.notes(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ob_nodes_user_id ON public.ob_nodes(user_id);
+CREATE INDEX IF NOT EXISTS idx_ob_nodes_visibility ON public.ob_nodes(visibility);
+CREATE INDEX IF NOT EXISTS idx_ob_nodes_emb ON public.ob_nodes USING hnsw (embedding vector_cosine_ops);
+
+DROP TRIGGER IF EXISTS ob_nodes_updated_at ON public.ob_nodes;
+CREATE TRIGGER ob_nodes_updated_at
+  BEFORE UPDATE ON public.ob_nodes
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER TABLE public.ob_nodes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public ob_nodes viewable by all"
+  ON public.ob_nodes FOR SELECT
+  USING (visibility = 'public' OR auth.uid() = user_id);
+CREATE POLICY "Users insert own ob_nodes"
+  ON public.ob_nodes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users update own ob_nodes"
+  ON public.ob_nodes FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users delete own ob_nodes"
+  ON public.ob_nodes FOR DELETE USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS public.ob_edges (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_node_id   UUID NOT NULL REFERENCES public.ob_nodes(id) ON DELETE CASCADE,
+  to_node_id     UUID NOT NULL REFERENCES public.ob_nodes(id) ON DELETE CASCADE,
+  edge_type      ob_edge_type NOT NULL DEFAULT 'references',
+  created_by     ob_edge_creator NOT NULL DEFAULT 'user',
+  weight         FLOAT DEFAULT 1.0 CHECK (weight >= 0 AND weight <= 1),
+  created_at     TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(from_node_id, to_node_id, edge_type)
+);
+CREATE INDEX IF NOT EXISTS idx_ob_edges_from ON public.ob_edges(from_node_id);
+CREATE INDEX IF NOT EXISTS idx_ob_edges_to ON public.ob_edges(to_node_id);
+ALTER TABLE public.ob_edges ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Edges on visible ob_nodes are viewable"
+  ON public.ob_edges FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.ob_nodes
+      WHERE id = from_node_id AND (visibility = 'public' OR user_id = auth.uid())
+    )
+  );
+CREATE POLICY "Users manage edges on own ob_nodes"
+  ON public.ob_edges FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM public.ob_nodes WHERE id = from_node_id AND user_id = auth.uid())
+  );
+
+CREATE TABLE IF NOT EXISTS public.ob_collections (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id        UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name           TEXT NOT NULL,
+  description    TEXT,
+  visibility     ob_visibility NOT NULL DEFAULT 'private',
+  cover_node_id  UUID REFERENCES public.ob_nodes(id) ON DELETE SET NULL,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS public.ob_node_collections (
+  node_id        UUID NOT NULL REFERENCES public.ob_nodes(id) ON DELETE CASCADE,
+  collection_id  UUID NOT NULL REFERENCES public.ob_collections(id) ON DELETE CASCADE,
+  position       INT DEFAULT 0,
+  added_at       TIMESTAMPTZ DEFAULT NOW(),
+  PRIMARY KEY (node_id, collection_id)
+);
+ALTER TABLE public.ob_collections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ob_node_collections ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public ob_collections viewable by all"
+  ON public.ob_collections FOR SELECT
+  USING (visibility = 'public' OR auth.uid() = user_id);
+CREATE POLICY "Users manage own ob_collections"
+  ON public.ob_collections FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "ob_node_collections viewable if collection visible"
+  ON public.ob_node_collections FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.ob_collections
+      WHERE id = collection_id AND (visibility = 'public' OR user_id = auth.uid())
+    )
+  );
+CREATE POLICY "Users manage ob_node_collections for own collections"
+  ON public.ob_node_collections FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM public.ob_collections WHERE id = collection_id AND user_id = auth.uid())
+  );
+
+CREATE TABLE IF NOT EXISTS public.ob_reactions (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  node_id     UUID NOT NULL REFERENCES public.ob_nodes(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type        ob_reaction_type NOT NULL,
+  note        TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(node_id, user_id, type)
+);
+ALTER TABLE public.ob_reactions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Reactions on public ob_nodes are viewable"
+  ON public.ob_reactions FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.ob_nodes
+      WHERE id = node_id AND (visibility = 'public' OR user_id = auth.uid())
+    )
+  );
+CREATE POLICY "Users manage own ob_reactions"
+  ON public.ob_reactions FOR ALL USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS public.ob_ai_sessions (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  brain_owner_id   UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  query            TEXT NOT NULL,
+  response         TEXT,
+  cited_node_ids   UUID[] DEFAULT '{}',
+  messages         JSONB NOT NULL DEFAULT '[]'::jsonb,
+  session_type     ob_session_type NOT NULL DEFAULT 'chat',
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE public.ob_ai_sessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users see own ob_ai_sessions"
+  ON public.ob_ai_sessions FOR SELECT
+  USING (auth.uid() = user_id OR auth.uid() = brain_owner_id);
+CREATE POLICY "Anyone can create an ob_ai_session"
+  ON public.ob_ai_sessions FOR INSERT WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS public.ob_profiles (
+  id           UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username     TEXT UNIQUE NOT NULL,
+  display_name TEXT,
+  bio          TEXT,
+  brain_slug   TEXT UNIQUE NOT NULL,
+  settings     JSONB DEFAULT '{}'::jsonb,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE OR REPLACE FUNCTION public.handle_new_ob_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.ob_profiles (id, username, brain_slug)
+  VALUES (
+    NEW.id,
+    split_part(NEW.email, '@', 1),
+    split_part(NEW.email, '@', 1)
+  )
+  ON CONFLICT DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created_ob ON auth.users;
+CREATE TRIGGER on_auth_user_created_ob
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_ob_user();
+
+ALTER TABLE public.ob_profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ob_profiles are publicly viewable"
+  ON public.ob_profiles FOR SELECT USING (true);
+CREATE POLICY "Users can update own ob_profile"
+  ON public.ob_profiles FOR UPDATE USING (auth.uid() = id);
+
+-- Semantic search across ob_nodes.
+-- When owner_id IS NULL: search public nodes across all users (for Explore).
+-- When owner_id IS NOT NULL: search all nodes (public + private) for that user (for /brain).
+CREATE OR REPLACE FUNCTION public.ob_search_nodes(
+  query_embedding    vector(768),
+  match_threshold    FLOAT DEFAULT 0.70,
+  match_count        INT DEFAULT 10,
+  owner_id           UUID DEFAULT NULL,
+  filter_node_type   ob_node_type DEFAULT NULL
+)
+RETURNS TABLE (
+  id           UUID,
+  title        TEXT,
+  body         TEXT,
+  node_type    ob_node_type,
+  ai_summary   TEXT,
+  ai_tags      TEXT[],
+  user_tags    TEXT[],
+  user_id      UUID,
+  similarity   FLOAT
+)
+LANGUAGE sql STABLE AS $$
+  SELECT
+    n.id, n.title, n.body, n.node_type,
+    n.ai_summary, n.ai_tags, n.user_tags, n.user_id,
+    1 - (n.embedding <=> query_embedding) AS similarity
+  FROM public.ob_nodes n
+  WHERE
+    (
+      (owner_id IS NULL AND n.visibility = 'public')
+      OR
+      (owner_id IS NOT NULL AND n.user_id = owner_id)
+    )
+    AND (filter_node_type IS NULL OR n.node_type = filter_node_type)
+    AND n.embedding IS NOT NULL
+    AND 1 - (n.embedding <=> query_embedding) > match_threshold
+  ORDER BY n.embedding <=> query_embedding
+  LIMIT match_count;
+$$;
+
+-- Combined search: ob_nodes + sb_* for one brain owner (service_role / API)
+CREATE OR REPLACE FUNCTION public.ob_search_all_brain(
+  query_embedding  vector(768),
+  owner_id         UUID,
+  match_threshold  FLOAT DEFAULT 0.65,
+  match_count      INT DEFAULT 15
+)
+RETURNS TABLE (
+  source_table  TEXT,
+  record_id     UUID,
+  label         TEXT,
+  detail        TEXT,
+  similarity    FLOAT,
+  created_at    TIMESTAMPTZ
+)
+LANGUAGE sql STABLE SECURITY DEFINER AS $$
+  SELECT * FROM (
+    SELECT 'ob_nodes'::text AS source_table, id AS record_id, title AS label, COALESCE(ai_summary, body, '') AS detail,
+      (1 - (embedding <=> query_embedding))::float AS similarity, created_at
+    FROM public.ob_nodes
+    WHERE user_id = owner_id AND visibility = 'public' AND embedding IS NOT NULL
+      AND 1 - (embedding <=> query_embedding) > match_threshold
+    UNION ALL
+    SELECT 'sb_thoughts'::text, id, LEFT(raw_text, 200), COALESCE(raw_text, ''),
+      (1 - (embedding <=> query_embedding))::float, created_at
+    FROM public.sb_thoughts WHERE embedding IS NOT NULL
+      AND 1 - (embedding <=> query_embedding) > match_threshold
+    UNION ALL
+    SELECT 'sb_projects'::text, id, name, COALESCE(notes, ''),
+      (1 - (embedding <=> query_embedding))::float, created_at
+    FROM public.sb_projects WHERE embedding IS NOT NULL
+      AND 1 - (embedding <=> query_embedding) > match_threshold
+    UNION ALL
+    SELECT 'sb_ideas'::text, id, title, COALESCE(body, ''),
+      (1 - (embedding <=> query_embedding))::float, created_at
+    FROM public.sb_ideas WHERE embedding IS NOT NULL
+      AND 1 - (embedding <=> query_embedding) > match_threshold
+    UNION ALL
+    SELECT 'sb_resources'::text, id, title, COALESCE(summary, ''),
+      (1 - (embedding <=> query_embedding))::float, created_at
+    FROM public.sb_resources WHERE embedding IS NOT NULL
+      AND 1 - (embedding <=> query_embedding) > match_threshold
+  ) sub
+  ORDER BY similarity DESC
+  LIMIT match_count;
+$$;

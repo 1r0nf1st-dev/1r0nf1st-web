@@ -17,12 +17,22 @@ import { logsRouter } from './routes/logs.js';
 import { emailRouter } from './routes/email.js';
 import { contactRouter } from './routes/contact.js';
 import { secondBrainRouter } from './routes/secondBrain.js';
+import { obPublicRouter } from './routes/ob/public.js';
+import { obProfileRouter } from './routes/ob/profile.js';
+import { obExploreRouter } from './routes/ob/explore.js';
+import { obNodesRouter } from './routes/ob/nodes.js';
+import { obAiRouter } from './routes/ob/ai.js';
+import { obEdgesRouter } from './routes/ob/edges.js';
+import { obCollectionsRouter } from './routes/ob/collections.js';
+import { obReactionsRouter } from './routes/ob/reactions.js';
+import { obDigestRouter } from './routes/ob/digest.js';
 import { config } from './config.js';
 import { logger } from './utils/logger.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { errorLogger } from './middleware/errorLogger.js';
 import { securityHeaders } from './middleware/securityHeaders.js';
 import { defaultRateLimiter } from './middleware/rateLimiter.js';
+import { supabase } from './db/supabase.js';
 
 // Validate required environment variables in production (skip on Vercel; env is set in dashboard)
 if (config.nodeEnv === 'production' && !process.env.VERCEL) {
@@ -78,8 +88,58 @@ app.use(defaultRateLimiter);
 // Request logging middleware (must be after body parser, before routes)
 app.use(requestLogger);
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (_req, res) => {
+  const timestamp = new Date().toISOString();
+
+  if (!supabase) {
+    res.status(503).json({
+      status: 'degraded',
+      timestamp,
+      db: false,
+      ob: false,
+      message: 'Supabase client not configured',
+    });
+    return;
+  }
+
+  try {
+    // Cheap check that Postgres is reachable and Open Brain schema is present.
+    const { error } = await supabase
+      .from('ob_nodes')
+      .select('id')
+      .limit(1);
+
+    if (error) {
+      logger.warn({ err: error.message }, '/health ob_nodes check failed');
+      res.status(503).json({
+        status: 'degraded',
+        timestamp,
+        db: true,
+        ob: false,
+        message: 'Database reachable but Open Brain check failed',
+      });
+      return;
+    }
+
+    res.json({
+      status: 'ok',
+      timestamp,
+      db: true,
+      ob: true,
+    });
+  } catch (err) {
+    logger.warn(
+      { err: err instanceof Error ? err.message : String(err) },
+      '/health check threw',
+    );
+    res.status(503).json({
+      status: 'degraded',
+      timestamp,
+      db: false,
+      ob: false,
+      message: 'Health check failed',
+    });
+  }
 });
 
 app.use('/api/github', githubRouter);
@@ -99,6 +159,15 @@ app.use('/api/logs', logsRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/second-brain', secondBrainRouter);
+app.use('/api/ob/public', obPublicRouter);
+app.use('/api/ob/profile', obProfileRouter);
+app.use('/api/ob/explore', obExploreRouter);
+app.use('/api/ob/nodes', obNodesRouter);
+app.use('/api/ob/ai', obAiRouter);
+app.use('/api/ob/edges', obEdgesRouter);
+app.use('/api/ob/collections', obCollectionsRouter);
+app.use('/api/ob/reactions', obReactionsRouter);
+app.use('/api/ob/digest', obDigestRouter);
 
 // 404 handler for unmatched routes
 app.use((_req, res) => {
