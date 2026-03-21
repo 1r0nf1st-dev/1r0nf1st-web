@@ -2,10 +2,8 @@
 
 import type { JSX, FormEvent } from 'react';
 import { useState, useCallback } from 'react';
-import { CorporateNav } from './CorporateNav';
-import { CorporateFooter } from './CorporateFooter';
-import { btnBase, btnPrimary } from '../../styles/buttons';
 import { ApiError } from '../../apiClient';
+import { PublicPageShell } from '../PublicPageShell';
 
 const MESSAGE_MAX_LENGTH = 5000;
 const NAME_MAX_LENGTH = 200;
@@ -102,40 +100,34 @@ export const CorporateContactPage = (): JSX.Element => {
   );
 
   return (
-    <div className="min-h-screen min-w-0 flex flex-col overflow-x-hidden">
-      <CorporateNav />
-      <main className="flex-1 w-full min-w-0">
-        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-16 md:py-24">
-          <div className="max-w-xl mx-auto">
-          <h1
-            className="text-3xl md:text-4xl font-bold text-foreground mb-2 tracking-tight"
-            style={{ letterSpacing: 'var(--letter-spacing-tight)' }}
-          >
-            CONTACT
-          </h1>
-          <p className="text-muted mb-6">
-            We&apos;d love to help with any web projects you need. Get in contact with us.
-          </p>
-          <a
-            href="#contact-form"
-            className={`${btnBase} ${btnPrimary} inline-flex mb-10 px-8 py-4 text-lg min-h-[44px] transition-transform duration-200 hover:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background`}
-            aria-label="Get in touch - scroll to contact form"
-          >
-            GET IN TOUCH
-          </a>
-
-          <div id="contact-form" className="scroll-mt-24">
-            {success ? (
-            <div className="rounded-xl border border-border bg-surface-soft/30 p-6">
-              <p className="text-foreground">
+    <PublicPageShell
+      hero={{
+        flagLabel: 'Get In Touch',
+        watermark: "Let's Build",
+        title: (
+          <>
+            Let&apos;s <em>Build</em> Something.
+          </>
+        ),
+        subtitle:
+          "We'd love to help with any web projects you need. Get in contact and let's talk.",
+        primaryBtn: { label: 'Get In Touch', href: '#contact-form' },
+        secondaryBtn: { label: 'View Projects', href: '/projects' },
+      }}
+    >
+      <div className="contact-grid">
+        <div id="contact-form" className="scroll-mt-24">
+          {success ? (
+            <div className="content-panel">
+              <p className="font-display text-[13px] leading-[1.75] text-[color:var(--color-text-inv-2)]">
                 Thanks for your message. We&apos;ve received it and will get back to you soon. Check
                 your email for a confirmation.
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-              <div>
-                <label htmlFor="corporate-contact-name" className="block text-sm font-medium mb-1">
+            <form onSubmit={handleSubmit} className="flex flex-col" noValidate>
+              <div className="field-group">
+                <label htmlFor="corporate-contact-name" className="field-label">
                   Name
                 </label>
                 <input
@@ -145,22 +137,23 @@ export const CorporateContactPage = (): JSX.Element => {
                   placeholder="Your name"
                   value={form.name}
                   onChange={(e) => handleChange('name', e.target.value)}
-                  className="w-full rounded-xl border-2 border-border bg-surface-soft px-3 py-3 min-h-[44px] text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                  className="field-input"
                   aria-invalid={Boolean(fieldErrors.name)}
                   aria-describedby={fieldErrors.name ? 'corporate-contact-name-error' : undefined}
                 />
-                {fieldErrors.name && (
+                {fieldErrors.name ? (
                   <p
                     id="corporate-contact-name-error"
-                    className="mt-1 text-sm text-red-600 dark:text-red-400"
+                    className="mt-1 font-display text-[12px] text-[color:var(--color-orange)]"
                     role="alert"
                   >
                     {fieldErrors.name}
                   </p>
-                )}
+                ) : null}
               </div>
-              <div>
-                <label htmlFor="corporate-contact-email" className="block text-sm font-medium mb-1">
+
+              <div className="field-group">
+                <label htmlFor="corporate-contact-email" className="field-label">
                   Email
                 </label>
                 <input
@@ -170,22 +163,23 @@ export const CorporateContactPage = (): JSX.Element => {
                   placeholder="Your email"
                   value={form.email}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  className="w-full rounded-xl border-2 border-border bg-surface-soft px-3 py-3 min-h-[44px] text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                  className="field-input"
                   aria-invalid={Boolean(fieldErrors.email)}
                   aria-describedby={fieldErrors.email ? 'corporate-contact-email-error' : undefined}
                 />
-                {fieldErrors.email && (
+                {fieldErrors.email ? (
                   <p
                     id="corporate-contact-email-error"
-                    className="mt-1 text-sm text-red-600 dark:text-red-400"
+                    className="mt-1 font-display text-[12px] text-[color:var(--color-orange)]"
                     role="alert"
                   >
                     {fieldErrors.email}
                   </p>
-                )}
+                ) : null}
               </div>
-              <div>
-                <label htmlFor="corporate-contact-message" className="block text-sm font-medium mb-1">
+
+              <div className="field-group">
+                <label htmlFor="corporate-contact-message" className="field-label">
                   Message
                 </label>
                 <textarea
@@ -194,43 +188,69 @@ export const CorporateContactPage = (): JSX.Element => {
                   placeholder="Your message"
                   value={form.message}
                   onChange={(e) => handleChange('message', e.target.value)}
-                  className="w-full rounded-xl border-2 border-border bg-surface-soft px-3 py-3 min-h-[100px] text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none resize-y"
+                  className="field-input"
                   aria-invalid={Boolean(fieldErrors.message)}
                   aria-describedby={
                     fieldErrors.message ? 'corporate-contact-message-error' : undefined
                   }
                   maxLength={MESSAGE_MAX_LENGTH}
                 />
-                {fieldErrors.message && (
+                {fieldErrors.message ? (
                   <p
                     id="corporate-contact-message-error"
-                    className="mt-1 text-sm text-red-600 dark:text-red-400"
+                    className="mt-1 font-display text-[12px] text-[color:var(--color-orange)]"
                     role="alert"
                   >
                     {fieldErrors.message}
                   </p>
-                )}
+                ) : null}
               </div>
-              {submitError && (
-                <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+
+              {submitError ? (
+                <p
+                  className="mb-4 font-display text-[12px] text-[color:var(--color-orange)]"
+                  role="alert"
+                >
                   {submitError}
                 </p>
-              )}
+              ) : null}
+
               <button
                 type="submit"
                 disabled={submitting}
-                className={`${btnBase} ${btnPrimary} self-start min-h-[44px] min-w-[44px]`}
+                className="contact-submit"
                 aria-busy={submitting}
               >
-                {submitting ? 'Sending…' : 'Send message'}
+                {submitting ? 'Sending…' : 'Send Message'}
               </button>
             </form>
           )}
+        </div>
+
+        <div>
+          <div className="info-block">
+            <h2 className="info-title">What We Do</h2>
+            <div className="info-text">
+              We build focused web applications and tools — from Second Brain platforms to
+              AI-powered pipelines. Every project engineered with precision.
+            </div>
           </div>
+
+          <div className="info-block">
+            <h2 className="info-title">Response Time</h2>
+            <div className="info-text">
+              We aim to respond to all enquiries within 24 hours.
+            </div>
+          </div>
+
+          <div className="info-block" style={{ marginBottom: 0 }}>
+            <h2 className="info-title">Stack</h2>
+            <div className="info-text">
+              Next.js · React · TypeScript · Supabase · Kubernetes · Playwright
+            </div>
           </div>
         </div>
-      </main>
-      <CorporateFooter />
-    </div>
+      </div>
+    </PublicPageShell>
   );
 };

@@ -136,7 +136,6 @@ export const SendEmailCard = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses}>
-
       <h2 className={cardTitle}>Send Email</h2>
       <p className={cardBody}>
         Send an email via Brevo. Only visible to admin. To and CC accept comma-separated addresses.

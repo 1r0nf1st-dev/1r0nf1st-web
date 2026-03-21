@@ -35,10 +35,7 @@ function getStoredTheme(): ThemePreferences | null {
 
   try {
     const parsed = JSON.parse(stored) as Partial<ThemePreferences & { styleTheme?: string }>;
-    if (
-      parsed.colorMode &&
-      (parsed.colorMode === 'light' || parsed.colorMode === 'dark')
-    ) {
+    if (parsed.colorMode && (parsed.colorMode === 'light' || parsed.colorMode === 'dark')) {
       return { colorMode: parsed.colorMode };
     }
   } catch {

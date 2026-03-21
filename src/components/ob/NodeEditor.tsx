@@ -3,17 +3,11 @@
 import type { JSX } from 'react';
 import { useState, useCallback, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { ConfirmModal } from '../ConfirmModal';
 import remarkGfm from 'remark-gfm';
 import type { ObNode, ObNodeCreate, ObNodeUpdate } from '../../lib/obApi';
-import { btnBase, btnPrimary, btnGhost, btnDanger } from '../../styles/buttons';
 
-const NODE_TYPES: Array<ObNode['node_type']> = [
-  'note',
-  'concept',
-  'question',
-  'source',
-  'project',
-];
+const NODE_TYPES: Array<ObNode['node_type']> = ['note', 'concept', 'question', 'source', 'project'];
 const VISIBILITIES: Array<ObNode['visibility']> = ['private', 'public', 'shared'];
 
 interface NodeEditorProps {
@@ -23,12 +17,7 @@ interface NodeEditorProps {
   onCancel?: () => void;
 }
 
-export function NodeEditor({
-  node,
-  onSave,
-  onDelete,
-  onCancel,
-}: NodeEditorProps): JSX.Element {
+export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps): JSX.Element {
   const [title, setTitle] = useState(node?.title ?? '');
   const [body, setBody] = useState(node?.body ?? '');
   const [nodeType, setNodeType] = useState<ObNode['node_type']>(node?.node_type ?? 'note');
@@ -36,6 +25,7 @@ export function NodeEditor({
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     setTitle(node?.title ?? '');
@@ -63,12 +53,16 @@ export function NodeEditor({
     }
   }, [node, title, body, nodeType, visibility, onSave]);
 
-  const handleDelete = useCallback(async () => {
+  const handleDeleteClick = useCallback(() => {
+    setShowDeleteModal(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
     if (!node?.id || !onDelete) return;
-    if (typeof window !== 'undefined' && !window.confirm('Delete this node?')) return;
     setDeleting(true);
     try {
       await onDelete(node.id);
+      setShowDeleteModal(false);
     } finally {
       setDeleting(false);
     }
@@ -77,7 +71,10 @@ export function NodeEditor({
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <label htmlFor="ob-node-title" className="block text-sm font-medium text-foreground mb-1">
+        <label
+          htmlFor="ob-node-title"
+          className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-3)]"
+        >
           Title
         </label>
         <input
@@ -86,32 +83,33 @@ export function NodeEditor({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Node title"
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:border-primary"
+          className="w-full border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-1)] placeholder:text-[color:var(--color-text-3)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-orange)] focus-visible:outline-offset-2 rounded-none"
           data-testid="node-title"
         />
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-1">
-          <label htmlFor="ob-node-body" className="block text-sm font-medium text-foreground">
+        <div className="mb-1 flex items-center justify-between">
+          <label
+            htmlFor="ob-node-body"
+            className="block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-3)]"
+          >
             Body (Markdown)
           </label>
           <button
             type="button"
             onClick={() => setShowPreview((p) => !p)}
-            className="text-xs text-muted-foreground hover:text-foreground"
+            className="font-mono text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-steel)] hover:text-[color:var(--color-text-1)]"
           >
             {showPreview ? 'Edit' : 'Preview'}
           </button>
         </div>
         {showPreview ? (
           <div
-            className="w-full min-h-[120px] rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-foreground [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-2 first:[&_h1]:mt-0 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-2 [&_li]:mb-0.5 [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_code]:font-mono [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:my-2 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-2 [&_blockquote]:text-muted-foreground [&_a]:text-primary [&_a]:underline"
+            className="w-full min-h-[120px] border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-1)] [&_h1]:text-[1.1rem] [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-2 first:[&_h1]:mt-0 [&_h2]:text-[1rem] [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-2 [&_h3]:text-[0.95rem] [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-2 [&_li]:mb-0.5 [&_code]:bg-[color:var(--color-steel-bg)] [&_code]:px-1 [&_code]:font-mono [&_pre]:bg-[color:var(--color-steel-bg)] [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:my-2 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_blockquote]:border-l-4 [&_blockquote]:border-[color:var(--color-orange)] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-2 [&_blockquote]:text-[color:var(--color-text-2)] [&_a]:text-[color:var(--color-orange)] [&_a]:underline"
             data-testid="node-body-preview"
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {body || '(empty)'}
-            </ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body || '(empty)'}</ReactMarkdown>
           </div>
         ) : (
           <textarea
@@ -120,7 +118,7 @@ export function NodeEditor({
             onChange={(e) => setBody(e.target.value)}
             placeholder="Write in Markdown..."
             rows={8}
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:ring-2 focus:ring-primary focus:border-primary font-mono text-sm"
+            className="w-full border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-mono text-[13px] text-[color:var(--color-text-1)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-orange)] focus-visible:outline-offset-2 rounded-none"
             data-testid="node-body"
           />
         )}
@@ -128,11 +126,13 @@ export function NodeEditor({
 
       <div className="flex flex-wrap gap-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Type</label>
+          <label className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-3)]">
+            Type
+          </label>
           <select
             value={nodeType}
             onChange={(e) => setNodeType(e.target.value as ObNode['node_type'])}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+            className="border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-1)] rounded-none"
             data-testid="node-type"
           >
             {NODE_TYPES.map((t) => (
@@ -143,11 +143,13 @@ export function NodeEditor({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Visibility</label>
+          <label className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-3)]">
+            Visibility
+          </label>
           <select
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as ObNode['visibility'])}
-            className="rounded-lg border border-border bg-background px-3 py-2 text-foreground"
+            className="border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-1)] rounded-none"
             data-testid="node-visibility"
           >
             {VISIBILITIES.map((v) => (
@@ -161,11 +163,11 @@ export function NodeEditor({
 
       {node?.ai_summary && (
         <div
-          className="rounded-lg bg-muted/40 p-3 text-sm"
+          className="border border-[color:var(--color-steel-border)] bg-[color:var(--color-steel-bg)] p-3 font-display text-[12px] text-[color:var(--color-steel)]"
           data-testid="ai-summary"
         >
-          <span className="font-medium text-muted-foreground">AI summary: </span>
-          <span className="text-foreground">{node.ai_summary}</span>
+          <span className="font-semibold">AI summary: </span>
+          <span>{node.ai_summary}</span>
         </div>
       )}
 
@@ -174,7 +176,7 @@ export function NodeEditor({
           {node.ai_tags.map((tag) => (
             <span
               key={tag}
-              className="text-xs px-2 py-0.5 rounded bg-primary/20 text-primary"
+              className="font-mono text-[9px] uppercase tracking-[0.12em] px-2 py-0.5 border border-[color:var(--color-steel-border)] bg-[color:var(--color-steel-bg)] text-[color:var(--color-steel)]"
               data-testid="ai-tag"
             >
               {tag}
@@ -188,28 +190,46 @@ export function NodeEditor({
           type="button"
           onClick={handleSave}
           disabled={saving || !title.trim()}
-          className={`${btnBase} ${btnPrimary}`}
+          className="bg-[color:var(--color-orange)] px-4 py-[9px] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-white disabled:opacity-70"
           data-testid="save-node-btn"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className={`${btnBase} ${btnGhost}`}>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-4 py-[9px] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-text-1)] hover:border-[color:var(--color-text-3)]"
+          >
             Cancel
           </button>
         )}
         {node?.id && onDelete && (
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             disabled={deleting}
-            className={`${btnBase} ${btnDanger}`}
+            className="bg-[#E11D48] px-4 py-[9px] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-white disabled:opacity-70"
             data-testid="delete-node-btn"
           >
             {deleting ? 'Deleting…' : 'Delete'}
           </button>
         )}
       </div>
+      {node?.id && onDelete && (
+        <ConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Node"
+          message="Are you sure you want to delete this node? This action cannot be undone."
+          warning="This action cannot be undone"
+          confirmLabel="Delete Node"
+          variant="destructive"
+          icon="🗑"
+          isLoading={deleting}
+        />
+      )}
     </div>
   );
 }

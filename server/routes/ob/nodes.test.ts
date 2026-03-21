@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { obNodesRouter } from './nodes.js';
 import * as obNodeService from '../../services/obNodeService.js';
 
 vi.mock('../../middleware/auth.js', () => ({
@@ -13,7 +12,14 @@ vi.mock('../../middleware/auth.js', () => ({
   },
 }));
 
+vi.mock('../../middleware/requireAdmin.js', () => ({
+  requireAdmin: (_req: express.Request, _res: express.Response, next: express.NextFunction) =>
+    next(),
+}));
+
 vi.mock('../../services/obNodeService.js');
+
+const { obNodesRouter } = await import('./nodes.js');
 
 function createApp(): express.Application {
   const app = express();
@@ -119,11 +125,7 @@ describe('obNodesRouter', () => {
 
       const res = await request(app).delete('/api/ob/nodes/n1');
       expect(res.status).toBe(204);
-      expect(obNodeService.deleteObNode).toHaveBeenCalledWith(
-        expect.anything(),
-        'n1',
-        'user-ob-1',
-      );
+      expect(obNodeService.deleteObNode).toHaveBeenCalledWith(expect.anything(), 'n1', 'user-ob-1');
     });
   });
 });

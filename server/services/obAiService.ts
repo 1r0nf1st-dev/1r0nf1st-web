@@ -121,20 +121,9 @@ async function generateText(systemPrompt: string, userPrompt: string): Promise<s
   return output;
 }
 
-export type ObNodeTypeFilter =
-  | 'note'
-  | 'concept'
-  | 'question'
-  | 'source'
-  | 'project';
+export type ObNodeTypeFilter = 'note' | 'concept' | 'question' | 'source' | 'project';
 
-const VALID_NODE_TYPES: ObNodeTypeFilter[] = [
-  'note',
-  'concept',
-  'question',
-  'source',
-  'project',
-];
+const VALID_NODE_TYPES: ObNodeTypeFilter[] = ['note', 'concept', 'question', 'source', 'project'];
 
 /**
  * Semantic search over ob_nodes. Uses service-role Supabase.
@@ -156,10 +145,7 @@ export async function searchObNodes(
     match_count: Math.min(limit, 50),
     owner_id: ownerId,
   };
-  if (
-    nodeType != null &&
-    VALID_NODE_TYPES.includes(nodeType as ObNodeTypeFilter)
-  ) {
+  if (nodeType != null && VALID_NODE_TYPES.includes(nodeType as ObNodeTypeFilter)) {
     payload.filter_node_type = nodeType;
   }
   const { data, error } = await supabase.rpc('ob_search_nodes', payload);
@@ -340,9 +326,9 @@ export async function synthesizeNodes(
     throw new Error('Could not load nodes');
   }
 
-  const blocks = (nodes as Array<{ id: string; title?: string; body?: string; ai_summary?: string }>).map(
-    (n) => `[${n.id}] ${n.title ?? ''}\n${[n.ai_summary, n.body].filter(Boolean).join('\n')}`,
-  );
+  const blocks = (
+    nodes as Array<{ id: string; title?: string; body?: string; ai_summary?: string }>
+  ).map((n) => `[${n.id}] ${n.title ?? ''}\n${[n.ai_summary, n.body].filter(Boolean).join('\n')}`);
   const context = blocks.join('\n\n---\n\n');
 
   const systemPrompt = `You are an assistant that weaves a coherent narrative connecting the given notes. Use only the provided content. Write in clear, concise paragraphs.`;
@@ -421,10 +407,7 @@ Plain text only, no markdown. Tone: clear and encouraging.`;
 /**
  * Generate OB weekly digest text via Gemini using last 7 days of nodes and sb_thoughts.
  */
-export async function generateObDigest(
-  supabase: SupabaseClient,
-  userId: string,
-): Promise<string> {
+export async function generateObDigest(supabase: SupabaseClient, userId: string): Promise<string> {
   const data = await getObDigestData(supabase, userId);
   const nodesForPrompt = data.nodesRecent.map((n) => ({
     title: n.title ?? 'Untitled',
@@ -436,9 +419,10 @@ export async function generateObDigest(
     text: t.raw_text.slice(0, 300),
     created_at: t.created_at,
   }));
-  const prompt = OB_DIGEST_PROMPT
-    .replace('{{NODES_JSON}}', JSON.stringify(nodesForPrompt, null, 2))
-    .replace('{{THOUGHTS_JSON}}', JSON.stringify(thoughtsForPrompt, null, 2));
+  const prompt = OB_DIGEST_PROMPT.replace(
+    '{{NODES_JSON}}',
+    JSON.stringify(nodesForPrompt, null, 2),
+  ).replace('{{THOUGHTS_JSON}}', JSON.stringify(thoughtsForPrompt, null, 2));
   const systemPrompt = 'You write concise, useful weekly digests. Output only the digest text.';
   return generateText(systemPrompt, prompt);
 }

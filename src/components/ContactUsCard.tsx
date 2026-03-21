@@ -101,7 +101,6 @@ export const ContactUsCard = (): JSX.Element => {
   if (success) {
     return (
       <article className={cardClasses}>
-
         <h2 className={cardTitle}>Contact us</h2>
         <p className={cardBody}>
           Thanks for your message. We&apos;ve received it and will get back to you soon. Check your
@@ -113,7 +112,6 @@ export const ContactUsCard = (): JSX.Element => {
 
   return (
     <article className={cardClasses}>
-
       <h2 className={cardTitle}>Contact us</h2>
       <p className={`${cardBody} mb-4`}>
         We&apos;d love to help with any web projects you need. Get in contact with us.

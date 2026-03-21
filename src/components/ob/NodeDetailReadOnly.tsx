@@ -21,19 +21,14 @@ interface NodeDetailReadOnlyProps {
   currentUserId?: string;
 }
 
-export function NodeDetailReadOnly({
-  node,
-  currentUserId,
-}: NodeDetailReadOnlyProps): JSX.Element {
+export function NodeDetailReadOnly({ node, currentUserId }: NodeDetailReadOnlyProps): JSX.Element {
   return (
     <div className={cardClasses + ' space-y-4'}>
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs font-medium px-2 py-0.5 rounded bg-primary/20 text-primary">
           {NODE_TYPE_LABELS[node.node_type]}
         </span>
-        <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
-          Public
-        </span>
+        <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">Public</span>
       </div>
       <h2 className={cardTitle}>{node.title || 'Untitled'}</h2>
       {node.body && (

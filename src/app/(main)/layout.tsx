@@ -6,15 +6,12 @@ import { usePathname } from 'next/navigation';
 import { SidebarProvider } from '../../contexts/SidebarContext';
 import { NotesActionsProvider } from '../../contexts/NotesActionsContext';
 import { Sidebar } from '../../components/Sidebar';
-import { CorporateNav } from '../../components/corporate/CorporateNav';
-import { CorporateFooter } from '../../components/corporate/CorporateFooter';
+import { AppShell } from '../../components/AppShell';
 
 export const dynamic = 'force-dynamic';
 
 function SidebarSkeleton(): ReactNode {
-  return (
-    <div className="hidden md:flex w-16 flex-shrink-0 flex-col bg-muted/20 animate-pulse" />
-  );
+  return <div className="hidden md:flex w-16 flex-shrink-0 flex-col bg-muted/20 animate-pulse" />;
 }
 
 /** Routes that show the notes/tools sidebar. Other routes get full-width main. */
@@ -44,18 +41,17 @@ export default function MainLayout({
     <Suspense fallback={<div className="p-4 text-sm text-muted">Loading...</div>}>
       <NotesActionsProvider>
         <SidebarProvider>
-          <div className="flex flex-col min-h-screen min-w-0 overflow-x-hidden">
-            <CorporateNav />
-            <div className="flex flex-1 min-h-0">
-              {showSidebar && (
+          <AppShell
+            sidebar={
+              showSidebar ? (
                 <Suspense fallback={<SidebarSkeleton />}>
                   <Sidebar />
                 </Suspense>
-              )}
-              <main className="min-w-0 flex-1">{children}</main>
-            </div>
-            <CorporateFooter />
-          </div>
+              ) : undefined
+            }
+          >
+            {children}
+          </AppShell>
         </SidebarProvider>
       </NotesActionsProvider>
     </Suspense>

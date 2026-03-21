@@ -19,21 +19,21 @@ import { getSharedNotesCount } from './noteService.js';
 describe('getSharedNotesCount', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Mock the first query (shared_notes)
     const sharedNotesChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       or: vi.fn(),
     };
-    
+
     // Mock the second query (notes)
     const notesChain = {
       select: vi.fn().mockReturnThis(),
       in: vi.fn().mockReturnThis(),
       is: vi.fn(),
     };
-    
+
     mocks.fromMock.mockImplementation((table: string) => {
       if (table === 'shared_notes') {
         return sharedNotesChain;
@@ -43,13 +43,13 @@ describe('getSharedNotesCount', () => {
       }
       return { select: mocks.selectMock };
     });
-    
+
     // First query returns data with note_ids
     sharedNotesChain.or.mockResolvedValue({
       data: [{ note_id: 'note-1' }, { note_id: 'note-2' }, { note_id: 'note-3' }],
       error: null,
     });
-    
+
     // Second query returns count
     notesChain.is.mockResolvedValue({
       count: 7,
@@ -77,7 +77,7 @@ describe('getSharedNotesCount', () => {
       }
       return { select: vi.fn() };
     });
-    
+
     await expect(getSharedNotesCount(mocks.mockSupabase as never, 'user-1')).resolves.toBe(0);
   });
 
@@ -94,7 +94,7 @@ describe('getSharedNotesCount', () => {
       }
       return { select: vi.fn() };
     });
-    
+
     await expect(getSharedNotesCount(mocks.mockSupabase as never, 'user-1')).rejects.toThrow(
       'Failed to fetch shared notes count: boom',
     );

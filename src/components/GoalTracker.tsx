@@ -83,7 +83,6 @@ export const GoalTracker = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="goals">
-
         <h2 className={cardTitle}>
           <Target className="inline mr-2" />
           Goals
@@ -102,7 +101,6 @@ export const GoalTracker = (): JSX.Element | null => {
     return (
       <div className="md:col-span-3">
         <article className={cardClasses} id="goals">
-
           <div className="flex items-center gap-3 mb-4 relative z-10">
             <Lock className="text-2xl text-primary" />
             <h2 className={`${cardTitle} m-0`}>
@@ -143,7 +141,6 @@ export const GoalTracker = (): JSX.Element | null => {
   if (goalsError) {
     return (
       <article className={cardClasses} id="goals">
-
         <h2 className={cardTitle}>
           <Target className="inline mr-2" />
           Goals
@@ -160,7 +157,6 @@ export const GoalTracker = (): JSX.Element | null => {
   return (
     <>
       <article className={cardClasses} id="goals">
-
         <div className="flex items-center justify-between mb-4 relative z-10">
           <h2 className={`${cardTitle} m-0`}>
             <Target className="inline mr-2" />

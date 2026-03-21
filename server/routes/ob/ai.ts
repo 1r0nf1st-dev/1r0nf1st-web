@@ -38,8 +38,7 @@ obAiRouter.post('/search', async (req: AuthRequest, res) => {
     }
 
     const ownerId = brainOwnerId && typeof brainOwnerId === 'string' ? brainOwnerId : req.userId;
-    const limitNum =
-      limit != null ? Math.min(Math.max(1, Number(limit)), 50) : 15;
+    const limitNum = limit != null ? Math.min(Math.max(1, Number(limit)), 50) : 15;
 
     const results = await searchObNodes(supabase, query, ownerId, limitNum);
     res.json(results);
@@ -125,8 +124,7 @@ obAiRouter.post('/expand', async (req: AuthRequest, res) => {
     res.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Expand failed';
-    const status =
-      message.toLowerCase().includes('not found') ? 404 : 500;
+    const status = message.toLowerCase().includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
 });

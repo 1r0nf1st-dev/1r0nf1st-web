@@ -3,7 +3,6 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { getJson } from '../../apiClient';
-import { btnBase, btnPrimary } from '../../styles/buttons';
 
 interface CaptureResult {
   thoughtId: string;
@@ -39,9 +38,9 @@ export const CaptureForm = (): JSX.Element => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
-      <h2 className="text-lg font-semibold text-foreground">Quick capture</h2>
-      <p className="text-sm text-muted">
+    <form onSubmit={handleSubmit} className="content-panel max-w-2xl">
+      <h2 className="panel-title">Quick capture</h2>
+      <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
         Add a thought, task, idea, or resource. AI will classify and route it.
       </p>
       <textarea
@@ -49,24 +48,20 @@ export const CaptureForm = (): JSX.Element => {
         onChange={(e) => setRawText(e.target.value)}
         placeholder="PROJECTS: Claude code&#10;IDEAS: subscription model for consultancy&#10;PEOPLE: Sarah — follow up Q2 proposal"
         rows={4}
-        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
+        className="field-input min-h-[140px] font-mono text-[12px] leading-[1.7]"
         disabled={loading}
         aria-label="Capture text"
       />
-      <button
-        type="submit"
-        disabled={loading || !rawText.trim()}
-        className={`${btnBase} ${btnPrimary}`}
-      >
+      <button type="submit" disabled={loading || !rawText.trim()} className="input-row-btn">
         {loading ? 'Capturing…' : 'Capture'}
       </button>
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="font-display text-[12px] text-[color:var(--color-orange)]" role="alert">
           {error}
         </p>
       )}
       {result && (
-        <p className="text-sm text-green-600 dark:text-green-400" role="status">
+        <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]" role="status">
           ✓ {result.category}
           {result.routed ? ' — routed' : ' — in inbox'}
         </p>

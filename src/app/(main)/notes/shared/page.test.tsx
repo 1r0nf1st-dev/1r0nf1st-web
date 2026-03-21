@@ -50,7 +50,7 @@ describe('SharedNotesPage', () => {
   it('navigates to notes page when note is selected', () => {
     render(<SharedNotesPage />);
     const noteButton = screen.getByText('Test Note');
-    
+
     // Simulate clicking the note (which calls onNoteSelect)
     // Note: This is a simplified test - in reality, SharedNotesList would handle the click
     // and call onNoteSelect with the note

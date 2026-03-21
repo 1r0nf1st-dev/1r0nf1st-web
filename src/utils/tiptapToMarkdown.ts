@@ -162,5 +162,8 @@ export function tiptapToMarkdown(doc: unknown): string {
 
   walk(root.content);
 
-  return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return lines
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

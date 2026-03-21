@@ -56,18 +56,20 @@ export async function fetchUserRepos(
 
   if (!response.ok) {
     let errorMessage = `GitHub API request failed with status ${response.status}`;
-    
+
     try {
       const errorData = (await response.json()) as { message?: string; documentation_url?: string };
       if (errorData.message) {
         errorMessage = errorData.message;
-        
+
         // Provide helpful guidance for common errors
         if (response.status === 401) {
           if (config.githubToken) {
-            errorMessage += '. Your GITHUB_TOKEN may be invalid or expired. Please check your token at https://github.com/settings/tokens';
+            errorMessage +=
+              '. Your GITHUB_TOKEN may be invalid or expired. Please check your token at https://github.com/settings/tokens';
           } else {
-            errorMessage += '. GITHUB_TOKEN is not set. Add it to your .env file (optional but recommended for higher rate limits).';
+            errorMessage +=
+              '. GITHUB_TOKEN is not set. Add it to your .env file (optional but recommended for higher rate limits).';
           }
         } else if (response.status === 404) {
           errorMessage += `. User "${effectiveUsername}" not found.`;
@@ -82,7 +84,7 @@ export async function fetchUserRepos(
         errorMessage = text;
       }
     }
-    
+
     throw new Error(errorMessage);
   }
 
@@ -117,18 +119,20 @@ export async function fetchRepoCommits(
 
   if (!response.ok) {
     let errorMessage = `GitHub API request failed with status ${response.status}`;
-    
+
     try {
       const errorData = (await response.json()) as { message?: string; documentation_url?: string };
       if (errorData.message) {
         errorMessage = errorData.message;
-        
+
         // Provide helpful guidance for common errors
         if (response.status === 401) {
           if (config.githubToken) {
-            errorMessage += '. Your GITHUB_TOKEN may be invalid or expired. Please check your token at https://github.com/settings/tokens';
+            errorMessage +=
+              '. Your GITHUB_TOKEN may be invalid or expired. Please check your token at https://github.com/settings/tokens';
           } else {
-            errorMessage += '. GITHUB_TOKEN is not set. Add it to your .env file (optional but recommended for higher rate limits).';
+            errorMessage +=
+              '. GITHUB_TOKEN is not set. Add it to your .env file (optional but recommended for higher rate limits).';
           }
         } else if (response.status === 404) {
           errorMessage += `. Repository "${owner}/${repo}" not found.`;
@@ -143,7 +147,7 @@ export async function fetchRepoCommits(
         errorMessage = text;
       }
     }
-    
+
     throw new Error(errorMessage);
   }
 

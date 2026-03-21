@@ -33,9 +33,7 @@ describe('NodeReactions', () => {
   });
 
   it('shows loading state initially', () => {
-    vi.mocked(obApi.obApi.reactions.list).mockImplementation(
-      () => new Promise(() => {}),
-    );
+    vi.mocked(obApi.obApi.reactions.list).mockImplementation(() => new Promise(() => {}));
     render(<NodeReactions nodeId={nodeId} currentUserId={currentUserId} />);
     expect(screen.getByText(/Loading reactions/)).toBeInTheDocument();
   });
@@ -84,9 +82,6 @@ describe('NodeReactions', () => {
     render(<NodeReactions nodeId={nodeId} currentUserId={currentUserId} />);
     await screen.findByTestId('reaction-list');
     await user.click(screen.getByTestId('reaction-resonates'));
-    expect(obApi.obApi.reactions.remove).toHaveBeenCalledWith(
-      nodeId,
-      'resonates',
-    );
+    expect(obApi.obApi.reactions.remove).toHaveBeenCalledWith(nodeId, 'resonates');
   });
 });

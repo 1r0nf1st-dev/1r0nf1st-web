@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-async function parseJsonOrFail(
-  res: { headers: () => Record<string, string>; status: () => number; text: () => Promise<string> },
-): Promise<unknown> {
+async function parseJsonOrFail(res: {
+  headers: () => Record<string, string>;
+  status: () => number;
+  text: () => Promise<string>;
+}): Promise<unknown> {
   const contentType = res.headers()['content-type'] ?? '';
   const text = await res.text();
   if (!contentType.includes('application/json') && text.trimStart().startsWith('<')) {

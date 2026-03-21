@@ -137,70 +137,69 @@ export const ChangePasswordPage = (): JSX.Element => {
   return (
     <ChromeLayout>
       <section className="w-full max-w-[500px] mx-auto space-y-8">
-          <article className={cardClasses}>
-
-            <h2 className={`${cardTitle} mb-6`}>
-              {recoveryToken ? 'Set new password' : 'Change Password'}
-            </h2>
-            <form onSubmit={handleSubmit} className="relative z-10">
-              {error && (
-                <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
-                  {error}
-                </div>
-              )}
-              {success && (
-                <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-500 text-sm">
-                  {success}
-                </div>
-              )}
-              <div className="mb-4">
-                <label
-                  htmlFor="newPassword"
-                  className="block mb-2 text-sm font-medium text-foreground"
-                >
-                  New Password
-                </label>
-                <input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
-                />
-                <p className="mt-2 text-[0.85rem] opacity-70">Must be at least 6 characters</p>
+        <article className={cardClasses}>
+          <h2 className={`${cardTitle} mb-6`}>
+            {recoveryToken ? 'Set new password' : 'Change Password'}
+          </h2>
+          <form onSubmit={handleSubmit} className="relative z-10">
+            {error && (
+              <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
+                {error}
               </div>
-              <div className="mb-6">
-                <label
-                  htmlFor="confirmPassword"
-                  className="block mb-2 text-sm font-medium text-foreground"
-                >
-                  Confirm New Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
-                />
+            )}
+            {success && (
+              <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-500 text-sm">
+                {success}
               </div>
-              <button
-                type="submit"
-                className={`${btnBase} ${btnPrimary} w-full mb-4`}
-                disabled={isLoading}
+            )}
+            <div className="mb-4">
+              <label
+                htmlFor="newPassword"
+                className="block mb-2 text-sm font-medium text-foreground"
               >
-                {isLoading
-                  ? 'Changing password...'
-                  : recoveryToken
-                    ? 'Set password'
-                    : 'Change Password'}
-              </button>
-            </form>
-          </article>
+                New Password
+              </label>
+              <input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+              />
+              <p className="mt-2 text-[0.85rem] opacity-70">Must be at least 6 characters</p>
+            </div>
+            <div className="mb-6">
+              <label
+                htmlFor="confirmPassword"
+                className="block mb-2 text-sm font-medium text-foreground"
+              >
+                Confirm New Password
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+              />
+            </div>
+            <button
+              type="submit"
+              className={`${btnBase} ${btnPrimary} w-full mb-4`}
+              disabled={isLoading}
+            >
+              {isLoading
+                ? 'Changing password...'
+                : recoveryToken
+                  ? 'Set password'
+                  : 'Change Password'}
+            </button>
+          </form>
+        </article>
       </section>
     </ChromeLayout>
   );

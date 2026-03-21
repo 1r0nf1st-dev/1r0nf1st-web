@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { cardClasses, cardBody } from '../styles/cards';
+import { BRAND_NAME } from '../config';
 import { BrandName } from './BrandName';
 import { btnBase, btnPrimary } from '../styles/buttons';
 
@@ -60,9 +61,8 @@ export const CutsceneCodingProblem = ({ onComplete }: CutsceneCodingProblemProps
     <article
       className={cardClasses}
       aria-live="polite"
-      aria-label="1r0nf1st solves a coding problem"
+      aria-label={`${BRAND_NAME} solves a coding problem`}
     >
-
       <div
         className={`${cardBody} relative z-10 flex flex-col items-center min-h-[280px] justify-center`}
       >
@@ -93,7 +93,7 @@ export const CutsceneCodingProblem = ({ onComplete }: CutsceneCodingProblemProps
           <div className="relative">
             <img
               src="/logo.jpg"
-              alt="1r0nf1st robot"
+              alt={`${BRAND_NAME} robot`}
               className="w-16 h-16 rounded-full object-cover border-2 border-primary/40 dark:border-border shadow-md"
             />
             {(phase === 'solving' || phase === 'fixed') && (
@@ -111,7 +111,9 @@ export const CutsceneCodingProblem = ({ onComplete }: CutsceneCodingProblemProps
         </div>
 
         {phase === 'fixed' && (
-          <p className="mt-3 text-foreground font-medium"><BrandName /> fixed it!</p>
+          <p className="mt-3 text-foreground font-medium">
+            <BrandName /> fixed it!
+          </p>
         )}
 
         <div className="mt-6 flex gap-3">

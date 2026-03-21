@@ -22,8 +22,7 @@ obDigestRouter.get('/', async (req: AuthRequest, res) => {
     const digest = await generateObDigest(req.supabase, req.userId);
     res.json({ digest });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to generate digest';
+    const message = error instanceof Error ? error.message : 'Failed to generate digest';
     res.status(500).json({ error: message });
   }
 });

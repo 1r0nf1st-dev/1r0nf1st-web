@@ -16,7 +16,6 @@ export const MediumStories = (): JSX.Element => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="medium">
-
         <h2 className={cardTitle}>Latest on Medium</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="h-4 w-full mb-3" />
@@ -30,7 +29,6 @@ export const MediumStories = (): JSX.Element => {
   if (error) {
     return (
       <article className={cardClasses} id="medium">
-
         <h2 className={cardTitle}>Latest on Medium</h2>
         <p className={cardBody}>Error: {error}</p>
       </article>
@@ -40,7 +38,6 @@ export const MediumStories = (): JSX.Element => {
   if (!stories || stories.length === 0) {
     return (
       <article className={cardClasses} id="medium">
-
         <h2 className={cardTitle}>Latest on Medium</h2>
         <p className={cardBody}>
           No stories found. Make sure the API server is running and <code>MEDIUM_FEED_URL</code> or{' '}

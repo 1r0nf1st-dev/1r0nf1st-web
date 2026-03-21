@@ -50,9 +50,7 @@ const nextConfig: NextConfig = {
 
 const withPWA = withPWAInit({
   dest: 'public',
-  disable:
-    process.env.NODE_ENV === 'development' ||
-    process.env.DISABLE_PWA === '1',
+  disable: process.env.NODE_ENV === 'development' || process.env.DISABLE_PWA === '1',
   cacheOnFrontEndNav: true,
   fallbacks: { document: '/offline' },
   runtimeCaching: [

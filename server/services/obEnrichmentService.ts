@@ -123,8 +123,7 @@ async function generateSummaryAndTags(
   const data = (await res.json()) as {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
-  const raw =
-    data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
   try {
     const parsed = JSON.parse(raw) as { summary?: string; tags?: string[] };
     const summary = typeof parsed.summary === 'string' ? parsed.summary.slice(0, 500) : '';
@@ -192,7 +191,10 @@ export async function runEnrichmentPipeline(
       .eq('user_id', userId);
 
     if (updateEmbError) {
-      logger.warn({ nodeId, err: updateEmbError.message }, 'OB enrichment: failed to save embedding');
+      logger.warn(
+        { nodeId, err: updateEmbError.message },
+        'OB enrichment: failed to save embedding',
+      );
       return;
     }
 
@@ -208,7 +210,10 @@ export async function runEnrichmentPipeline(
       .eq('user_id', userId);
 
     if (updateMetaError) {
-      logger.warn({ nodeId, err: updateMetaError.message }, 'OB enrichment: failed to save summary/tags');
+      logger.warn(
+        { nodeId, err: updateMetaError.message },
+        'OB enrichment: failed to save summary/tags',
+      );
     }
 
     // 3) Discover edges via semantic search (exclude self)
@@ -239,11 +244,17 @@ export async function runEnrichmentPipeline(
           // unique violation - edge already exists, skip
           continue;
         }
-        logger.warn({ nodeId, toId: s.id, err: edgeError.message }, 'OB enrichment: edge insert failed');
+        logger.warn(
+          { nodeId, toId: s.id, err: edgeError.message },
+          'OB enrichment: edge insert failed',
+        );
       }
     }
   } catch (err) {
-    logger.warn({ nodeId, err: err instanceof Error ? err.message : String(err) }, 'OB enrichment failed');
+    logger.warn(
+      { nodeId, err: err instanceof Error ? err.message : String(err) },
+      'OB enrichment failed',
+    );
     throw err;
   }
 }

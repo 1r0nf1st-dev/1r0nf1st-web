@@ -43,7 +43,10 @@ describe('goalService', () => {
         error: null,
       });
       chain.single.mockRestore();
-      chain.order.mockResolvedValue({ data: [{ id: 'g1', user_id: 'u1', title: 'Goal 1' }], error: null });
+      chain.order.mockResolvedValue({
+        data: [{ id: 'g1', user_id: 'u1', title: 'Goal 1' }],
+        error: null,
+      });
       fromMock.mockReturnValue(chain);
 
       const result = await getGoalsByUserId(mockSupabase as never, 'u1');
@@ -57,7 +60,9 @@ describe('goalService', () => {
       chain.order.mockResolvedValue({ data: null, error: { message: 'db error' } });
       fromMock.mockReturnValue(chain);
 
-      await expect(getGoalsByUserId(mockSupabase as never, 'u1')).rejects.toThrow('Failed to fetch goals');
+      await expect(getGoalsByUserId(mockSupabase as never, 'u1')).rejects.toThrow(
+        'Failed to fetch goals',
+      );
     });
   });
 
@@ -154,7 +159,10 @@ describe('goalService', () => {
           }),
         });
 
-      const result = await updateGoal(mockSupabase as never, 'g1', 'u1', { title: 'Updated', status: 'completed' });
+      const result = await updateGoal(mockSupabase as never, 'g1', 'u1', {
+        title: 'Updated',
+        status: 'completed',
+      });
       expect(result.title).toBe('Updated');
     });
 
@@ -207,7 +215,10 @@ describe('goalService', () => {
           }),
         });
 
-      const result = await createMilestone(mockSupabase as never, 'u1', { goal_id: 'g1', title: 'M1' });
+      const result = await createMilestone(mockSupabase as never, 'u1', {
+        goal_id: 'g1',
+        title: 'M1',
+      });
       expect(result.title).toBe('M1');
     });
   });

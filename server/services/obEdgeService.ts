@@ -1,11 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export type ObEdgeType =
-  | 'supports'
-  | 'contradicts'
-  | 'extends'
-  | 'inspired_by'
-  | 'references';
+export type ObEdgeType = 'supports' | 'contradicts' | 'extends' | 'inspired_by' | 'references';
 
 export interface ObEdgeRow {
   id: string;
@@ -80,23 +75,13 @@ export async function createObEdge(
   return data as ObEdgeRow;
 }
 
-export async function deleteObEdge(
-  db: SupabaseClient,
-  edgeId: string,
-): Promise<void> {
+export async function deleteObEdge(db: SupabaseClient, edgeId: string): Promise<void> {
   const { error } = await db.from(OB_EDGES).delete().eq('id', edgeId);
   if (error) throw error;
 }
 
-export async function getObEdge(
-  db: SupabaseClient,
-  edgeId: string,
-): Promise<ObEdgeRow | null> {
-  const { data, error } = await db
-    .from(OB_EDGES)
-    .select('*')
-    .eq('id', edgeId)
-    .single();
+export async function getObEdge(db: SupabaseClient, edgeId: string): Promise<ObEdgeRow | null> {
+  const { data, error } = await db.from(OB_EDGES).select('*').eq('id', edgeId).single();
   if (error) {
     if (error.code === 'PGRST116') return null;
     throw error;

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { createContext, useCallback, useContext, useState } from 'react';
-import { AlertModal } from '../components/AlertModal';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface AlertContextValue {
   showAlert: (message: string, title?: string) => void;
@@ -28,11 +28,15 @@ export function AlertProvider({ children }: { children: ReactNode }): ReactNode 
   return (
     <AlertContext.Provider value={{ showAlert }}>
       {children}
-      <AlertModal
+      <ConfirmModal
         isOpen={open}
+        onClose={handleClose}
+        onConfirm={handleClose}
         title={title ?? 'Notice'}
         message={message}
-        onClose={handleClose}
+        confirmLabel="OK"
+        variant="confirm"
+        hideCancel
       />
     </AlertContext.Provider>
   );

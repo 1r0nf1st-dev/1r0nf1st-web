@@ -34,7 +34,6 @@ export const RestoreVersionModal = ({
       aria-labelledby="restore-modal-title"
     >
       <article className={`${cardClasses} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
-
         <div className="relative z-10">
           <h2 id="restore-modal-title" className={cardTitle}>
             Restore Version {version.version_number}?

@@ -14,18 +14,18 @@ export const SendEmailPage = (): JSX.Element => {
 
   return (
     <section aria-label="Send Email">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {isAdmin ? (
-            <SendEmailCard />
-          ) : (
-            <AdminOnlyPlaceholderCard
-              title="Send Email"
-              description="Send transactional emails via Brevo. Admin only."
-              icon={Mail}
-              returnTo="/projects/send-email"
-            />
-          )}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {isAdmin ? (
+          <SendEmailCard />
+        ) : (
+          <AdminOnlyPlaceholderCard
+            title="Send Email"
+            description="Send transactional emails via Brevo. Admin only."
+            icon={Mail}
+            returnTo="/projects/send-email"
+          />
+        )}
+      </div>
     </section>
   );
 };

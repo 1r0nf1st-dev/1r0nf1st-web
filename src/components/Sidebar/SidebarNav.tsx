@@ -1,151 +1,150 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  Archive,
-  BookOpen,
-  Brain,
-  Compass,
-  FilePlus,
-  Library,
-  LogOut,
-  Search,
-  Settings,
-  Tag,
-  Users,
-  LayoutTemplate,
-  FileText,
-  CalendarDays,
-  Cog,
-  Sparkles,
-} from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import Link from 'next/link';
 import { useNotesActions } from '../../contexts/NotesActionsContext';
-import { SidebarAccordion } from './SidebarAccordion';
-import { SidebarNavItem } from './SidebarNavItem';
-import { NotebooksSidebar } from './NotebooksSidebar';
-import { TagsList } from './TagsList';
 import { SavedSearchesSection } from './SavedSearchesSection';
 import { WebClipperSection } from './WebClipperSection';
 import { TemplatesAccordion } from './TemplatesAccordion';
-import { NotesListSection } from './NotesListSection';
 import { SidebarWidgets } from './SidebarWidgets';
-import { SidebarProfile } from './SidebarProfile';
 
 export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }): JSX.Element => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { logout } = useAuth();
-  const { createNote, openSearch } = useNotesActions();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { createNote, openSearch, openWebClipper, toggleWidget } = useNotesActions();
 
   const sharedAriaLabel =
     typeof sharedUnreadCount === 'number' && sharedUnreadCount > 0
       ? `Shared notes, ${sharedUnreadCount} unread`
       : 'Shared notes';
 
-  return (
-    <div className="flex h-full flex-col">
-      <div className="space-y-1">
-        <SidebarNavItem
-          label="New Note"
-          icon={FilePlus}
-          onClick={async () => {
-            if (!pathname?.startsWith('/notes')) {
-              router.push('/notes?create=1');
-              return;
-            }
-            await createNote();
-          }}
-        />
-        <SidebarAccordion id="templates" label="From Template" icon={LayoutTemplate}>
-          <TemplatesAccordion />
-        </SidebarAccordion>
-        <SidebarNavItem href="/notes/templates" label="Templates" icon={Library} />
-      </div>
+  const isActive = (href: string): boolean => {
+    if (!pathname) return false;
+    if (href === '/brain') return pathname.startsWith('/brain');
+    if (href === '/notes') return pathname.startsWith('/notes');
+    return pathname === href;
+  };
 
-      <div className="mt-3 space-y-1">
-        <SidebarAccordion id="notes" label="All Notes" icon={FileText} defaultOpen>
-          <NotesListSection />
-        </SidebarAccordion>
-        <SidebarAccordion id="notebooks" label="Notebooks" icon={BookOpen} defaultOpen>
-          <NotebooksSidebar />
-        </SidebarAccordion>
-        <SidebarAccordion id="tags" label="Tags" icon={Tag} defaultOpen>
-          <TagsList />
-        </SidebarAccordion>
-        <SidebarAccordion id="archives" label="Archives" icon={Archive}>
-          <SidebarNavItem
-            href="/archive"
-            label="My Notes"
-            icon={FileText}
-            isActive={pathname === '/archive'}
-            forceShowLabel={true}
-          />
-          <SidebarNavItem
-            href="/archive?filter=today"
-            label="Today"
-            icon={CalendarDays}
-            isActive={pathname === '/archive' && searchParams.get('filter') === 'today'}
-            forceShowLabel={true}
-          />
-        </SidebarAccordion>
-        <SidebarNavItem
-          href="/notes/shared"
-          label="Shared"
-          icon={Users}
-          isActive={pathname === '/notes/shared'}
-          badge={sharedUnreadCount}
-          ariaLabel={sharedAriaLabel}
-        />
-        <SidebarNavItem
-          href="/projects/second-brain"
-          label="Second Brain"
-          icon={Brain}
-          isActive={pathname === '/projects/second-brain'}
-        />
-        <SidebarNavItem
-          href="/brain"
-          label="Open Brain"
-          icon={Sparkles}
-          isActive={pathname?.startsWith('/brain') ?? false}
-        />
-        <SidebarNavItem
-          href="/explore"
-          label="Explore"
-          icon={Compass}
-          isActive={pathname === '/explore'}
-        />
-        <SidebarAccordion id="search" label="Search" icon={Search} defaultOpen onClick={openSearch}>
-          <SavedSearchesSection />
-        </SidebarAccordion>
-        <SidebarAccordion id="widgets" label="Widgets" icon={Cog} defaultOpen>
-          <SidebarWidgets />
-        </SidebarAccordion>
-      </div>
+  const Item = ({
+    href,
+    icon,
+    label,
+    chevron,
+    badge,
+    onClick,
+    ariaLabel,
+  }: {
+    href?: string;
+    icon: string;
+    label: string;
+    chevron?: boolean;
+    badge?: ReactNode;
+    onClick?: () => void;
+    ariaLabel?: string;
+  }): JSX.Element => {
+    const active = href ? isActive(href) : false;
+    const className = `nav-item${active ? ' active' : ''}`;
+
+    const contents = (
+      <>
+        <span className="nav-item-icon" aria-hidden>
+          {icon}
+        </span>
+        <span className="nav-item-label">{label}</span>
+        {badge ? <span className="nav-item-badge">{badge}</span> : null}
+        {chevron ? (
+          <span className="nav-item-chevron" aria-hidden>
+            ›
+          </span>
+        ) : null}
+      </>
+    );
+
+    if (href) {
+      return (
+        <Link href={href} className={className} aria-current={active ? 'page' : undefined}>
+          {contents}
+        </Link>
+      );
+    }
+
+    return (
+      <button type="button" className={className} onClick={onClick} aria-label={ariaLabel ?? label}>
+        {contents}
+      </button>
+    );
+  };
+
+  return (
+    <div>
+      <Item
+        icon="+"
+        label="New Note"
+        onClick={() => {
+          if (!pathname?.startsWith('/notes')) {
+            router.push('/notes?create=1');
+            return;
+          }
+          void createNote();
+        }}
+      />
+
+      <Item
+        icon="⊞"
+        label="From Template"
+        chevron
+        onClick={() => router.push('/notes/templates')}
+      />
+      <Item icon="◫" label="Templates" href="/notes/templates" />
+
+      <div className="sidebar-section-label">Library</div>
+      <Item
+        icon="≡"
+        label="All Notes"
+        href="/notes"
+        badge={searchParams.get('count') ?? undefined}
+      />
+      <Item icon="⊟" label="Notebooks" chevron href="/notes" />
+      <Item icon="◇" label="Tags" chevron href="/notes" />
+      <Item icon="⊡" label="Archives" href="/archive" />
+      <Item
+        icon="○"
+        label="Shared"
+        href="/notes/shared"
+        badge={
+          typeof sharedUnreadCount === 'number' && sharedUnreadCount > 0
+            ? sharedUnreadCount
+            : undefined
+        }
+        ariaLabel={sharedAriaLabel}
+      />
+
+      <div className="sidebar-section-label">Intelligence</div>
+      <Item icon="◉" label="Second Brain" href="/projects/second-brain" />
+      <Item icon="⚙" label="Open Brain" href="/brain" />
+      <Item icon="◈" label="Explore" href="/explore" />
+      <Item icon="⊙" label="Search" chevron onClick={openSearch} />
+
+      <div className="sidebar-section-label">Tools</div>
+      <Item
+        icon="▣"
+        label="Widgets"
+        chevron
+        onClick={() => {
+          toggleWidget('tasks');
+        }}
+      />
+      <Item icon="⊕" label="Web Clipper" onClick={openWebClipper} />
+      <Item icon="◎" label="Settings" href="/settings" />
 
       <div className="mt-3">
+        <SavedSearchesSection />
+        <SidebarWidgets />
         <WebClipperSection />
-      </div>
-
-      <div className="mt-auto space-y-1 pt-3">
-        <SidebarNavItem href="/notes/change-password" label="Settings" icon={Settings} />
-        <SidebarNavItem
-          label={isLoggingOut ? 'Logging out...' : 'Log Out'}
-          icon={LogOut}
-          onClick={() => {
-            setIsLoggingOut(true);
-            Promise.resolve(logout())
-              .then(() => {
-                router.push('/login');
-              })
-              .finally(() => setIsLoggingOut(false));
-          }}
-        />
-        <SidebarProfile />
+        <TemplatesAccordion />
       </div>
     </div>
   );

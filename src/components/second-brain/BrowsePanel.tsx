@@ -18,14 +18,7 @@ const TABLES: { id: TableName; label: string }[] = [
 ];
 
 /** Columns that show full text (no truncation). Constrained width so table doesn't stretch too far. */
-const FULL_TEXT_COLUMNS = new Set([
-  'raw_text',
-  'body',
-  'notes',
-  'goal',
-  'summary',
-  'task',
-]);
+const FULL_TEXT_COLUMNS = new Set(['raw_text', 'body', 'notes', 'goal', 'summary', 'task']);
 
 /** Max width for full-text columns to keep table from stretching indefinitely */
 const FULL_TEXT_MAX_W = 280;
@@ -47,13 +40,9 @@ export const BrowsePanel = (): JSX.Element => {
   const fetchData = useCallback(() => {
     setLoading(true);
     setError(null);
-    getJson<Record<string, unknown>[]>(
-      `/api/second-brain/${activeTable}?limit=50`,
-    )
+    getJson<Record<string, unknown>[]>(`/api/second-brain/${activeTable}?limit=50`)
       .then((res) => setData(res ?? []))
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : 'Failed to load'),
-      )
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load'))
       .finally(() => setLoading(false));
   }, [activeTable]);
 
@@ -88,9 +77,7 @@ export const BrowsePanel = (): JSX.Element => {
 
   const handleReroute = async (row?: Record<string, unknown>): Promise<void> => {
     const id = (row?.id ?? editRow?.id) as string | undefined;
-    const rawText = row
-      ? String(row.raw_text ?? '')
-      : editRawText;
+    const rawText = row ? String(row.raw_text ?? '') : editRawText;
     if (!id) return;
     setActionLoading(true);
     setActionError(null);
@@ -230,58 +217,64 @@ export const BrowsePanel = (): JSX.Element => {
     : [];
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-foreground">Browse</h2>
+    <div className="content-panel">
+      <h2 className="panel-title">Browse</h2>
       <div className="flex flex-wrap gap-2">
         {TABLES.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setActiveTable(t.id)}
-            className={`${btnBase} ${btnGhost} px-3 py-1.5 text-sm ${
-              activeTable === t.id ? 'ring-2 ring-primary' : ''
-            }`}
+            className={[
+              'px-4 py-2 font-mono text-[10px] uppercase tracking-[0.12em] border bg-transparent',
+              activeTable === t.id
+                ? 'border-[color:var(--color-orange)] text-[color:var(--color-orange)]'
+                : 'border-[color:var(--color-rule-dark)] text-[color:var(--color-text-inv-2)] hover:border-[color:var(--color-rule-md)]',
+            ].join(' ')}
           >
             {t.label}
           </button>
         ))}
       </div>
-      {loading && <p className="text-sm text-muted">Loading…</p>}
+      {loading && (
+        <p className="font-display text-[12px] text-[color:var(--color-text-3)]">Loading…</p>
+      )}
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="font-display text-[12px] text-[color:var(--color-orange)]" role="alert">
           {error}
         </p>
       )}
       {!loading && !error && data.length === 0 && (
-        <p className="text-sm text-muted">No items yet.</p>
+        <p className="font-display text-[12px] text-[color:var(--color-text-3)]">No items yet.</p>
       )}
       {showActions && !loading && !error && data.length > 0 && (
-        <p className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">
-          <strong className="text-primary">Editable:</strong> Click the pencil icon to edit, or the tool icon for Re-route and Delete.
+        <p className="border border-[color:var(--color-steel-border)] bg-[color:var(--color-steel-bg)] px-4 py-3 font-display text-[12px] text-[color:var(--color-steel)]">
+          <span className="font-semibold text-[color:var(--color-text-1)]">Editable:</span> Click
+          the pencil icon to edit, or the tool icon for Re-route and Delete.
         </p>
       )}
       {showStatusActions && !loading && !error && data.length > 0 && (
-        <p className="rounded-lg border border-border bg-surface-soft/50 px-4 py-3 text-sm text-muted">
+        <p className="border border-[color:var(--color-rule-dark)] bg-[color:var(--color-surface)] px-4 py-3 font-display text-[12px] text-[color:var(--color-text-inv-2)]">
           Click the pencil icon to mark as done or reopen.
         </p>
       )}
       {actionError && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="font-display text-[12px] text-[color:var(--color-orange)]" role="alert">
           {actionError}
         </p>
       )}
       {!loading && !error && data.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-border max-w-full">
-          <table className="w-full max-w-5xl text-sm table-auto">
+        <div className="max-w-full overflow-x-auto border border-[color:var(--color-rule-dark)]">
+          <table className="w-full max-w-5xl table-auto font-display text-[12px] text-[color:var(--color-text-inv)]">
             <thead>
-              <tr className="border-b border-border bg-surface-soft/50">
+              <tr className="border-b border-[color:var(--color-rule-dark)] bg-[color:var(--color-sidebar-bg)]">
                 {hasRowActions && (
                   <th className="w-10 px-2 py-2 text-left shrink-0" scope="col" aria-label="Edit" />
                 )}
                 {columns.map((k) => (
                   <th
                     key={k}
-                    className={`px-4 py-2 text-left font-medium text-foreground ${
+                    className={`px-4 py-2 text-left font-semibold text-[color:var(--color-text-inv)] ${
                       FULL_TEXT_COLUMNS.has(k) ? 'whitespace-nowrap' : ''
                     }`}
                     style={
@@ -294,7 +287,11 @@ export const BrowsePanel = (): JSX.Element => {
                   </th>
                 ))}
                 {showActions && (
-                  <th className="w-10 px-2 py-2 text-left shrink-0" scope="col" aria-label="Options" />
+                  <th
+                    className="w-10 px-2 py-2 text-left shrink-0"
+                    scope="col"
+                    aria-label="Options"
+                  />
                 )}
               </tr>
             </thead>
@@ -303,88 +300,78 @@ export const BrowsePanel = (): JSX.Element => {
                 const rowId = (row.id as string) ?? `row-${i}`;
                 const isMenuOpen = openMenuRowId === rowId;
                 return (
-                <tr
-                  key={rowId}
-                  className="border-b border-border last:border-0 hover:bg-surface-soft/40 transition-colors"
-                >
-                  {hasRowActions && (
-                    <td className="px-2 py-2 align-top shrink-0 w-10">
-                      {showActions ? (
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(row)}
-                          disabled={actionLoading}
-                          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-0 border-0 bg-transparent text-muted hover:text-primary cursor-pointer disabled:opacity-50"
-                          title="Edit"
-                          aria-label="Edit"
-                        >
-                          <Pencil className="w-4 h-4" aria-hidden />
-                        </button>
-                      ) : showStatusActions ? (
-                        <button
-                          type="button"
-                          onClick={() => handleToggleComplete(row)}
-                          disabled={actionLoading}
-                          className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-0 border-0 bg-transparent text-muted hover:text-primary cursor-pointer disabled:opacity-50"
-                          title={
-                            String(row.status ?? '') === 'done'
-                              ? 'Reopen'
-                              : 'Mark as complete'
-                          }
-                          aria-label={
-                            String(row.status ?? '') === 'done'
-                              ? 'Reopen'
-                              : 'Mark complete'
-                          }
-                        >
-                          <Pencil className="w-4 h-4" aria-hidden />
-                        </button>
-                      ) : null}
-                    </td>
-                  )}
-                  {columns.map((k) => {
-                    const v = row[k];
-                    return (
-                      <td
-                        key={k}
-                        className={`px-4 py-2 text-muted align-top ${
-                          FULL_TEXT_COLUMNS.has(k)
-                            ? 'whitespace-pre-wrap break-words'
-                            : 'max-w-[180px] truncate'
-                        }`}
-                        style={
-                          FULL_TEXT_COLUMNS.has(k)
-                            ? { minWidth: FULL_TEXT_MAX_W, maxWidth: FULL_TEXT_MAX_W }
-                            : undefined
-                        }
-                        title={
-                          FULL_TEXT_COLUMNS.has(k)
-                            ? undefined
-                            : String(v ?? '')
-                        }
-                      >
-                        {v === null || v === undefined
-                          ? '—'
-                          : typeof v === 'object'
-                            ? JSON.stringify(v)
-                            : String(v)}
+                  <tr
+                    key={rowId}
+                    className="border-b border-[color:var(--color-rule)] last:border-0 hover:bg-[color:var(--color-orange-bg)] transition-colors"
+                  >
+                    {hasRowActions && (
+                      <td className="px-2 py-2 align-top shrink-0 w-10">
+                        {showActions ? (
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(row)}
+                            disabled={actionLoading}
+                            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-0 border-0 bg-transparent text-[color:var(--color-text-3)] hover:text-[color:var(--color-orange)] cursor-pointer disabled:opacity-50"
+                            title="Edit"
+                            aria-label="Edit"
+                          >
+                            <Pencil className="w-4 h-4" aria-hidden />
+                          </button>
+                        ) : showStatusActions ? (
+                          <button
+                            type="button"
+                            onClick={() => handleToggleComplete(row)}
+                            disabled={actionLoading}
+                            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-0 border-0 bg-transparent text-[color:var(--color-text-3)] hover:text-[color:var(--color-orange)] cursor-pointer disabled:opacity-50"
+                            title={
+                              String(row.status ?? '') === 'done' ? 'Reopen' : 'Mark as complete'
+                            }
+                            aria-label={
+                              String(row.status ?? '') === 'done' ? 'Reopen' : 'Mark complete'
+                            }
+                          >
+                            <Pencil className="w-4 h-4" aria-hidden />
+                          </button>
+                        ) : null}
                       </td>
-                    );
-                  })}
-                  {showActions && (
-                    <td className="px-2 py-2 align-top shrink-0 w-10 relative">
-                      <div className="relative">
+                    )}
+                    {columns.map((k) => {
+                      const v = row[k];
+                      return (
+                        <td
+                          key={k}
+                          className={`px-4 py-2 text-[color:var(--color-text-inv-2)] align-top ${
+                            FULL_TEXT_COLUMNS.has(k)
+                              ? 'whitespace-pre-wrap break-words'
+                              : 'max-w-[180px] truncate'
+                          }`}
+                          style={
+                            FULL_TEXT_COLUMNS.has(k)
+                              ? { minWidth: FULL_TEXT_MAX_W, maxWidth: FULL_TEXT_MAX_W }
+                              : undefined
+                          }
+                          title={FULL_TEXT_COLUMNS.has(k) ? undefined : String(v ?? '')}
+                        >
+                          {v === null || v === undefined
+                            ? '—'
+                            : typeof v === 'object'
+                              ? JSON.stringify(v)
+                              : String(v)}
+                        </td>
+                      );
+                    })}
+                    {showActions && (
+                      <td className="px-2 py-2 align-top shrink-0 w-10 relative">
+                        <div className="relative">
                           <button
                             ref={(el) => {
                               if (el) menuButtonRefs.current.set(rowId, el);
                             }}
                             type="button"
-                            onClick={() =>
-                              setOpenMenuRowId(isMenuOpen ? null : rowId)
-                            }
+                            onClick={() => setOpenMenuRowId(isMenuOpen ? null : rowId)}
                             disabled={actionLoading}
-                            className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-0 border-0 bg-transparent text-muted hover:text-foreground cursor-pointer disabled:opacity-50 ${
-                              isMenuOpen ? 'text-foreground' : ''
+                            className={`inline-flex items-center justify-center min-w-[44px] min-h-[44px] p-0 border-0 bg-transparent text-[color:var(--color-text-3)] hover:text-[color:var(--color-text-1)] cursor-pointer disabled:opacity-50 ${
+                              isMenuOpen ? 'text-[color:var(--color-text-1)]' : ''
                             }`}
                             title="More options"
                             aria-label="More options"
@@ -396,7 +383,7 @@ export const BrowsePanel = (): JSX.Element => {
                             <div
                               ref={menuDropdownRef}
                               role="menu"
-                              className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-lg border border-border bg-surface shadow-lg py-1"
+                              className="absolute right-0 top-full mt-1 z-50 min-w-[140px] border border-[color:var(--color-rule)] bg-[color:var(--color-white)] shadow-lg py-1"
                             >
                               <button
                                 type="button"
@@ -406,7 +393,7 @@ export const BrowsePanel = (): JSX.Element => {
                                   setOpenMenuRowId(null);
                                 }}
                                 disabled={actionLoading}
-                                className={`${btnBase} ${btnGhost} w-full justify-start gap-2 px-3 py-2 text-sm`}
+                                className="w-full flex items-center justify-start gap-2 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-text-1)] hover:bg-[color:var(--color-orange-bg)]"
                               >
                                 <RotateCcw className="w-4 h-4 shrink-0" aria-hidden />
                                 Re-route
@@ -419,7 +406,7 @@ export const BrowsePanel = (): JSX.Element => {
                                   setOpenMenuRowId(null);
                                 }}
                                 disabled={actionLoading}
-                                className={`${btnBase} ${btnGhost} w-full justify-start gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-500/10`}
+                                className="w-full flex items-center justify-start gap-2 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-[#E11D48] hover:bg-[rgba(225,29,72,0.08)]"
                               >
                                 <Trash2 className="w-4 h-4 shrink-0" aria-hidden />
                                 Delete
@@ -427,10 +414,10 @@ export const BrowsePanel = (): JSX.Element => {
                             </div>
                           )}
                         </div>
-                    </td>
-                  )}
-                </tr>
-              );
+                      </td>
+                    )}
+                  </tr>
+                );
               })}
             </tbody>
           </table>
@@ -443,15 +430,18 @@ export const BrowsePanel = (): JSX.Element => {
           aria-modal="true"
           aria-labelledby="edit-thought-title"
         >
-          <div className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-lg border border-border bg-surface p-6 shadow-xl">
-            <h3 id="edit-thought-title" className="mb-4 text-lg font-semibold text-foreground">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-auto border border-[color:var(--color-rule)] bg-[color:var(--color-white)] p-6 shadow-xl">
+            <h3
+              id="edit-thought-title"
+              className="mb-4 font-display text-[14px] font-bold uppercase tracking-[0.06em] text-[color:var(--color-text-1)]"
+            >
               Edit thought
             </h3>
             <textarea
               value={editRawText}
               onChange={(e) => setEditRawText(e.target.value)}
               rows={8}
-              className="mb-4 w-full rounded border border-border bg-background px-3 py-2 text-foreground focus:ring-2 focus:ring-primary"
+              className="mb-4 w-full border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-mono text-[13px] text-[color:var(--color-text-1)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-orange)] focus-visible:outline-offset-2 rounded-none"
               placeholder="Edit raw text…"
               aria-label="Raw text"
             />

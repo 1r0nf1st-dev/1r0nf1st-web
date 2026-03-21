@@ -3,7 +3,6 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { getJson } from '../../apiClient';
-import { btnBase, btnPrimary } from '../../styles/buttons';
 
 interface SearchResult {
   table_name: string;
@@ -53,81 +52,82 @@ export const SearchForm = (): JSX.Element => {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl">
-      <h2 className="text-lg font-semibold text-foreground">Semantic search</h2>
-      <p className="text-sm text-muted">
-        Find by meaning, not keywords. Or ask a question for an AI-generated
-        answer.
+    <div className="content-panel max-w-2xl">
+      <h2 className="panel-title">Semantic Search</h2>
+      <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
+        Find by meaning, not keywords.
       </p>
-      <form onSubmit={handleSearch} className="space-y-3">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setMode('search')}
-            className={`${btnBase} px-3 py-1.5 text-sm border rounded-lg ${
-              mode === 'search' ? 'bg-primary/20 border-primary' : 'border-border'
-            }`}
-          >
-            Search
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('rag')}
-            className={`${btnBase} px-3 py-1.5 text-sm border rounded-lg ${
-              mode === 'rag' ? 'bg-primary/20 border-primary' : 'border-border'
-            }`}
-          >
-            Ask (RAG)
+
+      <div className="flex gap-2 mb-3">
+        <button
+          type="button"
+          onClick={() => setMode('search')}
+          className={mode === 'search' ? 'tab active' : 'tab'}
+        >
+          Search
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('rag')}
+          className={mode === 'rag' ? 'tab active' : 'tab'}
+        >
+          Ask (RAG)
+        </button>
+      </div>
+
+      <form onSubmit={handleSearch}>
+        <div className="input-row">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={
+              mode === 'rag'
+                ? 'What did I think about the pricing strategy?'
+                : 'pricing strategy, follow-up with Sarah'
+            }
+            className="field-input"
+            disabled={loading}
+            aria-label="Search or question"
+          />
+          <button type="submit" disabled={loading || !query.trim()} className="input-row-btn">
+            {loading ? 'Searching…' : mode === 'rag' ? 'Ask' : 'Search'}
           </button>
         </div>
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={
-            mode === 'rag'
-              ? 'What did I think about the pricing strategy?'
-              : 'pricing strategy, follow-up with Sarah'
-          }
-          className="w-full rounded-lg border border-border bg-background px-4 py-3 text-foreground placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
-          disabled={loading}
-          aria-label="Search or question"
-        />
-        <button
-          type="submit"
-          disabled={loading || !query.trim()}
-          className={`${btnBase} ${btnPrimary}`}
-        >
-          {loading ? 'Searching…' : mode === 'rag' ? 'Ask' : 'Search'}
-        </button>
       </form>
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="font-display text-[12px] text-[color:var(--color-orange)]" role="alert">
           {error}
         </p>
       )}
       {searchResults && searchResults.length > 0 && (
         <ul className="space-y-2 mt-4" role="list">
           {searchResults.map((r, i) => (
-            <li
-              key={`${r.table_name}-${r.record_id}-${i}`}
-              className="p-3 rounded-lg border border-border bg-surface-soft/50"
-            >
-              <span className="text-xs text-muted uppercase">{r.table_name}</span>
-              <p className="font-medium">{r.label}</p>
-              {r.detail && <p className="text-sm text-muted">{r.detail}</p>}
-              <span className="text-xs text-muted">
-                {(r.similarity * 100).toFixed(0)}% match
-              </span>
+            <li key={`${r.table_name}-${r.record_id}-${i}`} className="list-card">
+              <div className="card-icon" aria-hidden>
+                🔎
+              </div>
+              <div className="min-w-0">
+                <div className="card-title">{r.label}</div>
+                <div className="card-meta">
+                  <span className="card-tag">{r.table_name}</span>
+                  <span className="card-date">{(r.similarity * 100).toFixed(0)}% match</span>
+                </div>
+              </div>
+              <div className="card-arrow" aria-hidden>
+                →
+              </div>
             </li>
           ))}
         </ul>
       )}
       {searchResults && searchResults.length === 0 && (
-        <p className="text-sm text-muted">No matches found.</p>
+        <p className="font-display text-[12px] text-[color:var(--color-text-3)]">
+          No matches found.
+        </p>
       )}
       {ragAnswer && (
-        <div className="mt-4 p-4 rounded-lg border border-border bg-surface-soft/50 whitespace-pre-wrap">
+        <div className="content-panel whitespace-pre-wrap font-display text-[12px] text-[color:var(--color-text-inv)]">
           {ragAnswer}
         </div>
       )}

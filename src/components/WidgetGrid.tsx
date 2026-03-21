@@ -67,9 +67,7 @@ export function WidgetGrid({ onViewDaily }: WidgetGridProps): JSX.Element {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted uppercase tracking-wider">
-          Widgets
-        </span>
+        <span className="text-xs font-medium text-muted uppercase tracking-wider">Widgets</span>
         <div ref={dropdownRef} className="relative">
           <button
             type="button"

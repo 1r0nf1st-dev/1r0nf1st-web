@@ -31,7 +31,7 @@ describe('SidebarAccordion', () => {
 
     const button = screen.getByRole('button', { name: /notebooks/i });
     expect(button).toHaveAttribute('aria-controls', 'notebooks-panel');
-    
+
     // The component's defaultOpen only works when !isMobile && !isCollapsed.
     // In test environment, these conditions may not be met immediately.
     // Test that the accordion can be opened by clicking (which validates the same behavior).

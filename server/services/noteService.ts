@@ -347,14 +347,14 @@ export async function createNote(
   userId: string,
   input: CreateNoteInput,
 ): Promise<Note> {
-  const note = await notesDb.insertNote(db, {
+  const note = (await notesDb.insertNote(db, {
     user_id: userId,
     title: input.title || '',
     content: input.content || {},
     notebook_id: input.notebook_id || null,
     is_pinned: false,
     is_archived: false,
-  }) as Note;
+  })) as Note;
 
   if (input.tag_ids && input.tag_ids.length > 0) {
     const validTagIds = await notesDb.selectUserTagIds(db, userId, input.tag_ids);
@@ -642,11 +642,7 @@ export async function deleteNotebook(
     throw new Error('Cannot delete notebook that contains notes');
   }
 
-  const { error } = await db
-    .from('notebooks')
-    .delete()
-    .eq('id', notebookId)
-    .eq('user_id', userId);
+  const { error } = await db.from('notebooks').delete().eq('id', notebookId).eq('user_id', userId);
 
   if (error) {
     throw new Error(`Failed to delete notebook: ${error.message}`);
@@ -752,11 +748,7 @@ export async function updateTag(
   return data as Tag;
 }
 
-export async function deleteTag(
-  db: SupabaseClient,
-  tagId: string,
-  userId: string,
-): Promise<void> {
+export async function deleteTag(db: SupabaseClient, tagId: string, userId: string): Promise<void> {
   // Verify the tag belongs to the user
   const existingTag = await getTagById(db, tagId, userId);
   if (!existingTag) {
@@ -1409,10 +1401,7 @@ export interface SavedSearch {
   created_at: string;
 }
 
-export async function getSavedSearches(
-  db: SupabaseClient,
-  userId: string,
-): Promise<SavedSearch[]> {
+export async function getSavedSearches(db: SupabaseClient, userId: string): Promise<SavedSearch[]> {
   const { data, error } = await db
     .from('saved_searches')
     .select('*')
@@ -1431,7 +1420,6 @@ export async function createSavedSearch(
   userId: string,
   input: { name: string; query: string },
 ): Promise<SavedSearch> {
-
   const { data, error } = await db
     .from('saved_searches')
     .insert({

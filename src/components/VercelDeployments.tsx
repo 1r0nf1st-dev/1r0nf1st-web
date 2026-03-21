@@ -166,7 +166,6 @@ export const VercelDeployments = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses} id="vercel-deployments">
-
       <h2 className={cardTitle}>Vercel Deployments</h2>
       <div className={cardBody}>
         <div className="mb-6">

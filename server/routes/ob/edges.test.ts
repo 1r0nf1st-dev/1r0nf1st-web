@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { obEdgesRouter } from './edges.js';
 import * as obEdgeService from '../../services/obEdgeService.js';
 import * as obNodeService from '../../services/obNodeService.js';
 
@@ -14,8 +13,15 @@ vi.mock('../../middleware/auth.js', () => ({
   },
 }));
 
+vi.mock('../../middleware/requireAdmin.js', () => ({
+  requireAdmin: (_req: express.Request, _res: express.Response, next: express.NextFunction) =>
+    next(),
+}));
+
 vi.mock('../../services/obEdgeService.js');
 vi.mock('../../services/obNodeService.js');
+
+const { obEdgesRouter } = await import('./edges.js');
 
 function createApp(): express.Application {
   const app = express();
@@ -32,9 +38,7 @@ describe('obEdgesRouter', () => {
   });
 
   it('returns 400 when creating edge without fromNodeId', async () => {
-    const res = await request(app)
-      .post('/api/ob/edges')
-      .send({ toNodeId: 'n2' });
+    const res = await request(app).post('/api/ob/edges').send({ toNodeId: 'n2' });
     expect(res.status).toBe(400);
   });
 
@@ -53,9 +57,7 @@ describe('obEdgesRouter', () => {
       created_at: new Date().toISOString(),
     });
 
-    const res = await request(app)
-      .post('/api/ob/edges')
-      .send({ fromNodeId: 'n1', toNodeId: 'n2' });
+    const res = await request(app).post('/api/ob/edges').send({ fromNodeId: 'n1', toNodeId: 'n2' });
     expect(res.status).toBe(201);
     expect(res.body.edge_type).toBe('references');
   });

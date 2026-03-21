@@ -14,18 +14,18 @@ export const DomainAuthPage = (): JSX.Element => {
 
   return (
     <section aria-label="Domain Auth (DKIM / DMARC)">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {isAdmin ? (
-            <DomainAuthCheckCard />
-          ) : (
-            <AdminOnlyPlaceholderCard
-              title="Domain Auth (DKIM / DMARC)"
-              description="Check DNS for DMARC and DKIM on your sending domain. Admin only."
-              icon={Shield}
-              returnTo="/projects/domain-auth"
-            />
-          )}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {isAdmin ? (
+          <DomainAuthCheckCard />
+        ) : (
+          <AdminOnlyPlaceholderCard
+            title="Domain Auth (DKIM / DMARC)"
+            description="Check DNS for DMARC and DKIM on your sending domain. Admin only."
+            icon={Shield}
+            returnTo="/projects/domain-auth"
+          />
+        )}
+      </div>
     </section>
   );
 };

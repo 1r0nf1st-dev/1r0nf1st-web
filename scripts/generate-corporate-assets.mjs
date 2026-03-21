@@ -66,11 +66,7 @@ async function main() {
   const input = sharp(inputPath);
 
   // 1. Full-size B&W logo (black on transparent - for light backgrounds)
-  await input
-    .clone()
-    .grayscale()
-    .png()
-    .toFile(join(publicDir, 'logo-corporate-bw.png'));
+  await input.clone().grayscale().png().toFile(join(publicDir, 'logo-corporate-bw.png'));
   console.log('✓ logo-corporate-bw.png');
 
   // 1b. Inverted B&W logo (white on transparent - for dark backgrounds)

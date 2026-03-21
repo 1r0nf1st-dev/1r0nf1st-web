@@ -32,10 +32,8 @@ async function run() {
     return;
   }
 
-  const url =
-    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token =
-    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
 
   if (!url || !token) {
     const fallback = getFallback();
@@ -51,11 +49,7 @@ async function run() {
   } catch (err) {
     const fallback = getFallback();
     writeFileSync(outPath, JSON.stringify({ buildNumber: fallback }));
-    console.warn(
-      'Build number increment failed, using fallback:',
-      fallback,
-      err?.message ?? err
-    );
+    console.warn('Build number increment failed, using fallback:', fallback, err?.message ?? err);
   }
 }
 

@@ -66,7 +66,7 @@ export const useMobileMenu = (): UseMobileMenuReturn => {
     if (!isOpen || !menuRef.current) return;
     const panel = menuRef.current;
     const focusables = panel.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const first = focusables[0];
     const last = focusables[focusables.length - 1];

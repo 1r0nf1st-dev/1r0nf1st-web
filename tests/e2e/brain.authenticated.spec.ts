@@ -6,9 +6,7 @@ import type { Page, BrowserContext } from '@playwright/test';
  * Run only when E2E_LOGIN_EMAIL and E2E_LOGIN_PASSWORD are set (e.g. local or CI with secrets).
  * Skips entirely when credentials are missing so CI without secrets stays green.
  */
-const hasAuth =
-  !!process.env.E2E_LOGIN_EMAIL &&
-  !!process.env.E2E_LOGIN_PASSWORD;
+const hasAuth = !!process.env.E2E_LOGIN_EMAIL && !!process.env.E2E_LOGIN_PASSWORD;
 
 test.describe('Open Brain (authenticated)', () => {
   test.skip(!hasAuth, 'E2E_LOGIN_EMAIL and E2E_LOGIN_PASSWORD must be set');
@@ -35,9 +33,9 @@ test.describe('Open Brain (authenticated)', () => {
     await sharedPage.goto('/brain', { waitUntil: 'domcontentloaded' });
 
     await expect(sharedPage).toHaveURL(/\/brain/);
-    await expect(
-      sharedPage.getByRole('heading', { name: /open brain/i }),
-    ).toBeVisible({ timeout: 10000 });
+    await expect(sharedPage.getByRole('heading', { name: /open brain/i })).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test('brain page shows New node or admin placeholder', async () => {
@@ -92,9 +90,7 @@ test.describe('Open Brain (authenticated)', () => {
     await graphBtn.click();
 
     await expect(
-      sharedPage.getByTestId('brain-graph').or(
-        sharedPage.getByText(/no nodes to show in graph/i),
-      ),
+      sharedPage.getByTestId('brain-graph').or(sharedPage.getByText(/no nodes to show in graph/i)),
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -108,9 +104,7 @@ test.describe('Open Brain (authenticated)', () => {
     await chatSend.click();
 
     await expect(
-      sharedPage.getByTestId('chat-response').or(
-        sharedPage.getByRole('alert'),
-      ),
+      sharedPage.getByTestId('chat-response').or(sharedPage.getByRole('alert')),
     ).toBeVisible({ timeout: 30000 });
   });
 });

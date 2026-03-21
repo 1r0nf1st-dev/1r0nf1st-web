@@ -9,7 +9,7 @@ import {
 import { Skeleton } from './Skeleton';
 import { cardClasses, cardTitle, cardBody } from '../styles/cards';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
-import { RestoreVersionModal } from './RestoreVersionModal';
+import { ConfirmModal } from './ConfirmModal';
 import { useAlert } from '../contexts/AlertContext';
 import { VersionPreview } from './VersionPreview';
 
@@ -36,10 +36,7 @@ export const NoteVersionHistory = ({
       setPreviewVersion(version);
     } catch (error) {
       console.error('Failed to load version:', error);
-      showAlert(
-        error instanceof Error ? error.message : 'Failed to load version',
-        'Error',
-      );
+      showAlert(error instanceof Error ? error.message : 'Failed to load version', 'Error');
     }
   };
 
@@ -52,10 +49,7 @@ export const NoteVersionHistory = ({
       onVersionRestored?.();
     } catch (error) {
       console.error('Failed to restore version:', error);
-      showAlert(
-        error instanceof Error ? error.message : 'Failed to restore version',
-        'Error',
-      );
+      showAlert(error instanceof Error ? error.message : 'Failed to restore version', 'Error');
     } finally {
       setIsRestoring(false);
     }
@@ -87,7 +81,6 @@ export const NoteVersionHistory = ({
 
   return (
     <article className={cardClasses}>
-
       <div className="relative z-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
           <h2 className={`${cardTitle} truncate min-w-0`}>Version History</h2>
@@ -178,10 +171,30 @@ export const NoteVersionHistory = ({
       </div>
 
       {selectedVersion && (
-        <RestoreVersionModal
-          version={selectedVersion}
+        <ConfirmModal
+          isOpen={!!selectedVersion}
+          onClose={() => setSelectedVersion(null)}
           onConfirm={() => handleRestoreVersion(selectedVersion.version_number)}
-          onCancel={() => setSelectedVersion(null)}
+          title="Restore Version"
+          message={
+            <>
+              This will restore the note content from{' '}
+              <strong style={{ color: '#F4F2EE' }}>
+                {new Intl.DateTimeFormat('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                }).format(new Date(selectedVersion.created_at))}
+              </strong>
+              . The current version will be saved as a new version, so you can always go back.
+            </>
+          }
+          warning="Note will be updated"
+          confirmLabel="Restore Version"
+          variant="confirm"
+          icon="↩"
         />
       )}
     </article>

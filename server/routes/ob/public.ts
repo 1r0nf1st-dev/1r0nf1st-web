@@ -43,10 +43,7 @@ obPublicRouter.get('/:brainSlug', async (req, res) => {
       return;
     }
 
-    const limit = Math.min(
-      Math.max(0, Number.parseInt(String(req.query.limit), 10) || 50),
-      100,
-    );
+    const limit = Math.min(Math.max(0, Number.parseInt(String(req.query.limit), 10) || 50), 100);
     const offset = Math.max(0, Number.parseInt(String(req.query.offset), 10) || 0);
 
     const nodes = await listPublicObNodesForOwner(supabase, profile.id, {

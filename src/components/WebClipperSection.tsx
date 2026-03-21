@@ -13,9 +13,7 @@ export interface WebClipperSectionProps {
   compact?: boolean;
 }
 
-export const WebClipperSection = ({
-  compact = false,
-}: WebClipperSectionProps): JSX.Element => {
+export const WebClipperSection = ({ compact = false }: WebClipperSectionProps): JSX.Element => {
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -59,8 +57,8 @@ export const WebClipperSection = ({
       <div className={compact ? 'px-2 space-y-2' : 'space-y-4'}>
         {!compact && (
           <p className="text-sm text-muted mb-4">
-            Save any webpage to Notes in one click. Generate a token below, then paste
-            it into the Chrome extension.
+            Save any webpage to Notes in one click. Generate a token below, then paste it into the
+            Chrome extension.
           </p>
         )}
         <details className="mb-3">
@@ -68,8 +66,11 @@ export const WebClipperSection = ({
             {compact ? 'Setup guide' : 'Step-by-step setup guide'}
           </summary>
           <p className="mt-2 text-xs text-muted">
-            Use the <strong><BrandName /> Notes Clipper</strong>—not in the Chrome Web Store;
-            not the Evernote extension.
+            Use the{' '}
+            <strong>
+              <BrandName /> Notes Clipper
+            </strong>
+            —not in the Chrome Web Store; not the Evernote extension.
           </p>
           <ol className="mt-3 space-y-2 text-sm text-muted list-decimal list-inside pl-2">
             <li>
@@ -82,15 +83,23 @@ export const WebClipperSection = ({
               >
                 Download extension (ZIP)
               </a>
-              , unzip, then open <code className="text-xs bg-surface-soft dark:bg-surface px-1 rounded-xl">chrome://extensions</code> → Developer mode → Load unpacked → select the{' '}
-              <code className="text-xs bg-surface-soft dark:bg-surface px-1 rounded-xl">web-clipper</code>{' '}
+              , unzip, then open{' '}
+              <code className="text-xs bg-surface-soft dark:bg-surface px-1 rounded-xl">
+                chrome://extensions
+              </code>{' '}
+              → Developer mode → Load unpacked → select the{' '}
+              <code className="text-xs bg-surface-soft dark:bg-surface px-1 rounded-xl">
+                web-clipper
+              </code>{' '}
               folder.
             </li>
             <li>Generate a token below (you must be logged in)</li>
             <li>
               Click the extension icon, enter Site URL (e.g.{' '}
-              <code className="text-xs bg-surface-soft dark:bg-surface px-1 rounded-xl">https://1r0nf1st.vercel.app</code>)
-              and paste the token
+              <code className="text-xs bg-surface-soft dark:bg-surface px-1 rounded-xl">
+                https://1r0nf1st.vercel.app
+              </code>
+              ) and paste the token
             </li>
             <li>On any webpage, click the extension icon → Clip page</li>
           </ol>
@@ -103,8 +112,8 @@ export const WebClipperSection = ({
         {token ? (
           <div className="space-y-3">
             <p className="text-xs text-muted">
-              Copy this token now. It won&apos;t be shown again. Generating a new token
-              revokes the previous one.
+              Copy this token now. It won&apos;t be shown again. Generating a new token revokes the
+              previous one.
             </p>
             <div className="flex gap-2">
               <input

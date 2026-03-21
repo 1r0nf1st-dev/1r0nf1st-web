@@ -43,7 +43,11 @@ describe('LiveRegionContext', () => {
       result.current.announce('Test message');
     });
 
-    const { container } = render(<LiveRegionProvider><div>Test</div></LiveRegionProvider>);
+    const { container } = render(
+      <LiveRegionProvider>
+        <div>Test</div>
+      </LiveRegionProvider>,
+    );
     const liveRegion = container.querySelector('[aria-live="polite"]');
     expect(liveRegion).toBeInTheDocument();
   });
@@ -83,7 +87,11 @@ describe('LiveRegionContext', () => {
     });
 
     // Message should be cleared
-    const { container } = render(<LiveRegionProvider><div>Test</div></LiveRegionProvider>);
+    const { container } = render(
+      <LiveRegionProvider>
+        <div>Test</div>
+      </LiveRegionProvider>,
+    );
     const liveRegion = container.querySelector('[aria-live]');
     expect(liveRegion?.textContent).toBe('');
   });

@@ -8,7 +8,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot =
-  path.basename(__dirname) === 'dist' ? path.resolve(__dirname, '..', '..') : path.resolve(__dirname, '..');
+  path.basename(__dirname) === 'dist'
+    ? path.resolve(__dirname, '..', '..')
+    : path.resolve(__dirname, '..');
 
 dotenv.config({ path: path.join(projectRoot, '.env') });
 dotenv.config({ path: path.join(projectRoot, '.env.local'), override: true });

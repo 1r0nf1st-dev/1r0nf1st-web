@@ -66,10 +66,7 @@ export function sanitizeFreeText(input: string, maxLength = 10000): string {
  * Sanitize markdown/body text: strip dangerous content but preserve newlines.
  * Use for node body, descriptions, or any field where line breaks must be kept.
  */
-export function sanitizeFreeTextPreserveNewlines(
-  input: string,
-  maxLength = 10000,
-): string {
+export function sanitizeFreeTextPreserveNewlines(input: string, maxLength = 10000): string {
   const stripped = stripHtmlAndScriptsPreserveNewlines(input);
   return sanitizePlainText(stripped, maxLength);
 }

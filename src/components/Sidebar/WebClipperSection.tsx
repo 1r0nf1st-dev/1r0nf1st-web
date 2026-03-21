@@ -8,11 +8,5 @@ import { useNotesActions } from '../../contexts/NotesActionsContext';
 export const WebClipperSection = (): JSX.Element => {
   const { openWebClipper } = useNotesActions();
 
-  return (
-    <SidebarNavItem
-      label="Web Clipper"
-      icon={Scissors}
-      onClick={openWebClipper}
-    />
-  );
+  return <SidebarNavItem label="Web Clipper" icon={Scissors} onClick={openWebClipper} />;
 };

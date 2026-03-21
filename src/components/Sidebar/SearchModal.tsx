@@ -99,7 +99,6 @@ export const SearchModal = ({ isOpen, onClose }: SearchModalProps): JSX.Element 
       aria-labelledby="search-modal-title"
     >
       <article className={`${cardClasses} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
-
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <h2 id="search-modal-title" className={cardTitle}>
@@ -122,7 +121,10 @@ export const SearchModal = ({ isOpen, onClose }: SearchModalProps): JSX.Element 
                 Search
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" aria-hidden />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted"
+                  aria-hidden
+                />
                 <input
                   ref={inputRef}
                   id="search-input"

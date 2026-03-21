@@ -11,7 +11,9 @@ import type { JSX } from 'react';
 // they close over must also be hoisted via vi.hoisted().
 // ---------------------------------------------------------------------------
 const mockUnsubscribe = vi.hoisted(() => vi.fn());
-const capturedAuthCallbacks = vi.hoisted(() => ({ current: null as ((event: string, session: Session | null) => void) | null }));
+const capturedAuthCallbacks = vi.hoisted(() => ({
+  current: null as ((event: string, session: Session | null) => void) | null,
+}));
 
 const mockAuth = vi.hoisted(() => ({
   onAuthStateChange: vi.fn((cb: (event: string, session: Session | null) => void) => {

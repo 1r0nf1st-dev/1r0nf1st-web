@@ -1,6 +1,6 @@
 'use client';
 
 import type { JSX } from 'react';
-import { CorporateAboutPage } from './corporate/CorporateAboutPage';
+import { AboutPage } from './AboutPage';
 
-export const AboutPageWrapper = (): JSX.Element => <CorporateAboutPage />;
+export const AboutPageWrapper = (): JSX.Element => <AboutPage />;

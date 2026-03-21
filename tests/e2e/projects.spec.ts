@@ -27,5 +27,4 @@ test.describe('Projects page', () => {
 
     await expect(page).toHaveURL(/\/notes/);
   });
-
 });

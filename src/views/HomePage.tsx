@@ -2,6 +2,7 @@
 
 import type { JSX } from 'react';
 import Link from 'next/link';
+import { BrandName } from '../components/BrandName';
 import { Hero } from '../components/Hero';
 import { InfoCard } from '../components/InfoCard';
 import { MediumStories } from '../components/MediumStories';
@@ -23,7 +24,11 @@ export const HomePage = (): JSX.Element => {
         <Hero />
       </div>
 
-      <main id="main-content" className="flex-1 flex items-stretch justify-center pt-7" tabIndex={-1}>
+      <main
+        id="main-content"
+        className="flex-1 flex items-stretch justify-center pt-7"
+        tabIndex={-1}
+      >
         <section
           className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-[1080px]"
           aria-label="Tools and live data"
@@ -45,14 +50,13 @@ export const HomePage = (): JSX.Element => {
             aria-label="Go to Meet 1r0nf1st experience"
           >
             <article className={`${cardClasses} h-full flex flex-col`} id="meet-1r0nf1st">
-
               <div className="flex justify-center mb-3">
                 <RobotWalkRaiseAnimation width={140} loop />
               </div>
-              <h2 className={cardTitle}>Meet 1r0nf1st</h2>
+              <h2 className={cardTitle}>Meet <BrandName /></h2>
               <p className={`${cardBody} mb-6`}>
                 Go through the robot experience: boot sequence, a short cutscene, theme picker, and
-                more. 1r0nf1st is a friendly robot who loves to help.
+                more. <BrandName /> is a friendly robot who loves to help.
               </p>
               <span
                 className={`${btnBase} ${btnPrimary} mt-auto self-start pointer-events-none`}

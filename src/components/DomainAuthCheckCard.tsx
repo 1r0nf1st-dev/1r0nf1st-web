@@ -91,7 +91,8 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
       )}
       {r.lookupHostname && (
         <p className="text-xs text-muted" title={r.lookupHostname}>
-          Looked up: <code className="break-all bg-muted/50 px-1 rounded-xl">{r.lookupHostname}</code>
+          Looked up:{' '}
+          <code className="break-all bg-muted/50 px-1 rounded-xl">{r.lookupHostname}</code>
         </p>
       )}
       {r.error && <p className="text-sm text-red-500 dark:text-red-400 mt-0.5">{r.error}</p>}
@@ -110,7 +111,6 @@ export const DomainAuthCheckCard = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses}>
-
       <h2 className={cardTitle}>Domain auth (DKIM / DMARC)</h2>
       <p className={cardBody}>
         Check DNS for DMARC and DKIM on a domain. Only visible to admin. Use the DKIM selector from

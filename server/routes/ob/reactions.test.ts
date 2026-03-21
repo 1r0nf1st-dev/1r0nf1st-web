@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { obReactionsRouter } from './reactions.js';
 import * as obReactionService from '../../services/obReactionService.js';
 
 vi.mock('../../middleware/auth.js', () => ({
@@ -13,7 +12,14 @@ vi.mock('../../middleware/auth.js', () => ({
   },
 }));
 
+vi.mock('../../middleware/requireAdmin.js', () => ({
+  requireAdmin: (_req: express.Request, _res: express.Response, next: express.NextFunction) =>
+    next(),
+}));
+
 vi.mock('../../services/obReactionService.js');
+
+const { obReactionsRouter } = await import('./reactions.js');
 
 function createApp(): express.Application {
   const app = express();
@@ -35,9 +41,7 @@ describe('obReactionsRouter', () => {
   });
 
   it('returns 400 when adding reaction without nodeId', async () => {
-    const res = await request(app)
-      .post('/api/ob/reactions')
-      .send({ type: 'resonates' });
+    const res = await request(app).post('/api/ob/reactions').send({ type: 'resonates' });
     expect(res.status).toBe(400);
   });
 

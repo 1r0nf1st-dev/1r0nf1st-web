@@ -17,9 +17,9 @@ export const DefaultAboutPage = (): JSX.Element => {
       <main className="flex-1 flex justify-center pt-7">
         <section className="w-full max-w-[1080px] space-y-4">
           <InfoCard title="About">
-            Welcome to <BrandName />. Here you&apos;ll find my latest coding projects, blog
-            posts, music I&apos;m listening to, fitness activities, and more. Everything is powered
-            by live data from various APIs.
+            Welcome to <BrandName />. Here you&apos;ll find my latest coding projects, blog posts,
+            music I&apos;m listening to, fitness activities, and more. Everything is powered by live
+            data from various APIs.
           </InfoCard>
           <InfoCard title="Tech Stack">
             Next.js, React, TypeScript, Express, Tailwind CSS, and Supabase. Notes with TipTap,

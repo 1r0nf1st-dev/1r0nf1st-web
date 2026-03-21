@@ -26,9 +26,7 @@ export const NoteTags = ({ tags, maxVisible = 3 }: NoteTagsProps): JSX.Element |
           {tag.name}
         </span>
       ))}
-      {remaining > 0 && (
-        <span className="text-xs text-muted">+{remaining}</span>
-      )}
+      {remaining > 0 && <span className="text-xs text-muted">+{remaining}</span>}
     </div>
   );
 };

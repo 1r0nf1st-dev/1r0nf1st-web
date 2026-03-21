@@ -39,10 +39,7 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
       await updateSharePermission(shareId, permission);
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to update permission',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to update permission', 'Error');
     } finally {
       setUpdating(null);
     }
@@ -81,12 +78,9 @@ export const ShareSettings = ({ noteId, onClose }: ShareSettingsProps): JSX.Elem
 
   return (
     <div className={cardClasses}>
-
       <div className="relative z-10">
         <div className="flex items-center justify-between gap-2 mb-4 min-h-[44px]">
-          <h2 className={`${cardTitle} truncate min-w-0`}>
-            Share Settings
-          </h2>
+          <h2 className={`${cardTitle} truncate min-w-0`}>Share Settings</h2>
           <button
             type="button"
             onClick={onClose}

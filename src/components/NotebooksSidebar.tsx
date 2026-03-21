@@ -44,7 +44,9 @@ export const NotebooksSidebar = ({
   };
 
   const containerClass = compact ? 'py-1' : cardSidebar;
-  const titleClass = compact ? 'text-xs font-semibold text-muted uppercase tracking-wider mb-2 px-2' : cardTitle;
+  const titleClass = compact
+    ? 'text-xs font-semibold text-muted uppercase tracking-wider mb-2 px-2'
+    : cardTitle;
   const showHeader = !hideTitle;
 
   if (isLoading) {

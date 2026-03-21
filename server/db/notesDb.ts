@@ -58,19 +58,13 @@ export async function selectNoteById(
   return data as NoteRow;
 }
 
-export async function selectNoteTags(
-  db: SupabaseClient,
-  noteId: string,
-): Promise<NoteTagRow[]> {
+export async function selectNoteTags(db: SupabaseClient, noteId: string): Promise<NoteTagRow[]> {
   const { data, error } = await db.from('note_tags').select('tag_id').eq('note_id', noteId);
   if (error) throw new Error(`Failed to fetch note tags: ${error.message}`);
   return (data ?? []) as NoteTagRow[];
 }
 
-export async function selectTagsByIds(
-  db: SupabaseClient,
-  ids: string[],
-): Promise<TagRow[]> {
+export async function selectTagsByIds(db: SupabaseClient, ids: string[]): Promise<TagRow[]> {
   if (ids.length === 0) return [];
   const { data, error } = await db.from('tags').select('*').in('id', ids);
   if (error) throw new Error(`Failed to fetch tags: ${error.message}`);
@@ -100,11 +94,7 @@ export interface InsertNoteData {
 }
 
 export async function insertNote(db: SupabaseClient, data: InsertNoteData): Promise<NoteRow> {
-  const { data: note, error } = await db
-    .from('notes')
-    .insert(data)
-    .select()
-    .single();
+  const { data: note, error } = await db.from('notes').insert(data).select().single();
   if (error) throw new Error(`Failed to create note: ${error.message}`);
   return note as NoteRow;
 }
@@ -124,11 +114,7 @@ export async function selectUserTagIds(
   tagIds: string[],
 ): Promise<string[]> {
   if (tagIds.length === 0) return [];
-  const { data, error } = await db
-    .from('tags')
-    .select('id')
-    .eq('user_id', userId)
-    .in('id', tagIds);
+  const { data, error } = await db.from('tags').select('id').eq('user_id', userId).in('id', tagIds);
   if (error) throw new Error(`Failed to verify tags: ${error.message}`);
   return (data ?? []).map((r: { id: string }) => r.id);
 }
@@ -137,7 +123,9 @@ export async function updateNote(
   db: SupabaseClient,
   noteId: string,
   userId: string,
-  updates: Partial<Pick<NoteRow, 'title' | 'content' | 'notebook_id' | 'is_pinned' | 'is_archived'>>,
+  updates: Partial<
+    Pick<NoteRow, 'title' | 'content' | 'notebook_id' | 'is_pinned' | 'is_archived'>
+  >,
 ): Promise<NoteRow> {
   const { data, error } = await db
     .from('notes')
@@ -163,10 +151,7 @@ export async function softDeleteNote(
   if (error) throw new Error(`Failed to delete note: ${error.message}`);
 }
 
-export async function deleteNoteTags(
-  db: SupabaseClient,
-  noteId: string,
-): Promise<void> {
+export async function deleteNoteTags(db: SupabaseClient, noteId: string): Promise<void> {
   const { error } = await db.from('note_tags').delete().eq('note_id', noteId);
   if (error) throw new Error(`Failed to remove existing tags: ${error.message}`);
 }

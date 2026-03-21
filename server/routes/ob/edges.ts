@@ -34,10 +34,8 @@ obEdgesRouter.get('/', async (req: AuthRequest, res) => {
       res.status(503).json({ error: 'Database not configured' });
       return;
     }
-    const fromNodeId =
-      typeof req.query.fromNodeId === 'string' ? req.query.fromNodeId : undefined;
-    const toNodeId =
-      typeof req.query.toNodeId === 'string' ? req.query.toNodeId : undefined;
+    const fromNodeId = typeof req.query.fromNodeId === 'string' ? req.query.fromNodeId : undefined;
+    const toNodeId = typeof req.query.toNodeId === 'string' ? req.query.toNodeId : undefined;
     const edges = await listObEdges(req.supabase, { fromNodeId, toNodeId });
     res.json(edges);
   } catch (error) {

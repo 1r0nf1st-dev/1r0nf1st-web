@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { obCollectionsRouter } from './collections.js';
 import * as obCollectionService from '../../services/obCollectionService.js';
 
 vi.mock('../../middleware/auth.js', () => ({
@@ -13,7 +12,14 @@ vi.mock('../../middleware/auth.js', () => ({
   },
 }));
 
+vi.mock('../../middleware/requireAdmin.js', () => ({
+  requireAdmin: (_req: express.Request, _res: express.Response, next: express.NextFunction) =>
+    next(),
+}));
+
 vi.mock('../../services/obCollectionService.js');
+
+const { obCollectionsRouter } = await import('./collections.js');
 
 function createApp(): express.Application {
   const app = express();
@@ -45,9 +51,7 @@ describe('obCollectionsRouter', () => {
       created_at: new Date().toISOString(),
     });
 
-    const res = await request(app)
-      .post('/api/ob/collections')
-      .send({ name: 'My collection' });
+    const res = await request(app).post('/api/ob/collections').send({ name: 'My collection' });
     expect(res.status).toBe(201);
     expect(res.body.name).toBe('My collection');
   });

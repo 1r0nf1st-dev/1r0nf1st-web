@@ -38,7 +38,7 @@ export const Tooltip = ({
 
   const calculatePosition = useCallback(() => {
     if (!triggerRef.current) return;
-    
+
     const triggerRect = triggerRef.current.getBoundingClientRect();
     const tooltipEl = tooltipRef.current;
     const tooltipWidth = tooltipEl?.offsetWidth ?? 100;
@@ -117,7 +117,7 @@ export const Tooltip = ({
     onFocus?: (e: React.FocusEvent) => void;
     onBlur?: (e: React.FocusEvent) => void;
   }>;
-  
+
   const childWithProps = React.cloneElement(childElement, {
     'aria-describedby': isVisible ? tooltipId.current : undefined,
     onMouseEnter: (e: React.MouseEvent) => {
@@ -173,7 +173,7 @@ export const Tooltip = ({
               aria-hidden="true"
             />
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

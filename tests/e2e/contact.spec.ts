@@ -21,7 +21,9 @@ test.describe('Contact form', () => {
     await page.getByRole('button', { name: /send message/i }).click();
 
     await expect(
-      page.getByText(/thanks for your message|received it|contact form is temporarily unavailable/i),
+      page.getByText(
+        /thanks for your message|received it|contact form is temporarily unavailable/i,
+      ),
     ).toBeVisible({ timeout: 10000 });
   });
 });

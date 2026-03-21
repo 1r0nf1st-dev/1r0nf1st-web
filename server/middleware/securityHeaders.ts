@@ -5,11 +5,7 @@ import { config } from '../config.js';
  * Security headers middleware
  * Adds security headers to all responses
  */
-export const securityHeaders = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void => {
+export const securityHeaders = (req: Request, res: Response, next: NextFunction): void => {
   // Prevent MIME type sniffing
   res.setHeader('X-Content-Type-Options', 'nosniff');
 

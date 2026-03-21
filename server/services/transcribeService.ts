@@ -22,7 +22,15 @@ async function convertToMp3(buffer: Buffer, mime: string): Promise<Buffer> {
   try {
     writeFileSync(inputPath, buffer);
     await new Promise<void>((resolve, reject) => {
-      const proc = spawn(ffmpeg, ['-i', inputPath, '-vn', '-acodec', 'libmp3lame', '-y', outputPath]);
+      const proc = spawn(ffmpeg, [
+        '-i',
+        inputPath,
+        '-vn',
+        '-acodec',
+        'libmp3lame',
+        '-y',
+        outputPath,
+      ]);
       proc.on('error', reject);
       proc.on('close', (code) => {
         if (code === 0) resolve();
@@ -62,10 +70,7 @@ async function ensureGeminiCompatibleAudio(
       const mp3 = await convertToMp3(buffer, norm);
       return { buffer: mp3, mimeType: 'audio/mpeg' };
     } catch (conversionErr) {
-      const msg =
-        conversionErr instanceof Error
-          ? conversionErr.message
-          : 'Conversion failed';
+      const msg = conversionErr instanceof Error ? conversionErr.message : 'Conversion failed';
       if (msg.includes('ffmpeg') || msg.includes('exited with code')) {
         throw new Error(
           `Audio conversion failed: ${msg}. Try "Transcribe audio file" with an MP3 or WAV file instead.`,
@@ -126,12 +131,9 @@ export async function transcribeAudio(
   mimeType: string,
   apiKey: string,
 ): Promise<string> {
-  const { buffer: compatibleBuffer, mimeType: compatibleMime } =
-    await ensureGeminiCompatibleAudio(buffer, mimeType);
-  return transcribeWithGemini(
-    compatibleBuffer,
-    compatibleMime,
-    AUDIO_PROMPT,
-    apiKey,
+  const { buffer: compatibleBuffer, mimeType: compatibleMime } = await ensureGeminiCompatibleAudio(
+    buffer,
+    mimeType,
   );
+  return transcribeWithGemini(compatibleBuffer, compatibleMime, AUDIO_PROMPT, apiKey);
 }

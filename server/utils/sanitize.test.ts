@@ -48,9 +48,7 @@ describe('sanitize', () => {
 
   describe('stripHtmlAndScriptsPreserveNewlines', () => {
     it('removes script tags but keeps newlines', () => {
-      expect(
-        stripHtmlAndScriptsPreserveNewlines('a\nb\nc<script>x</script>d'),
-      ).toBe('a\nb\ncd');
+      expect(stripHtmlAndScriptsPreserveNewlines('a\nb\nc<script>x</script>d')).toBe('a\nb\ncd');
     });
 
     it('preserves markdown-style line breaks', () => {
@@ -66,9 +64,7 @@ describe('sanitize', () => {
     });
 
     it('strips dangerous content', () => {
-      expect(
-        sanitizeFreeTextPreserveNewlines('ok<script>alert(1)</script>end', 100),
-      ).toBe('okend');
+      expect(sanitizeFreeTextPreserveNewlines('ok<script>alert(1)</script>end', 100)).toBe('okend');
     });
   });
 

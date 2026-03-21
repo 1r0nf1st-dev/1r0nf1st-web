@@ -75,10 +75,7 @@ export function AlertModal({
       className="w-full max-w-md rounded-xl border-2 border-primary/40 dark:border-border bg-white dark:bg-surface shadow-xl p-0 overflow-hidden backdrop:bg-black/50"
     >
       <div ref={containerRef} className="p-6">
-        <h2
-          id="alert-modal-title"
-          className="text-lg font-semibold text-foreground mb-2"
-        >
+        <h2 id="alert-modal-title" className="text-lg font-semibold text-foreground mb-2">
           {title}
         </h2>
         <p id="alert-modal-desc" className="text-muted text-sm mb-6">

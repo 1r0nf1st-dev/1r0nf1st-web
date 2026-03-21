@@ -39,10 +39,7 @@ describe('goalsRouter', () => {
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
       expect(res.body[0].title).toBe('Goal 1');
-      expect(goalService.getGoalsByUserId).toHaveBeenCalledWith(
-        expect.anything(),
-        'user-1',
-      );
+      expect(goalService.getGoalsByUserId).toHaveBeenCalledWith(expect.anything(), 'user-1');
     });
   });
 

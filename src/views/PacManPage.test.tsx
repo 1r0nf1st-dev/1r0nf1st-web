@@ -4,13 +4,9 @@ import { PacManPage } from './PacManPage';
 import { ThemeProvider } from '../contexts/ThemeContext';
 
 vi.mock('next/link', () => ({
-  default: ({
-    children,
-    href,
-  }: {
-    children: React.ReactNode;
-    href: string;
-  }) => <a href={href}>{children}</a>,
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
 }));
 
 vi.mock('../contexts/ThemeContext', () => ({
@@ -24,14 +20,11 @@ describe('PacManPage', () => {
   beforeEach(() => {
     rafId = 0;
     rafCalls.length = 0;
-    vi.stubGlobal(
-      'requestAnimationFrame',
-      (cb: FrameRequestCallback) => {
-        rafCalls.push(cb);
-        rafId += 1;
-        return rafId;
-      }
-    );
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      rafCalls.push(cb);
+      rafId += 1;
+      return rafId;
+    });
     vi.stubGlobal('cancelAnimationFrame', vi.fn());
   });
 
@@ -43,7 +36,7 @@ describe('PacManPage', () => {
     render(
       <ThemeProvider>
         <PacManPage />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
     const canvas = screen.getByTestId('pacman-canvas');
     expect(canvas).toBeInTheDocument();
@@ -53,7 +46,7 @@ describe('PacManPage', () => {
     render(
       <ThemeProvider>
         <PacManPage />
-      </ThemeProvider>
+      </ThemeProvider>,
     );
     expect(screen.getByText(/arrow keys or wasd/i)).toBeInTheDocument();
   });

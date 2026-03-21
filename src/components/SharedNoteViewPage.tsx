@@ -56,7 +56,6 @@ export const SharedNoteViewPage = ({ token }: SharedNoteViewPageProps): JSX.Elem
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background">
         <article className={`${cardClasses} max-w-md w-full text-center`}>
-
           <div className="relative z-10">
             <h1 className={cardTitle}>Link not available</h1>
             <p className={cardBody}>
@@ -96,7 +95,6 @@ export const SharedNoteViewPage = ({ token }: SharedNoteViewPageProps): JSX.Elem
 
       <main className="flex-1 p-4 sm:p-6 max-w-3xl mx-auto w-full">
         <article className={cardClasses}>
-
           <div className="relative z-10">
             <h1 className={`${cardTitle} text-xl mb-4`}>{note.title || 'Untitled'}</h1>
             <div className="prose dark:prose-invert max-w-none">

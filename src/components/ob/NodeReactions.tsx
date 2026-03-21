@@ -5,12 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { obApi, type ObReaction, type ObReactionType } from '../../lib/obApi';
 import { btnBase, btnGhost, btnCompact } from '../../styles/buttons';
 
-const REACTION_TYPES: ObReactionType[] = [
-  'resonates',
-  'challenges',
-  'expands',
-  'bookmarks',
-];
+const REACTION_TYPES: ObReactionType[] = ['resonates', 'challenges', 'expands', 'bookmarks'];
 
 const REACTION_LABELS: Record<ObReactionType, string> = {
   resonates: 'Resonates',
@@ -24,10 +19,7 @@ interface NodeReactionsProps {
   currentUserId: string;
 }
 
-export function NodeReactions({
-  nodeId,
-  currentUserId,
-}: NodeReactionsProps): JSX.Element {
+export function NodeReactions({ nodeId, currentUserId }: NodeReactionsProps): JSX.Element {
   const [reactions, setReactions] = useState<ObReaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

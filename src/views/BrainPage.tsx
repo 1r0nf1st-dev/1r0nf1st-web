@@ -13,16 +13,15 @@ import { NodeEditor } from '../components/ob/NodeEditor';
 import { BrainGraph } from '../components/ob/BrainGraph';
 import { ChatPanel } from '../components/ob/ChatPanel';
 import { AdminOnlyPlaceholderCard } from '../components/AdminOnlyPlaceholderCard';
-import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
-import { cardClasses } from '../styles/cards';
 import { Plus, Sparkles, ExternalLink, List, Network } from 'lucide-react';
+import { PageHero } from '../components/PageHero';
+import { StatsBar } from '../components/StatsBar';
 
 const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 
 export function BrainPage(): JSX.Element {
   const { user } = useAuth();
-  const isAdmin =
-    !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const isAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
   const { nodes, isLoading, error, refetch } = useObNodes({ limit: 50 });
   const [selectedNode, setSelectedNode] = useState<ObNode | null>(null);
@@ -92,136 +91,179 @@ export function BrainPage(): JSX.Element {
 
   if (!isAdmin) {
     return (
-      <div className="p-4 md:p-6 max-w-6xl mx-auto">
-        <section aria-label="Open Brain">
+      <section
+        aria-label="Open Brain"
+        className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <PageHero flagLabel="Intelligence" title="Open Brain" watermark="Open Brain" />
+        <div className="page-content min-h-0">
           <AdminOnlyPlaceholderCard
             title="Open Brain"
             description="Knowledge graph nodes, semantic search, and AI chat over your brain. Admin only."
             icon={Sparkles}
             returnTo="/brain"
           />
-        </section>
-      </div>
+        </div>
+      </section>
     );
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto">
-      <div className="flex flex-col lg:flex-row gap-6">
-        <aside className="lg:w-80 flex-shrink-0 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <h1 className="text-xl font-semibold text-foreground">Open Brain</h1>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`${btnBase} ${btnGhost} flex items-center gap-1 text-sm`}
-                aria-pressed={viewMode === 'list'}
-                aria-label="List view"
-              >
-                <List className="w-4 h-4" aria-hidden />
-                List
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('graph')}
-                className={`${btnBase} ${btnGhost} flex items-center gap-1 text-sm`}
-                aria-pressed={viewMode === 'graph'}
-                aria-label="Graph view"
-                data-testid="toggle-graph-view"
-              >
-                <Network className="w-4 h-4" aria-hidden />
-                Graph
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {publicBrainSlug && (
-              <Link
-                href={`/brain/${encodeURIComponent(publicBrainSlug)}`}
-                className={`${btnBase} ${btnGhost} flex items-center gap-1.5 text-sm`}
-                aria-label="View your public brain"
-              >
-                <ExternalLink className="w-4 h-4" aria-hidden />
-                Public brain
-              </Link>
-            )}
+    <section
+      aria-label="Open Brain"
+      className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+    >
+      <PageHero
+        flagLabel="Intelligence"
+        title="Open Brain"
+        watermark="Open Brain"
+        actions={
+          <>
             <button
               type="button"
-              onClick={handleNewNode}
-              className={`${btnBase} ${btnPrimary} flex items-center gap-1.5`}
-              data-testid="new-node-btn"
-              aria-label="New node"
+              className="act-btn"
+              onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
+              aria-label="List view"
             >
-              <Plus className="w-4 h-4" aria-hidden />
-              New node
+              <span aria-hidden>List</span>
             </button>
-          </div>
+            <button
+              type="button"
+              className="act-btn"
+              onClick={() => setViewMode('graph')}
+              aria-pressed={viewMode === 'graph'}
+              aria-label="Graph view"
+              data-testid="toggle-graph-view"
+            >
+              <span aria-hidden>Graph</span>
+            </button>
+            <button
+              type="button"
+              className="act-btn primary"
+              onClick={handleNewNode}
+              data-testid="new-node-btn"
+            >
+              + New Node
+            </button>
+          </>
+        }
+      />
 
-          {error && (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          )}
+      <div className="page-content min-h-0">
+        <StatsBar
+          items={[
+            { label: 'Nodes', value: nodes?.length ?? 0 },
+            { label: 'Edges', value: edges?.length ?? 0 },
+            { label: 'View', value: viewMode.toUpperCase(), accent: true },
+            { label: 'Public', value: publicBrainSlug ? 'YES' : 'NO' },
+          ]}
+        />
 
-          {isLoading ? (
-            <p className="text-sm text-muted">Loading nodes…</p>
-          ) : viewMode === 'list' && nodes && nodes.length > 0 ? (
-            <ul className="space-y-2">
-              {nodes.map((node) => (
-                <li key={node.id}>
-                  <NodeCard
-                    node={node}
-                    isSelected={selectedNode?.id === node.id}
-                    onSelect={() => {
-                      setSelectedNode(node);
-                      setCreating(false);
-                    }}
-                  />
-                </li>
-              ))}
-            </ul>
-          ) : viewMode === 'graph' && nodes && nodes.length > 0 ? (
-            <BrainGraph
-              nodes={nodes}
-              edges={edges}
-              onNodeClick={(node) => {
-                setSelectedNode(node);
-                setCreating(false);
-              }}
-            />
-          ) : viewMode === 'graph' ? (
-            <p className="text-sm text-muted">No nodes to show in graph.</p>
-          ) : (
-            <p className="text-sm text-muted">No nodes yet. Create one to get started.</p>
-          )}
-        </aside>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1.4fr',
+            gap: 16,
+            alignItems: 'start',
+          }}
+        >
+          <aside className="min-w-0">
+            {publicBrainSlug ? (
+              <div className="content-panel">
+                <h2 className="panel-title">Public Brain</h2>
+                <Link
+                  href={`/brain/${encodeURIComponent(publicBrainSlug)}`}
+                  className="nav-item"
+                  aria-label="View your public brain"
+                >
+                  <span className="nav-item-icon" aria-hidden>
+                    ↗
+                  </span>
+                  <span className="nav-item-label">Open public brain</span>
+                  <span className="nav-item-chevron" aria-hidden>
+                    ›
+                  </span>
+                </Link>
+              </div>
+            ) : null}
 
-        <section className="flex-1 min-w-0 space-y-4">
-          {showEditor ? (
-            <div className={cardClasses}>
-              <NodeEditor
-                node={editingNode}
-                onSave={handleSave}
-                onDelete={user && nodes?.length ? handleDelete : undefined}
-                onCancel={creating ? () => setCreating(false) : undefined}
-              />
-            </div>
-          ) : (
-            <div className={cardClasses}>
-              <p className="text-muted">
-                {viewMode === 'graph'
-                  ? 'Click a node in the graph to edit it.'
-                  : 'Select a node from the list or click &quot;New node&quot; to create one.'}
+            {error ? (
+              <p className="font-display text-[12px] text-[color:var(--color-orange)]" role="alert">
+                {error}
               </p>
-            </div>
-          )}
+            ) : null}
 
-          {user?.id && (
-            <ChatPanel brainOwnerId={user.id} />
-          )}
-        </section>
+            <div className="content-panel">
+              <h2 className="panel-title">Nodes</h2>
+              {isLoading ? (
+                <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
+                  Loading nodes…
+                </p>
+              ) : viewMode === 'list' && nodes && nodes.length > 0 ? (
+                <ul className="space-y-2">
+                  {nodes.map((node) => (
+                    <li key={node.id}>
+                      <NodeCard
+                        node={node}
+                        isSelected={selectedNode?.id === node.id}
+                        onSelect={() => {
+                          setSelectedNode(node);
+                          setCreating(false);
+                        }}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : viewMode === 'graph' ? (
+                <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
+                  Graph view enabled. The graph is shown on the right.
+                </p>
+              ) : (
+                <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
+                  No nodes yet. Create one to get started.
+                </p>
+              )}
+            </div>
+          </aside>
+
+          <section className="min-w-0">
+            {viewMode === 'graph' && nodes && nodes.length > 0 ? (
+              <BrainGraph
+                nodes={nodes}
+                edges={edges}
+                onNodeClick={(node) => {
+                  setSelectedNode(node);
+                  setCreating(false);
+                }}
+              />
+            ) : null}
+
+            <div className="content-panel">
+              <h2 className="panel-title">Ask Your Brain</h2>
+              {user?.id ? <ChatPanel brainOwnerId={user.id} /> : null}
+            </div>
+
+            <div className="content-panel">
+              <h2 className="panel-title">{showEditor ? 'Edit Node' : 'Editor'}</h2>
+              {showEditor ? (
+                <NodeEditor
+                  node={editingNode}
+                  onSave={handleSave}
+                  onDelete={user && nodes?.length ? handleDelete : undefined}
+                  onCancel={creating ? () => setCreating(false) : undefined}
+                />
+              ) : (
+                <p className="font-display text-[13px] text-[color:var(--color-text-inv-2)]">
+                  {viewMode === 'graph'
+                    ? 'Click a node in the graph to edit it.'
+                    : 'Select a node from the list or click \"New Node\" to create one.'}
+                </p>
+              )}
+            </div>
+          </section>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

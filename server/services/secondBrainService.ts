@@ -21,7 +21,6 @@ export interface ClassificationResult {
   extracted: Record<string, unknown>;
 }
 
-
 const CLASSIFIER_PROMPT =
   'You are a classification engine for a personal Second Brain system.\n\n' +
   'Analyse the following input and return a single JSON object.\n\n' +
@@ -61,8 +60,7 @@ async function callGeminiGenerateContent(text: string): Promise<string> {
       content?: { parts?: Array<{ text?: string }> };
     }>;
   };
-  const output =
-    data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+  const output = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
   return output;
 }
 
@@ -104,31 +102,51 @@ const PREFIX_PATTERNS: Array<{
   {
     pattern: /^\s*projects?\s*:\s*/i,
     category: 'PROJECTS',
-    extractTitle: (_, full) => full.replace(/^\s*projects?\s*:\s*/i, '').trim().slice(0, 50) || 'Untitled project',
+    extractTitle: (_, full) =>
+      full
+        .replace(/^\s*projects?\s*:\s*/i, '')
+        .trim()
+        .slice(0, 50) || 'Untitled project',
     extractDetail: (_, full) => full.replace(/^\s*projects?\s*:\s*/i, '').trim() || full,
   },
   {
     pattern: /^\s*people\s*:\s*/i,
     category: 'PEOPLE',
-    extractTitle: (_, full) => full.replace(/^\s*people\s*:\s*/i, '').trim().slice(0, 50) || 'Untitled person',
+    extractTitle: (_, full) =>
+      full
+        .replace(/^\s*people\s*:\s*/i, '')
+        .trim()
+        .slice(0, 50) || 'Untitled person',
     extractDetail: (_, full) => full.replace(/^\s*people\s*:\s*/i, '').trim() || full,
   },
   {
     pattern: /^\s*ideas?\s*:\s*/i,
     category: 'IDEAS',
-    extractTitle: (_, full) => full.replace(/^\s*ideas?\s*:\s*/i, '').trim().slice(0, 50) || 'Untitled idea',
+    extractTitle: (_, full) =>
+      full
+        .replace(/^\s*ideas?\s*:\s*/i, '')
+        .trim()
+        .slice(0, 50) || 'Untitled idea',
     extractDetail: (_, full) => full.replace(/^\s*ideas?\s*:\s*/i, '').trim() || full,
   },
   {
     pattern: /^\s*admin\s*:\s*/i,
     category: 'ADMIN',
-    extractTitle: (_, full) => full.replace(/^\s*admin\s*:\s*/i, '').trim().slice(0, 50) || 'Untitled task',
+    extractTitle: (_, full) =>
+      full
+        .replace(/^\s*admin\s*:\s*/i, '')
+        .trim()
+        .slice(0, 50) || 'Untitled task',
     extractDetail: (_, full) => full.replace(/^\s*admin\s*:\s*/i, '').trim() || full,
   },
   {
     pattern: /^\s*resources?\s*:\s*/i,
     category: 'RESOURCES',
-    extractTitle: (_, full) => full.replace(/^\s*resources?\s*:\s*/i, '').trim().slice(0, 50) || 'Untitled resource',
+    extractTitle: (_, full) =>
+      full
+        .replace(/^\s*resources?\s*:\s*/i, '')
+        .trim()
+        .slice(0, 50) || 'Untitled resource',
     extractDetail: (_, full) => full.replace(/^\s*resources?\s*:\s*/i, '').trim() || full,
   },
 ];
@@ -175,7 +193,10 @@ export async function classifyText(rawText: string): Promise<ClassificationResul
   const jsonMatch = output.match(/\{[\s\S]*\}/);
   const jsonStr = jsonMatch?.[0] ?? output;
   const parsed = JSON.parse(jsonStr) as ClassificationResult;
-  if (!parsed.category || !['PROJECTS', 'PEOPLE', 'IDEAS', 'ADMIN', 'RESOURCES', 'REVIEW'].includes(parsed.category)) {
+  if (
+    !parsed.category ||
+    !['PROJECTS', 'PEOPLE', 'IDEAS', 'ADMIN', 'RESOURCES', 'REVIEW'].includes(parsed.category)
+  ) {
     parsed.category = 'REVIEW';
   }
   return parsed;
@@ -198,7 +219,18 @@ export async function captureThought(
     classification = await classifyText(rawText.trim());
   } catch (err) {
     // #region agent log
-    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Classification failed',data:{errMsg:err instanceof Error?err.message:'unknown'},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
+    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '3b680a' },
+      body: JSON.stringify({
+        sessionId: '3b680a',
+        location: 'secondBrainService.ts:captureThought',
+        message: 'Classification failed',
+        data: { errMsg: err instanceof Error ? err.message : 'unknown' },
+        hypothesisId: 'H2',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
     // #endregion
     logger.warn({ err }, 'Classification failed, defaulting to REVIEW');
     classification = {
@@ -211,14 +243,36 @@ export async function captureThought(
   }
 
   // #region agent log
-  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Classification result',data:{category:classification.category,confidence:classification.confidence},hypothesisId:'H2',timestamp:Date.now()})}).catch(()=>{});
+  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '3b680a' },
+    body: JSON.stringify({
+      sessionId: '3b680a',
+      location: 'secondBrainService.ts:captureThought',
+      message: 'Classification result',
+      data: { category: classification.category, confidence: classification.confidence },
+      hypothesisId: 'H2',
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
   // #endregion
 
   try {
     embedding = await getEmbedding(rawText.trim());
   } catch (err) {
     // #region agent log
-    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Embedding failed',data:{errMsg:err instanceof Error?err.message:'unknown'},hypothesisId:'H3',timestamp:Date.now()})}).catch(()=>{});
+    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '3b680a' },
+      body: JSON.stringify({
+        sessionId: '3b680a',
+        location: 'secondBrainService.ts:captureThought',
+        message: 'Embedding failed',
+        data: { errMsg: err instanceof Error ? err.message : 'unknown' },
+        hypothesisId: 'H3',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
     // #endregion
     logger.warn({ err }, 'Embedding failed, storing without embedding');
   }
@@ -235,19 +289,56 @@ export async function captureThought(
     });
   } catch (err) {
     // #region agent log
-    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'insertThought failed',data:{errMsg:err instanceof Error?err.message:'unknown'},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
+    fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '3b680a' },
+      body: JSON.stringify({
+        sessionId: '3b680a',
+        location: 'secondBrainService.ts:captureThought',
+        message: 'insertThought failed',
+        data: { errMsg: err instanceof Error ? err.message : 'unknown' },
+        hypothesisId: 'H4',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
     // #endregion
     throw err;
   }
 
   // #region agent log
-  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'insertThought ok',data:{thoughtId:thought.id},hypothesisId:'H4',timestamp:Date.now()})}).catch(()=>{});
+  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '3b680a' },
+    body: JSON.stringify({
+      sessionId: '3b680a',
+      location: 'secondBrainService.ts:captureThought',
+      message: 'insertThought ok',
+      data: { thoughtId: thought.id },
+      hypothesisId: 'H4',
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
   // #endregion
 
   let routed = false;
   const willAttemptRoute = classification.category !== 'REVIEW' && classification.confidence >= 60;
   // #region agent log
-  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Routing check',data:{willAttemptRoute,category:classification.category,confidence:classification.confidence},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+  fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '3b680a' },
+    body: JSON.stringify({
+      sessionId: '3b680a',
+      location: 'secondBrainService.ts:captureThought',
+      message: 'Routing check',
+      data: {
+        willAttemptRoute,
+        category: classification.category,
+        confidence: classification.confidence,
+      },
+      hypothesisId: 'H5',
+      timestamp: Date.now(),
+    }),
+  }).catch(() => {});
   // #endregion
   if (willAttemptRoute) {
     try {
@@ -255,11 +346,33 @@ export async function captureThought(
       await secondBrainDb.updateThought(thought.id, { routed: true });
       routed = true;
       // #region agent log
-      fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'routing succeeded',data:{},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+      fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '3b680a' },
+        body: JSON.stringify({
+          sessionId: '3b680a',
+          location: 'secondBrainService.ts:captureThought',
+          message: 'routing succeeded',
+          data: {},
+          hypothesisId: 'H5',
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
       // #endregion
     } catch (err) {
       // #region agent log
-      fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'3b680a'},body:JSON.stringify({sessionId:'3b680a',location:'secondBrainService.ts:captureThought',message:'Routing failed',data:{errMsg:err instanceof Error?err.message:'unknown'},hypothesisId:'H5',timestamp:Date.now()})}).catch(()=>{});
+      fetch('http://127.0.0.1:7786/ingest/92ad1406-29dc-4f4f-ac56-debf92fe1219', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '3b680a' },
+        body: JSON.stringify({
+          sessionId: '3b680a',
+          location: 'secondBrainService.ts:captureThought',
+          message: 'Routing failed',
+          data: { errMsg: err instanceof Error ? err.message : 'unknown' },
+          hypothesisId: 'H5',
+          timestamp: Date.now(),
+        }),
+      }).catch(() => {});
       // #endregion
       logger.warn({ err }, 'Routing failed, thought remains in inbox');
     }
@@ -343,10 +456,7 @@ export async function semanticSearch(
   return secondBrainDb.searchAll(embedding, matchThreshold, matchCount);
 }
 
-export async function queryWithRag(
-  question: string,
-  matchCount = 5,
-): Promise<string> {
+export async function queryWithRag(question: string, matchCount = 5): Promise<string> {
   let results: SearchResult[] = [];
   try {
     results = await semanticSearch(question, 0.6, matchCount);
@@ -356,12 +466,7 @@ export async function queryWithRag(
   }
   const context =
     results.length > 0
-      ? results
-          .map(
-            (r) =>
-              `[${r.table_name}] ${r.label}: ${r.detail ?? '—'}`,
-          )
-          .join('\n')
+      ? results.map((r) => `[${r.table_name}] ${r.label}: ${r.detail ?? '—'}`).join('\n')
       : 'No relevant records found.';
   const prompt = `You are the user's Second Brain assistant. Help them retrieve and make sense of their stored knowledge.
 
@@ -522,26 +627,22 @@ export async function backfillSecondBrainEmbeddings(): Promise<{
     backfillEmbeddingsForTable(
       'sb_projects',
       'id, name, goal, notes',
-      (row) =>
-        `${row.name ?? ''}\n${row.goal ?? ''}\n${row.notes ?? ''}`,
+      (row) => `${row.name ?? ''}\n${row.goal ?? ''}\n${row.notes ?? ''}`,
     ),
     backfillEmbeddingsForTable(
       'sb_people',
       'id, name, relationship, notes',
-      (row) =>
-        `${row.name ?? ''}\n${row.relationship ?? ''}\n${row.notes ?? ''}`,
+      (row) => `${row.name ?? ''}\n${row.relationship ?? ''}\n${row.notes ?? ''}`,
     ),
     backfillEmbeddingsForTable(
       'sb_ideas',
       'id, title, body, area',
-      (row) =>
-        `${row.title ?? ''}\n${row.body ?? ''}\n${row.area ?? ''}`,
+      (row) => `${row.title ?? ''}\n${row.body ?? ''}\n${row.area ?? ''}`,
     ),
     backfillEmbeddingsForTable(
       'sb_admin',
       'id, task, notes',
-      (row) =>
-        `${row.task ?? ''}\n${row.notes ?? ''}`,
+      (row) => `${row.task ?? ''}\n${row.notes ?? ''}`,
     ),
     backfillEmbeddingsForTable(
       'sb_resources',
@@ -596,10 +697,7 @@ export interface RouteThoughtResult {
   category: SecondBrainCategory;
 }
 
-export async function routeThought(
-  id: string,
-  rawText?: string,
-): Promise<RouteThoughtResult> {
+export async function routeThought(id: string, rawText?: string): Promise<RouteThoughtResult> {
   let text: string;
 
   if (rawText !== undefined && rawText.trim()) {
@@ -718,8 +816,10 @@ Plain text, no markdown.`;
 
 export async function generateMorningDigest(): Promise<string> {
   const data = await getDigestData();
-  const prompt = MORNING_DIGEST_PROMPT
-    .replace('{{PROJECTS_JSON}}', JSON.stringify(data.projects, null, 2))
+  const prompt = MORNING_DIGEST_PROMPT.replace(
+    '{{PROJECTS_JSON}}',
+    JSON.stringify(data.projects, null, 2),
+  )
     .replace('{{TASKS_JSON}}', JSON.stringify(data.tasksDue, null, 2))
     .replace('{{IDEAS_JSON}}', JSON.stringify(data.ideasRecent, null, 2));
   return callGeminiGenerateContent(prompt);
@@ -727,8 +827,10 @@ export async function generateMorningDigest(): Promise<string> {
 
 export async function generateWeeklyReview(): Promise<string> {
   const data = await getReviewData();
-  const prompt = WEEKLY_REVIEW_PROMPT
-    .replace('{{PROJECTS_JSON}}', JSON.stringify(data.projectsUpdated, null, 2))
+  const prompt = WEEKLY_REVIEW_PROMPT.replace(
+    '{{PROJECTS_JSON}}',
+    JSON.stringify(data.projectsUpdated, null, 2),
+  )
     .replace('{{COMPLETED_JSON}}', JSON.stringify(data.tasksCompleted, null, 2))
     .replace('{{IDEAS_JSON}}', JSON.stringify(data.ideasNew, null, 2))
     .replace('{{PEOPLE_JSON}}', JSON.stringify(data.peopleFollowUp, null, 2));

@@ -21,7 +21,8 @@ export const SidebarProvider = ({ children }: { children: ReactNode }): ReactNod
     try {
       const saved = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
       if (saved === '1') setIsCollapsed(true);
-      if (saved === '0') setIsCollapsed(false);
+      else if (saved === '0') setIsCollapsed(false);
+      else if (window.innerWidth <= 768) setIsCollapsed(true);
     } catch {
       // Ignore storage access issues in private mode.
     }

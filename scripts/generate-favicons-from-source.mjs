@@ -18,21 +18,9 @@ const inputPath = process.argv[2] || join(publicDir, 'favicon-source.png');
 async function main() {
   const input = sharp(inputPath);
 
-  const png16 = await input
-    .clone()
-    .resize(16, 16)
-    .png()
-    .toBuffer();
-  const png32 = await input
-    .clone()
-    .resize(32, 32)
-    .png()
-    .toBuffer();
-  const png180 = await input
-    .clone()
-    .resize(180, 180)
-    .png()
-    .toBuffer();
+  const png16 = await input.clone().resize(16, 16).png().toBuffer();
+  const png32 = await input.clone().resize(32, 32).png().toBuffer();
+  const png180 = await input.clone().resize(180, 180).png().toBuffer();
 
   await sharp(png16).toFile(join(publicDir, 'favicon-16x16.png'));
   console.log('✓ favicon-16x16.png');
