@@ -6,9 +6,9 @@ import { CogPair } from './CogPair';
 import { BrandName } from './BrandName';
 
 export const Hero = (): JSX.Element => (
-  <section className="hero relative grid min-h-[320px] grid-cols-[minmax(0,1fr)_280px] overflow-hidden bg-[color:var(--color-ink)] border-b-[3px] border-b-[color:var(--color-orange)]">
+  <section className="hero relative grid min-h-[320px] min-w-0 grid-cols-[minmax(0,1fr)_280px] overflow-hidden bg-[color:var(--color-ink)] border-b-[3px] border-b-[color:var(--color-orange)]">
     {/* Left column */}
-    <div className="hero-content relative z-10 px-8 py-14">
+    <div className="hero-content relative z-10 min-w-0 px-8 py-14">
       <div className="mb-3 flex items-center gap-2 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-[color:var(--color-orange)]">
         <span className="inline-block h-px w-6 bg-[color:var(--color-orange)]" />
         <span>Second Brain Platform</span>

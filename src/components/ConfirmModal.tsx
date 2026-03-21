@@ -1,7 +1,8 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useFocusManagement } from '../hooks/useFocusManagement';
 
 export interface ConfirmModalProps {
@@ -65,6 +66,11 @@ export function ConfirmModal({
     }
   }, [isOpen]);
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   if (!isOpen) return null;
 
   const isDestructive = variant === 'destructive';
@@ -77,7 +83,7 @@ export function ConfirmModal({
     if (e.target === e.currentTarget) onClose();
   };
 
-  return (
+  const modalContent = (
     <div
       className="modal-overlay"
       onClick={handleOverlayClick}
@@ -89,7 +95,7 @@ export function ConfirmModal({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1000,
+        zIndex: 1001,
       }}
     >
       <div
@@ -288,4 +294,8 @@ export function ConfirmModal({
       </div>
     </div>
   );
+
+  return isMounted && typeof document !== 'undefined'
+    ? createPortal(modalContent, document.body)
+    : modalContent;
 }
