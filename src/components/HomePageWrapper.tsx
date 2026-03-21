@@ -9,7 +9,7 @@ import { Pillars } from './Pillars';
 import { Footer } from './Footer';
 
 export const HomePageWrapper = (): JSX.Element => (
-  <div className="pt-14">
+  <div className="min-w-0 w-full overflow-x-hidden bg-[color:var(--color-ink)] pt-[52px] md:pt-14">
     <Nav />
     <Hero />
     <Ticker />

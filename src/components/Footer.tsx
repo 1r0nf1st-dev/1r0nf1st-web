@@ -44,6 +44,10 @@ export const Footer = (): JSX.Element => (
         Contact
       </Link>
     </div>
-    <div className="footer-ver font-mono text-[9px] text-[color:var(--color-text-inv-2)]">v0.1.0.17</div>
+    <div className="footer-ver font-mono text-[9px] text-[color:var(--color-text-inv-2)]">
+      v{typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_BUILD_VERSION
+        ? process.env.NEXT_PUBLIC_BUILD_VERSION
+        : 'dev'}
+    </div>
   </footer>
 );
