@@ -84,7 +84,9 @@ export default function RootLayout({
           <Providers>
             <SkipLink />
             <AuthHashErrorHandler />
-            <div className="min-h-screen min-w-0 overflow-x-hidden relative z-[1]">{children}</div>
+            <div className="min-h-screen min-w-0 max-w-full overflow-x-hidden relative z-[1]">
+              {children}
+            </div>
           </Providers>
         </ErrorBoundary>
         <SpeedInsights />
