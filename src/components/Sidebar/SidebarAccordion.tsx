@@ -2,7 +2,6 @@
 
 import type { JSX } from 'react';
 import { createContext, useCallback, useContext, useState, useEffect, useRef, useId } from 'react';
-import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useSidebar } from '../../contexts/SidebarContext';
@@ -14,7 +13,7 @@ const SidebarAccordionCloseContext = createContext<(() => void) | null>(null);
 export const useSidebarAccordionClose = (): (() => void) | null =>
   useContext(SidebarAccordionCloseContext);
 
-// Track which accordion is open on mobile to prevent multiple popovers
+// Track which accordion is open on mobile to avoid stacking multiple inline panels
 let openAccordionId: string | null = null;
 const accordionListeners = new Set<(id: string | null) => void>();
 
@@ -34,9 +33,7 @@ export const SidebarAccordion = ({
   const [isOpen, setIsOpen] = useState(false);
   const { isCollapsed, setCollapsed } = useSidebar();
   const [isMobile, setIsMobile] = useState(false);
-  const [popoverTop, setPopoverTop] = useState<number | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const panelId = `${id}-panel`;
   const tooltipId = useId();
@@ -57,7 +54,7 @@ export const SidebarAccordion = ({
     }
   }, [defaultOpen, isMobile, isCollapsed]);
 
-  // Listen for other accordions opening/closing (mobile only)
+  // Listen for other accordions opening/closing when multiple can be open (mobile inline panels)
   useEffect(() => {
     if (!isMobile || !isCollapsed) return;
 
@@ -91,35 +88,25 @@ export const SidebarAccordion = ({
     }
   }, [pathname, id]);
 
-  // Close popover when clicking outside (mobile only)
+  // Mobile drawer + collapsed context: close inline panel when tapping main content / overlay
   useEffect(() => {
     if (!isMobile || !isCollapsed || !isOpen) return;
 
     const handleClickOutside = (event: Event) => {
       const target = event.target as Node;
-
-      // Get the popover panel element
       const panelElement = document.getElementById(panelId);
 
-      // Check if click is inside the popover panel or its children
-      if (panelElement && panelElement.contains(target)) {
-        // Click is inside popover - don't close, let the button/link handle it
+      if (panelElement?.contains(target)) {
+        return;
+      }
+      if (containerRef.current?.contains(target)) {
         return;
       }
 
-      // Check if click is on the sidebar button that opened this popover
-      if (containerRef.current && containerRef.current.contains(target)) {
-        // Click is on the button - don't close (button handles its own toggle)
-        return;
-      }
-
-      // Click is outside both - close the popover
       setIsOpen(false);
       notifyAccordionChange(null);
     };
 
-    // Use bubble phase (not capture) so clicks inside popover can fire first
-    // This ensures button/link onClick handlers execute before this handler
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
     return () => {
@@ -129,11 +116,9 @@ export const SidebarAccordion = ({
   }, [isMobile, isCollapsed, isOpen, panelId]);
 
   const closePopover = useCallback(() => {
-    if (isCollapsed && isMobile) {
-      setIsOpen(false);
-      notifyAccordionChange(null);
-    }
-  }, [isCollapsed, isMobile]);
+    setIsOpen(false);
+    notifyAccordionChange(null);
+  }, []);
 
   const showTooltip = isCollapsed && !isMobile;
 
@@ -146,7 +131,6 @@ export const SidebarAccordion = ({
   return (
     <div ref={containerRef} className="relative">
       <button
-        ref={buttonRef}
         type="button"
         className={`group flex w-full min-h-[44px] items-center rounded-xl px-2 py-2 text-sm font-medium hover:bg-primary/5 dark:hover:bg-primary/10 touch-manipulation ${
           isCollapsed ? 'justify-center' : 'justify-between'
@@ -155,22 +139,14 @@ export const SidebarAccordion = ({
         aria-controls={panelId}
         aria-describedby={showTooltip ? tooltipId : undefined}
         onClick={() => {
-          // On mobile (when collapsed), clicking toggles accordion and shows popover
-          // On desktop, normal accordion behavior (expands sidebar if collapsed)
+          // Desktop collapsed rail: first click expands the sidebar (popover was unusably narrow).
+          // Mobile drawer: sidebar stays "collapsed" in context but drawer is wide — expand inline.
           if (isCollapsed) {
             if (!isMobile) {
-              // Desktop: expand sidebar when clicking collapsed accordion
               setCollapsed(false);
               return;
             }
-            // Mobile: toggle accordion, content shows in popover
-            // Close other accordions when opening this one
             const newState = !isOpen;
-            if (newState && buttonRef.current) {
-              // Calculate popover position relative to button
-              const rect = buttonRef.current.getBoundingClientRect();
-              setPopoverTop(rect.top - 73); // 73px is header height
-            }
             setIsOpen(newState);
             notifyAccordionChange(newState ? id : null);
             return;
@@ -204,37 +180,16 @@ export const SidebarAccordion = ({
           )
         ) : null}
       </button>
-      {/* Show content when open */}
+      {/* Inline panel only: portaled flyouts at z-9999 sat over notes/templates on mobile. */}
       {isOpen ? (
-        isCollapsed && isMobile && typeof document !== 'undefined' ? (
-          createPortal(
-            <>
-              {/* Backdrop - pointer-events-none so touches pass through to panel or main */}
-              <div
-                className="fixed inset-0 z-[9998] bg-black/20 pointer-events-none"
-                aria-hidden="true"
-              />
-              <div
-                id={panelId}
-                role="region"
-                aria-label={label}
-                className="fixed left-[64px] z-[9999] space-y-1 bg-white/95 dark:bg-surface/95 backdrop-blur-md rounded-xl shadow-xl p-3 min-w-[240px] max-w-[280px] max-h-[60vh] overflow-y-auto border border-primary/10 dark:border-border touch-manipulation"
-                style={popoverTop !== undefined ? { top: `${popoverTop}px` } : undefined}
-              >
-                {panelContent}
-              </div>
-            </>,
-            document.body,
-          )
-        ) : (
-          <div
-            id={panelId}
-            role="region"
-            className={`space-y-1 ${isCollapsed ? 'hidden' : 'mt-1 pl-3'}`}
-          >
-            {panelContent}
-          </div>
-        )
+        <div
+          id={panelId}
+          role="region"
+          aria-label={label}
+          className={`space-y-1 ${isCollapsed && !isMobile ? 'hidden' : 'mt-1 pl-3'}`}
+        >
+          {panelContent}
+        </div>
       ) : null}
     </div>
   );
