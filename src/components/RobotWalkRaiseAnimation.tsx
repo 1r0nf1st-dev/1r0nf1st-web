@@ -1,6 +1,7 @@
 'use client';
 
 import type { JSX } from 'react';
+import { BRAND_NAME } from '../config';
 
 const VIDEO_SRC = '/ai-artwork.mp4';
 
@@ -26,7 +27,7 @@ export const RobotWalkRaiseAnimation = ({
       className={className.trim()}
       style={{ width, height: height ?? 'auto', maxWidth: '100%' }}
       role="img"
-      aria-label="1r0nf1st AI artwork animation"
+      aria-label={`${BRAND_NAME} AI artwork animation`}
     >
       <video
         src={VIDEO_SRC}

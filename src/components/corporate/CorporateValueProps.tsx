@@ -36,10 +36,7 @@ const VALUE_PROPS: ValueProp[] = [
 function ValuePropBlock({ icon: Icon, title, description }: ValueProp): JSX.Element {
   return (
     <article className="flex flex-col items-start gap-3 p-6 rounded-xl border border-border bg-surface-soft/30">
-      <Icon
-        className="text-2xl text-primary shrink-0"
-        aria-hidden
-      />
+      <Icon className="text-2xl text-primary shrink-0" aria-hidden />
       <h3
         className="text-sm font-semibold text-foreground uppercase tracking-wider"
         style={{ letterSpacing: 'var(--letter-spacing-wider)' }}
@@ -53,10 +50,7 @@ function ValuePropBlock({ icon: Icon, title, description }: ValueProp): JSX.Elem
 
 export const CorporateValueProps = (): JSX.Element => {
   return (
-    <section
-      className="py-16 md:py-24 px-4 sm:px-6"
-      aria-labelledby="value-props-heading"
-    >
+    <section className="py-16 md:py-24 px-4 sm:px-6" aria-labelledby="value-props-heading">
       <div className="max-w-6xl mx-auto">
         <h2
           id="value-props-heading"

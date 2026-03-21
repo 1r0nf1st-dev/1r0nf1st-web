@@ -14,12 +14,7 @@ const obReactionsRouter = Router();
 obReactionsRouter.use(authenticateToken);
 obReactionsRouter.use(requireAdmin);
 
-const VALID_REACTION_TYPES: ObReactionType[] = [
-  'resonates',
-  'challenges',
-  'expands',
-  'bookmarks',
-];
+const VALID_REACTION_TYPES: ObReactionType[] = ['resonates', 'challenges', 'expands', 'bookmarks'];
 const NOTE_MAX_LENGTH = 1000;
 
 obReactionsRouter.get('/', async (req: AuthRequest, res) => {
@@ -28,8 +23,7 @@ obReactionsRouter.get('/', async (req: AuthRequest, res) => {
       res.status(503).json({ error: 'Database not configured' });
       return;
     }
-    const nodeId =
-      typeof req.query.nodeId === 'string' ? req.query.nodeId : undefined;
+    const nodeId = typeof req.query.nodeId === 'string' ? req.query.nodeId : undefined;
     if (!nodeId) {
       res.status(400).json({ error: 'nodeId query is required' });
       return;
@@ -68,9 +62,7 @@ obReactionsRouter.post('/', async (req: AuthRequest, res) => {
       nodeId,
       req.userId,
       type as ObReactionType,
-      note != null && typeof note === 'string'
-        ? sanitizeFreeText(note, NOTE_MAX_LENGTH)
-        : null,
+      note != null && typeof note === 'string' ? sanitizeFreeText(note, NOTE_MAX_LENGTH) : null,
     );
     res.status(201).json(reaction);
   } catch (error) {
@@ -85,10 +77,8 @@ obReactionsRouter.delete('/', async (req: AuthRequest, res) => {
       res.status(401).json({ error: 'User not authenticated' });
       return;
     }
-    const nodeId =
-      typeof req.query.nodeId === 'string' ? req.query.nodeId : undefined;
-    const type =
-      typeof req.query.type === 'string' ? req.query.type : undefined;
+    const nodeId = typeof req.query.nodeId === 'string' ? req.query.nodeId : undefined;
+    const type = typeof req.query.type === 'string' ? req.query.type : undefined;
     if (!nodeId || !type) {
       res.status(400).json({ error: 'nodeId and type query params are required' });
       return;

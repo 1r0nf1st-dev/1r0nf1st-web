@@ -136,10 +136,7 @@ export function useRecordAndTranscribe(): UseRecordAndTranscribeResult {
         try {
           const formData = new FormData();
           formData.append('file', file);
-          const res = await postFormData<{ text: string }>(
-            '/api/notes/transcribe/audio',
-            formData,
-          );
+          const res = await postFormData<{ text: string }>('/api/notes/transcribe/audio', formData);
           setIsTranscribing(false);
           resolve(res.text || '');
         } catch (err) {

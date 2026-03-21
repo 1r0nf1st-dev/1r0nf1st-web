@@ -71,10 +71,9 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative">
         {skipLink}
         <article className={cardClasses} style={{ maxWidth: '420px' }}>
-
           <div className="relative z-10">
             <h1 className={cardTitle}>
-              Initializing 1r0nf1st... {Math.min(100, Math.round(bootPercent))}%
+              Initializing <BrandName />... {Math.min(100, Math.round(bootPercent))}%
             </h1>
             <p className={cardBody}>Booting up systems.</p>
           </div>
@@ -88,10 +87,11 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative">
         {skipLink}
         <article className={cardClasses} style={{ maxWidth: '420px' }}>
-
           <div className="relative z-10 flex flex-col items-center text-center">
             <RobotWalkRaiseAnimation width={140} loop className="mb-4" />
-            <h1 className={cardTitle}>Hi, I&apos;m <BrandName /></h1>
+            <h1 className={cardTitle}>
+              Hi, I&apos;m <BrandName />
+            </h1>
             <p className={cardBody}>I&apos;m here to help. Ready?</p>
             <button
               type="button"
@@ -122,7 +122,6 @@ export const RobotSplash = ({ onEnter }: RobotSplashProps): JSX.Element | null =
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background relative">
         {skipLink}
         <article className={cardClasses} style={{ maxWidth: '420px' }}>
-
           <div className="relative z-10 flex flex-col items-center text-center">
             <img
               src="/logo.jpg"

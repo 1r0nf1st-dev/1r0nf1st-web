@@ -20,7 +20,7 @@ export const SidebarNavItem = ({
   const tooltipId = useId();
   const displayBadge =
     typeof badge === 'number' && badge > 0 ? (badge > 99 ? '99+' : String(badge)) : null;
-  
+
   // Show label if not collapsed OR if forceShowLabel is true (for mobile popovers)
   const shouldShowLabel = !isCollapsed || forceShowLabel;
 

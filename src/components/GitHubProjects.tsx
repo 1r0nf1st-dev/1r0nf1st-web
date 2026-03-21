@@ -14,7 +14,6 @@ export const GitHubProjects = (): JSX.Element => {
 
   return (
     <article className={cardClasses} id="projects">
-
       <h2 className={cardTitle}>GitHub projects</h2>
       {isLoading && (
         <div className={cardBody} aria-busy>

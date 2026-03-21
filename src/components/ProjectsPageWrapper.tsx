@@ -1,8 +1,6 @@
 'use client';
 
 import type { JSX } from 'react';
-import { CorporateProjectsPage } from './corporate/CorporateProjectsPage';
+import { PublicProjectsPage } from './PublicProjectsPage';
 
-export const ProjectsPageWrapper = (): JSX.Element => (
-  <CorporateProjectsPage embedInLayout />
-);
+export const ProjectsPageWrapper = (): JSX.Element => <PublicProjectsPage />;

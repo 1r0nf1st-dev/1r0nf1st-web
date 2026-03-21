@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import request from 'supertest';
-import { obAiRouter } from './ai.js';
 import * as obAiService from '../../services/obAiService.js';
 
 vi.mock('../../middleware/auth.js', () => ({
@@ -10,6 +9,11 @@ vi.mock('../../middleware/auth.js', () => ({
     r.userId = 'user-ai-1';
     next();
   },
+}));
+
+vi.mock('../../middleware/requireAdmin.js', () => ({
+  requireAdmin: (_req: express.Request, _res: express.Response, next: express.NextFunction) =>
+    next(),
 }));
 
 vi.mock('../../services/obAiService.js');
@@ -24,6 +28,8 @@ vi.mock('../../db/supabase.js', () => ({
     }),
   },
 }));
+
+const { obAiRouter } = await import('./ai.js');
 
 function createApp(): express.Application {
   const app = express();
@@ -61,9 +67,7 @@ describe('obAiRouter', () => {
         },
       ]);
 
-      const res = await request(app)
-        .post('/api/ob/ai/search')
-        .send({ query: 'test' });
+      const res = await request(app).post('/api/ob/ai/search').send({ query: 'test' });
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(1);
       expect(res.body[0].title).toBe('A node');

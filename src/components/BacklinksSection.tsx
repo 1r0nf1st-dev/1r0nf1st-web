@@ -23,9 +23,7 @@ export function BacklinksSection({
   return (
     <div className="mt-4 p-4 rounded-xl border border-primary/20 dark:border-border bg-gray-50/50 dark:bg-surface-soft/50">
       <h3 className="text-sm font-medium text-foreground mb-2">Linked from</h3>
-      <p className="text-xs text-muted mb-2">
-        Notes that link to this note
-      </p>
+      <p className="text-xs text-muted mb-2">Notes that link to this note</p>
       <ul className="flex flex-wrap gap-2">
         {backlinks.map((n) => (
           <li key={n.id}>

@@ -3,7 +3,6 @@
 import type { JSX } from 'react';
 import { useState, useEffect } from 'react';
 import { getJson } from '../../apiClient';
-import { btnBase, btnPrimary } from '../../styles/buttons';
 
 interface DigestData {
   projects: Record<string, unknown>[];
@@ -31,27 +30,21 @@ export const DigestPanel = (): JSX.Element => {
     setError(null);
     getJson<DigestData>('/api/second-brain/digest')
       .then(setDigestData)
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : 'Failed to load digest'),
-      );
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load digest'));
   };
 
   const loadReviewData = (): void => {
     setError(null);
     getJson<ReviewData>('/api/second-brain/review')
       .then(setReviewData)
-      .catch((err) =>
-        setError(err instanceof Error ? err.message : 'Failed to load review'),
-      );
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load review'));
   };
 
   const generateDigest = async (): Promise<void> => {
     setLoading('digest');
     setError(null);
     try {
-      const res = await getJson<{ digest: string }>(
-        '/api/second-brain/digest/generate',
-      );
+      const res = await getJson<{ digest: string }>('/api/second-brain/digest/generate');
       setGeneratedDigest(res.digest);
       setView('daily');
     } catch (err) {
@@ -65,9 +58,7 @@ export const DigestPanel = (): JSX.Element => {
     setLoading('review');
     setError(null);
     try {
-      const res = await getJson<{ review: string }>(
-        '/api/second-brain/review/generate',
-      );
+      const res = await getJson<{ review: string }>('/api/second-brain/review/generate');
       setGeneratedReview(res.review);
       setView('weekly');
     } catch (err) {
@@ -85,15 +76,13 @@ export const DigestPanel = (): JSX.Element => {
   }, [view]);
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h2 className="text-lg font-semibold text-foreground">
-        Digest & Weekly Review
-      </h2>
-      <p className="text-sm text-muted">
+    <div className="content-panel max-w-2xl">
+      <h2 className="panel-title">Digest &amp; Weekly Review</h2>
+      <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
         View raw data or generate AI digests.
       </p>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => {
@@ -101,9 +90,7 @@ export const DigestPanel = (): JSX.Element => {
             loadDigestData();
             loadReviewData();
           }}
-          className={`${btnBase} px-3 py-1.5 text-sm border rounded-lg ${
-            view === 'raw' ? 'bg-primary/20 border-primary' : 'border-border'
-          }`}
+          className={view === 'raw' ? 'act-btn primary' : 'act-btn'}
         >
           Raw data
         </button>
@@ -111,7 +98,7 @@ export const DigestPanel = (): JSX.Element => {
           type="button"
           onClick={generateDigest}
           disabled={loading !== null}
-          className={`${btnBase} ${btnPrimary} px-3 py-1.5 text-sm`}
+          className="act-btn primary disabled:opacity-70"
         >
           {loading === 'digest' ? 'Generating…' : 'Morning digest'}
         </button>
@@ -119,26 +106,26 @@ export const DigestPanel = (): JSX.Element => {
           type="button"
           onClick={generateReview}
           disabled={loading !== null}
-          className={`${btnBase} ${btnPrimary} px-3 py-1.5 text-sm`}
+          className="act-btn primary disabled:opacity-70"
         >
           {loading === 'review' ? 'Generating…' : 'Weekly review'}
         </button>
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="font-display text-[12px] text-[color:var(--color-orange)]" role="alert">
           {error}
         </p>
       )}
 
       {view === 'daily' && generatedDigest && (
-        <div className="p-4 rounded-lg border border-border bg-surface-soft/50 whitespace-pre-wrap text-foreground">
+        <div className="content-panel whitespace-pre-wrap font-display text-[12px] text-[color:var(--color-text-inv)]">
           {generatedDigest}
         </div>
       )}
 
       {view === 'weekly' && generatedReview && (
-        <div className="p-4 rounded-lg border border-border bg-surface-soft/50 whitespace-pre-wrap text-foreground">
+        <div className="content-panel whitespace-pre-wrap font-display text-[12px] text-[color:var(--color-text-inv)]">
           {generatedReview}
         </div>
       )}
@@ -147,8 +134,10 @@ export const DigestPanel = (): JSX.Element => {
         <div className="space-y-6">
           {digestData && (
             <div>
-              <h3 className="font-medium mb-2">Today&apos;s focus (digest)</h3>
-              <ul className="space-y-1 text-sm text-muted">
+              <h3 className="mb-2 font-display text-[14px] font-bold uppercase tracking-[0.04em] text-[color:var(--color-text-inv)]">
+                Today&apos;s focus (digest)
+              </h3>
+              <ul className="space-y-1 font-display text-[12px] text-[color:var(--color-text-inv-2)]">
                 <li>Projects: {digestData.projects.length}</li>
                 <li>Tasks due: {digestData.tasksDue.length}</li>
                 <li>Recent ideas: {digestData.ideasRecent.length}</li>
@@ -157,8 +146,10 @@ export const DigestPanel = (): JSX.Element => {
           )}
           {reviewData && (
             <div>
-              <h3 className="font-medium mb-2">This week (review)</h3>
-              <ul className="space-y-1 text-sm text-muted">
+              <h3 className="mb-2 font-display text-[14px] font-bold uppercase tracking-[0.04em] text-[color:var(--color-text-inv)]">
+                This week (review)
+              </h3>
+              <ul className="space-y-1 font-display text-[12px] text-[color:var(--color-text-inv-2)]">
                 <li>Projects updated: {reviewData.projectsUpdated.length}</li>
                 <li>Tasks completed: {reviewData.tasksCompleted.length}</li>
                 <li>New ideas: {reviewData.ideasNew.length}</li>

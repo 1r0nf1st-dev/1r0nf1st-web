@@ -7,9 +7,16 @@ export interface FileUploadProps {
   noteId: string;
   onUploadComplete: () => void;
   onError: (error: string) => void;
+  /** Optional className for the button (e.g. btn-attach for note modal) */
+  buttonClassName?: string;
 }
 
-export const FileUpload = ({ noteId, onUploadComplete, onError }: FileUploadProps): JSX.Element => {
+export const FileUpload = ({
+  noteId,
+  onUploadComplete,
+  onError,
+  buttonClassName,
+}: FileUploadProps): JSX.Element => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +73,7 @@ export const FileUpload = ({ noteId, onUploadComplete, onError }: FileUploadProp
         type="button"
         onClick={handleClick}
         disabled={isUploading}
-        className={`${btnBase} ${btnPrimary} text-sm min-h-[44px] touch-manipulation`}
+        className={buttonClassName ?? `${btnBase} ${btnPrimary} text-sm min-h-[44px] touch-manipulation`}
       >
         {isUploading ? `Uploading... ${uploadProgress}%` : '📎 Attach File'}
       </button>

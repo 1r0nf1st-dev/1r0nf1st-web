@@ -23,10 +23,7 @@ export function StravaWidget(): JSX.Element {
 
   if (isLoading) {
     return (
-      <section
-        className={cardClass}
-        aria-labelledby="strava-widget-heading"
-      >
+      <section className={cardClass} aria-labelledby="strava-widget-heading">
         <h2
           id="strava-widget-heading"
           className="text-sm font-semibold uppercase tracking-wider text-muted mb-3"
@@ -44,10 +41,7 @@ export function StravaWidget(): JSX.Element {
 
   if (error || !totals) {
     return (
-      <section
-        className={cardClass}
-        aria-labelledby="strava-widget-heading"
-      >
+      <section className={cardClass} aria-labelledby="strava-widget-heading">
         <h2
           id="strava-widget-heading"
           className="text-sm font-semibold uppercase tracking-wider text-muted mb-3"
@@ -64,8 +58,8 @@ export function StravaWidget(): JSX.Element {
           Connect Strava
         </Link>
         <p className="text-xs text-muted mt-3">
-          You&apos;ll be redirected to Strava to authorize. For self-hosted deployments,
-          add the refresh token to your <code className="text-xs">.env</code> file.
+          You&apos;ll be redirected to Strava to authorize. For self-hosted deployments, add the
+          refresh token to your <code className="text-xs">.env</code> file.
         </p>
       </section>
     );
@@ -81,17 +75,16 @@ export function StravaWidget(): JSX.Element {
     <div className="py-2 border-b border-border/30 last:border-0">
       <span className="text-xs font-medium text-muted">{label}</span>
       <ul className="m-0 mt-1 p-0 list-none text-sm">
-        <li>{period.distanceMiles.toFixed(1)} mi · {formatTime(period.movingTimeSeconds)}</li>
+        <li>
+          {period.distanceMiles.toFixed(1)} mi · {formatTime(period.movingTimeSeconds)}
+        </li>
         <li className="text-muted">{Math.round(period.elevationGainM)} m elev</li>
       </ul>
     </div>
   );
 
   return (
-    <section
-      className={cardClass}
-      aria-labelledby="strava-widget-heading"
-    >
+    <section className={cardClass} aria-labelledby="strava-widget-heading">
       <h2
         id="strava-widget-heading"
         className="text-sm font-semibold uppercase tracking-wider text-muted mb-3"

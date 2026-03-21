@@ -47,11 +47,12 @@ export const SidebarWidgets = (): JSX.Element => {
 
   // Show labels if not collapsed OR if on mobile (for popovers)
   const shouldShowLabel = !isCollapsed || isMobile;
+  const baseId = useId();
 
   return (
     <div className="space-y-1">
       {widgets.map((widget) => {
-        const tooltipId = useId();
+        const tooltipId = `${baseId}-${widget.id}`;
         return (
           <button
             key={widget.id}

@@ -2,18 +2,9 @@ import { Router } from 'express';
 import { supabase } from '../../db/supabase.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { authenticateToken } from '../../middleware/auth.js';
-import {
-  exploreObNodes,
-  type ObNodeTypeFilter,
-} from '../../services/obAiService.js';
+import { exploreObNodes, type ObNodeTypeFilter } from '../../services/obAiService.js';
 
-const VALID_NODE_TYPES: ObNodeTypeFilter[] = [
-  'note',
-  'concept',
-  'question',
-  'source',
-  'project',
-];
+const VALID_NODE_TYPES: ObNodeTypeFilter[] = ['note', 'concept', 'question', 'source', 'project'];
 
 const obExploreRouter = Router();
 obExploreRouter.use(authenticateToken);
@@ -30,7 +21,11 @@ obExploreRouter.post('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { query, limit, node_type: nodeType } = req.body as {
+    const {
+      query,
+      limit,
+      node_type: nodeType,
+    } = req.body as {
       query?: string;
       limit?: number;
       node_type?: string;
@@ -40,10 +35,7 @@ obExploreRouter.post('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    const limitNum = Math.min(
-      Math.max(1, Number.parseInt(String(limit), 10) || 20),
-      50,
-    );
+    const limitNum = Math.min(Math.max(1, Number.parseInt(String(limit), 10) || 20), 50);
 
     const filterType =
       nodeType != null &&
@@ -52,16 +44,10 @@ obExploreRouter.post('/', async (req: AuthRequest, res) => {
         ? (nodeType as ObNodeTypeFilter)
         : undefined;
 
-    const results = await exploreObNodes(
-      supabase,
-      query.trim(),
-      limitNum,
-      filterType,
-    );
+    const results = await exploreObNodes(supabase, query.trim(), limitNum, filterType);
     res.json(results);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Explore search failed';
+    const message = error instanceof Error ? error.message : 'Explore search failed';
     res.status(500).json({ error: message });
   }
 });

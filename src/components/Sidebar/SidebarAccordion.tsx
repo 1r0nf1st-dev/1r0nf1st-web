@@ -97,22 +97,22 @@ export const SidebarAccordion = ({
 
     const handleClickOutside = (event: Event) => {
       const target = event.target as Node;
-      
+
       // Get the popover panel element
       const panelElement = document.getElementById(panelId);
-      
+
       // Check if click is inside the popover panel or its children
       if (panelElement && panelElement.contains(target)) {
         // Click is inside popover - don't close, let the button/link handle it
         return;
       }
-      
+
       // Check if click is on the sidebar button that opened this popover
       if (containerRef.current && containerRef.current.contains(target)) {
         // Click is on the button - don't close (button handles its own toggle)
         return;
       }
-      
+
       // Click is outside both - close the popover
       setIsOpen(false);
       notifyAccordionChange(null);
@@ -219,9 +219,7 @@ export const SidebarAccordion = ({
                 role="region"
                 aria-label={label}
                 className="fixed left-[64px] z-[9999] space-y-1 bg-white/95 dark:bg-surface/95 backdrop-blur-md rounded-xl shadow-xl p-3 min-w-[240px] max-w-[280px] max-h-[60vh] overflow-y-auto border border-primary/10 dark:border-border touch-manipulation"
-                style={
-                  popoverTop !== undefined ? { top: `${popoverTop}px` } : undefined
-                }
+                style={popoverTop !== undefined ? { top: `${popoverTop}px` } : undefined}
               >
                 {panelContent}
               </div>

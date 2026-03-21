@@ -80,7 +80,11 @@ describe('secondBrainService', () => {
         candidates: [
           {
             content: {
-              parts: [{ text: '{"category":"IDEAS","confidence":85,"title":"Creative thought","detail":"full text","extracted":{}}' }],
+              parts: [
+                {
+                  text: '{"category":"IDEAS","confidence":85,"title":"Creative thought","detail":"full text","extracted":{}}',
+                },
+              ],
             },
           },
         ],
@@ -97,7 +101,11 @@ describe('secondBrainService', () => {
         candidates: [
           {
             content: {
-              parts: [{ text: '{"category":"INVALID","confidence":50,"title":"x","detail":"x","extracted":{}}' }],
+              parts: [
+                {
+                  text: '{"category":"INVALID","confidence":50,"title":"x","detail":"x","extracted":{}}',
+                },
+              ],
             },
           },
         ],
@@ -137,7 +145,8 @@ describe('secondBrainService', () => {
         eq: vi.fn().mockResolvedValue({ error: null }),
       };
       fromMock.mockImplementation((table: string) => {
-        if (table === 'sb_thoughts') return { insert: () => insertChain, update: () => updateChain, eq: () => ({}) };
+        if (table === 'sb_thoughts')
+          return { insert: () => insertChain, update: () => updateChain, eq: () => ({}) };
         if (table === 'sb_projects') return { insert: vi.fn().mockResolvedValue({ error: null }) };
         return {};
       });
@@ -201,7 +210,14 @@ describe('secondBrainService', () => {
       mockFetchJson({ embedding: { values: [0.1, 0.2] } });
       rpcMock.mockResolvedValue({
         data: [
-          { table_name: 'projects', record_id: 'p1', label: 'Foo', detail: 'Bar', similarity: 0.9, created_at: '2024-01-01' },
+          {
+            table_name: 'projects',
+            record_id: 'p1',
+            label: 'Foo',
+            detail: 'Bar',
+            similarity: 0.9,
+            created_at: '2024-01-01',
+          },
         ],
         error: null,
       });
@@ -249,7 +265,9 @@ describe('secondBrainService', () => {
     });
 
     it('throws when rawText is empty', async () => {
-      await expect(updateThought('t1', { rawText: '   ' })).rejects.toThrow('rawText cannot be empty');
+      await expect(updateThought('t1', { rawText: '   ' })).rejects.toThrow(
+        'rawText cannot be empty',
+      );
     });
   });
 

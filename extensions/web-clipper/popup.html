@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -15,22 +15,25 @@
       <div id="setup" class="panel hidden">
         <div class="help-block mb-4">
           <strong>What it does</strong>
-          <p>Save any webpage to 1r0nf1st Notes in one click. (This is the 1r0nf1st extension—not Evernote or others.)</p>
+          <p>
+            Save any webpage to 1r0nf1st Notes in one click. (This is the 1r0nf1st extension—not
+            Evernote or others.)
+          </p>
           <strong>Setup (in order)</strong>
           <ol>
             <li>Log in at your site</li>
-            <li>Go to <a href="#" id="settings-link" class="link" target="_blank" rel="noopener">Notes → open Tools sidebar → Web Clipper</a></li>
+            <li>
+              Go to
+              <a href="#" id="settings-link" class="link" target="_blank" rel="noopener"
+                >Notes → open Tools sidebar → Web Clipper</a
+              >
+            </li>
             <li>Generate token and copy it (starts with <code>nc_</code>)</li>
             <li>Paste below, enter Site URL, then Save</li>
           </ol>
         </div>
         <label for="site-url" class="label">Site URL</label>
-        <input
-          type="text"
-          id="site-url"
-          placeholder="https://yoursite.com"
-          class="input mb-3"
-        />
+        <input type="text" id="site-url" placeholder="https://yoursite.com" class="input mb-3" />
         <label for="token-input" class="label">Token</label>
         <input
           type="password"
@@ -57,9 +60,7 @@
           </button>
         </div>
         <div class="clip-footer">
-          <button type="button" id="logout-token" class="btn btn-ghost btn-sm">
-            Change token
-          </button>
+          <button type="button" id="logout-token" class="btn btn-ghost btn-sm">Change token</button>
         </div>
       </div>
 

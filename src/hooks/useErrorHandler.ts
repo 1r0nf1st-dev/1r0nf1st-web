@@ -63,7 +63,10 @@ export const useErrorHandler = () => {
           message = errorObj.message;
         } else if ('error' in errorObj && typeof errorObj.error === 'string') {
           message = errorObj.error;
-        } else if ('error_description' in errorObj && typeof errorObj.error_description === 'string') {
+        } else if (
+          'error_description' in errorObj &&
+          typeof errorObj.error_description === 'string'
+        ) {
           // Supabase auth errors
           message = errorObj.error_description;
         } else if ('msg' in errorObj && typeof errorObj.msg === 'string') {

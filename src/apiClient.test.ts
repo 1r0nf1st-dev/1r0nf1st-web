@@ -41,9 +41,7 @@ describe('getJson', () => {
 
   it('should successfully fetch and return JSON data', async () => {
     const mockData = { id: 1, name: 'Test' };
-    global.fetch = vi.fn().mockResolvedValue(
-      createMockResponse({ json: async () => mockData }),
-    );
+    global.fetch = vi.fn().mockResolvedValue(createMockResponse({ json: async () => mockData }));
 
     const result = await getJson<typeof mockData>('/api/test');
     expect(result).toEqual(mockData);
@@ -57,9 +55,7 @@ describe('getJson', () => {
   it('should add Authorization header when token exists in localStorage', async () => {
     localStorage.setItem('authToken', 'test-token-123');
     const mockData = { id: 1 };
-    global.fetch = vi.fn().mockResolvedValue(
-      createMockResponse({ json: async () => mockData }),
-    );
+    global.fetch = vi.fn().mockResolvedValue(createMockResponse({ json: async () => mockData }));
 
     await getJson('/api/test');
     expect(global.fetch).toHaveBeenCalledWith('/api/test', {
@@ -73,9 +69,7 @@ describe('getJson', () => {
   it('should not override Authorization header if already provided', async () => {
     localStorage.setItem('authToken', 'local-token');
     const mockData = { id: 1 };
-    global.fetch = vi.fn().mockResolvedValue(
-      createMockResponse({ json: async () => mockData }),
-    );
+    global.fetch = vi.fn().mockResolvedValue(createMockResponse({ json: async () => mockData }));
 
     await getJson('/api/test', {
       headers: {
@@ -133,9 +127,7 @@ describe('getJson', () => {
 
   it('should pass through custom RequestInit options', async () => {
     const mockData = { id: 1 };
-    global.fetch = vi.fn().mockResolvedValue(
-      createMockResponse({ json: async () => mockData }),
-    );
+    global.fetch = vi.fn().mockResolvedValue(createMockResponse({ json: async () => mockData }));
 
     await getJson('/api/test', {
       method: 'POST',

@@ -2,14 +2,7 @@
 
 import type { JSX } from 'react';
 import { useState, useRef, useEffect } from 'react';
-import {
-  StickyNote,
-  Search,
-  Pin,
-  Clock,
-  ChevronDown,
-  FileText,
-} from 'lucide-react';
+import { StickyNote, Search, Pin, Clock, ChevronDown, FileText } from 'lucide-react';
 import { WidgetGrid } from './WidgetGrid';
 import type { Note } from '../useNotes';
 import { cardClasses, cardTitle, cardBody } from '../styles/cards';
@@ -117,13 +110,7 @@ function formatRelativeDate(dateStr: string): string {
   return date.toLocaleDateString();
 }
 
-function NoteCardCompact({
-  note,
-  onClick,
-}: {
-  note: Note;
-  onClick: () => void;
-}): JSX.Element {
+function NoteCardCompact({ note, onClick }: { note: Note; onClick: () => void }): JSX.Element {
   const preview = note.content_text
     ? note.content_text.substring(0, 100) + (note.content_text.length > 100 ? '...' : '')
     : '';
@@ -144,15 +131,17 @@ function NoteCardCompact({
             {note.title || 'Untitled'}
           </h3>
           {preview && (
-            <p className="text-xs md:text-sm text-muted line-clamp-2 mt-0.5">
-              {preview}
-            </p>
+            <p className="text-xs md:text-sm text-muted line-clamp-2 mt-0.5">{preview}</p>
           )}
           <p className="text-xs text-muted mt-2">
             {formatRelativeDate(note.updated_at)}
             {note.tags && note.tags.length > 0 && (
               <span className="ml-2">
-                · {note.tags.slice(0, 2).map((t) => t.name).join(', ')}
+                ·{' '}
+                {note.tags
+                  .slice(0, 2)
+                  .map((t) => t.name)
+                  .join(', ')}
               </span>
             )}
           </p>
@@ -172,9 +161,7 @@ export const NotesHomeView = ({
   onViewDaily,
 }: NotesHomeViewProps): JSX.Element => {
   const pinned = notes.filter((n) => n.is_pinned).slice(0, PINNED_MAX);
-  const recent = notes
-    .filter((n) => !n.is_pinned)
-    .slice(0, RECENT_MAX);
+  const recent = notes.filter((n) => !n.is_pinned).slice(0, RECENT_MAX);
 
   const hasNotes = notes.length > 0;
 
@@ -225,46 +212,43 @@ export const NotesHomeView = ({
             }`}
             style={{ minHeight: '200px' }}
           >
-
-          <div className="relative z-10 text-center max-w-sm">
-            <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full mb-4 bg-primary/10 dark:bg-primary/20 text-primary">
-              <StickyNote className="w-7 h-7 md:w-8 md:h-8" aria-hidden />
-            </div>
-            <h2 className={`${cardTitle} text-lg md:text-xl mb-2`}>
-              No notes yet
-            </h2>
-            <p className={cardBody}>
-              Create your first note to get started. Notes stay private and
-              sync across your devices.
-            </p>
-            <div className="flex flex-wrap gap-3 justify-center mt-6">
-              <button
-                type="button"
-                onClick={onNewNote}
-                className={`${btnBase} ${btnPrimary} px-6 py-3 rounded-xl`}
-              >
-                Create your first note
-              </button>
-              {templates.length > 0 && onNewNoteFromTemplate && (
-                <div className="flex flex-col items-center gap-2">
-                  <span className="text-sm text-muted">or use a template:</span>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {templates.map((t) => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => onNewNoteFromTemplate(t)}
-                        className={`${btnBase} ${btnPrimary} px-4 py-2 text-sm rounded-xl`}
-                      >
-                        {t.name}
-                      </button>
-                    ))}
+            <div className="relative z-10 text-center max-w-sm">
+              <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full mb-4 bg-primary/10 dark:bg-primary/20 text-primary">
+                <StickyNote className="w-7 h-7 md:w-8 md:h-8" aria-hidden />
+              </div>
+              <h2 className={`${cardTitle} text-lg md:text-xl mb-2`}>No notes yet</h2>
+              <p className={cardBody}>
+                Create your first note to get started. Notes stay private and sync across your
+                devices.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center mt-6">
+                <button
+                  type="button"
+                  onClick={onNewNote}
+                  className={`${btnBase} ${btnPrimary} px-6 py-3 rounded-xl`}
+                >
+                  Create your first note
+                </button>
+                {templates.length > 0 && onNewNoteFromTemplate && (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-sm text-muted">or use a template:</span>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {templates.map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => onNewNoteFromTemplate(t)}
+                          className={`${btnBase} ${btnPrimary} px-4 py-2 text-sm rounded-xl`}
+                        >
+                          {t.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
         </div>
       ) : (
         <div className="flex flex-col gap-8 md:gap-10">
@@ -272,10 +256,7 @@ export const NotesHomeView = ({
           {pinned.length > 0 && (
             <section aria-labelledby="home-pinned-heading">
               <div className="flex items-center gap-2 mb-3 md:mb-4">
-                <Pin
-                  className="w-4 h-4 text-primary shrink-0"
-                  aria-hidden
-                />
+                <Pin className="w-4 h-4 text-primary shrink-0" aria-hidden />
                 <h2
                   id="home-pinned-heading"
                   className="text-sm font-semibold uppercase tracking-wider text-muted tracking-widest"
@@ -285,11 +266,7 @@ export const NotesHomeView = ({
               </div>
               <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {pinned.map((note) => (
-                  <NoteCardCompact
-                    key={note.id}
-                    note={note}
-                    onClick={() => onNoteClick(note)}
-                  />
+                  <NoteCardCompact key={note.id} note={note} onClick={() => onNoteClick(note)} />
                 ))}
               </div>
             </section>
@@ -298,10 +275,7 @@ export const NotesHomeView = ({
           {recent.length > 0 && (
             <section aria-labelledby="home-recent-heading">
               <div className="flex items-center gap-2 mb-3 md:mb-4">
-                <Clock
-                  className="w-4 h-4 text-primary shrink-0"
-                  aria-hidden
-                />
+                <Clock className="w-4 h-4 text-primary shrink-0" aria-hidden />
                 <h2
                   id="home-recent-heading"
                   className="text-sm font-semibold uppercase tracking-wider text-muted tracking-widest"
@@ -311,11 +285,7 @@ export const NotesHomeView = ({
               </div>
               <div className="grid gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {recent.map((note) => (
-                  <NoteCardCompact
-                    key={note.id}
-                    note={note}
-                    onClick={() => onNoteClick(note)}
-                  />
+                  <NoteCardCompact key={note.id} note={note} onClick={() => onNoteClick(note)} />
                 ))}
               </div>
             </section>

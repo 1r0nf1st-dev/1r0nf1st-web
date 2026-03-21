@@ -111,7 +111,6 @@ export const GoalCard = ({ goal, onUpdate, onDelete, id }: GoalCardProps): JSX.E
 
   return (
     <article className={cardClasses} id={id}>
-
       <div className={`${cardBody} flex flex-col h-full`}>
         {isEditing ? (
           <div className="space-y-4">

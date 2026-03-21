@@ -13,8 +13,8 @@ function loadPreferences(): WidgetId[] {
     if (!raw) return DEFAULT_WIDGETS;
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return DEFAULT_WIDGETS;
-    const valid = parsed.filter((id): id is WidgetId =>
-      id === 'tasks' || id === 'strava' || id === 'goals',
+    const valid = parsed.filter(
+      (id): id is WidgetId => id === 'tasks' || id === 'strava' || id === 'goals',
     );
     const result = valid.length > 0 ? valid : DEFAULT_WIDGETS;
     // Migrate: add 'goals' for users who had pre-goals preferences
@@ -51,18 +51,13 @@ export function useWidgetPreferences(): {
 
   const toggleWidget = useCallback((id: WidgetId) => {
     setEnabledWidgets((prev) => {
-      const next = prev.includes(id)
-        ? prev.filter((w) => w !== id)
-        : [...prev, id];
+      const next = prev.includes(id) ? prev.filter((w) => w !== id) : [...prev, id];
       savePreferences(next);
       return next;
     });
   }, []);
 
-  const isEnabled = useCallback(
-    (id: WidgetId) => enabledWidgets.includes(id),
-    [enabledWidgets],
-  );
+  const isEnabled = useCallback((id: WidgetId) => enabledWidgets.includes(id), [enabledWidgets]);
 
   return { enabledWidgets, toggleWidget, isEnabled };
 }

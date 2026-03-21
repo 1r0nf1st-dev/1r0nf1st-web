@@ -2,59 +2,75 @@
 
 import type { JSX } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ThemeToggle } from './Navigation/ThemeToggle';
-import { AuthControls } from './Navigation/AuthControls';
-import { btnBase, btnPrimary } from '../styles/buttons';
+import { CogPair } from './CogPair';
 import { BrandName } from './BrandName';
 
-export const Hero = (): JSX.Element => {
-  const pathname = usePathname();
-  const isProjectsPage = pathname === '/projects';
-  const isLoginPage = pathname === '/login';
-  const isChangePasswordPage =
-    pathname === '/change-password' || pathname === '/notes/change-password';
-
-  return (
-    <header className="w-full">
-      <div className="relative rounded-xl border border-slate-200/50 dark:border-slate-700/50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg overflow-hidden px-6 py-8 md:px-10 md:py-10 glass-card-fallback">
-        <div className="relative z-10">
-          <div className="flex justify-between items-center mb-2">
-            <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-full border-2 border-primary/40 dark:border-border bg-primary/15 dark:bg-primary/10 text-xs uppercase tracking-wider text-primary-strong dark:text-muted font-medium">
-              Tools · Next.js + React
-            </span>
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <div className="hidden sm:flex items-center gap-2">
-                <AuthControls />
-              </div>
-            </div>
-          </div>
-          <Link href="/" className="no-underline text-inherit flex items-center gap-4 mt-4 mb-2" aria-label="1r0nf1st">
-            <h1 className="text-3xl md:text-4xl font-semibold tracking-tight cursor-pointer">
-              <BrandName />
-            </h1>
-          </Link>
-          <p className="mb-6 max-w-md text-muted leading-relaxed">
-            A growing toolbox of web experiences and utilities I use every day, powered by live data
-            from GitHub, Medium, Spotify, Strava, weather APIs, and more.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {isProjectsPage || isLoginPage || isChangePasswordPage ? (
-              <Link href="/" className={`${btnBase} ${btnPrimary}`}>
-                Back to Home
-              </Link>
-            ) : (
-              <Link href="/projects" className={`${btnBase} ${btnPrimary}`}>
-                View projects
-              </Link>
-            )}
-            <div className="sm:hidden">
-              <AuthControls />
-            </div>
-          </div>
-        </div>
+export const Hero = (): JSX.Element => (
+  <section className="hero relative grid min-h-[320px] grid-cols-[minmax(0,1fr)_280px] overflow-hidden bg-[color:var(--color-ink)] border-b-[3px] border-b-[color:var(--color-orange)]">
+    {/* Left column */}
+    <div className="hero-content relative z-10 px-8 py-14">
+      <div className="mb-3 flex items-center gap-2 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-[color:var(--color-orange)]">
+        <span className="inline-block h-px w-6 bg-[color:var(--color-orange)]" />
+        <span>Second Brain Platform</span>
       </div>
-    </header>
-  );
-};
+      <h1 className="mb-4 font-display text-[clamp(2.4rem,5vw,3.6rem)] font-black italic uppercase leading-[1] tracking-[-0.02em] text-[color:var(--color-text-inv)]">
+        Built with
+        <br />
+        <BrandName className="not-italic text-[color:var(--color-orange)]" />
+        <br />
+        Precision.
+      </h1>
+      <p className="mb-7 max-w-[380px] font-display text-[13px] font-normal leading-[1.75] text-[color:var(--color-text-inv-2)]">
+        Tools and web experiences engineered for performance. Next.js, React, TypeScript — every cog
+        turning with intent.
+      </p>
+      <div className="flex gap-0">
+        <Link
+          href="/projects"
+          className="bg-[color:var(--color-orange)] px-6 py-[11px] text-[11px] font-bold uppercase tracking-[0.12em] text-white"
+        >
+          View Projects
+        </Link>
+        <a
+          href="#work"
+          className="border border-[rgba(255,255,255,0.15)] px-6 py-[11px] text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-text-inv)] hover:border-[rgba(255,255,255,0.4)]"
+        >
+          Our Work ↓
+        </a>
+      </div>
+    </div>
+
+    {/* Right column: cog panel */}
+    <div id="hero-svg" className="cog-panel relative flex h-[320px] w-[280px] items-center justify-center overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-[rgba(255,255,255,0.06)]">
+      <CogPair
+        // Hero variant params from Section 4c
+        lx={158}
+        ly={148}
+        lr={72}
+        lt={12}
+        la={14}
+        ld={10}
+        sx={74}
+        sy={226}
+        sr={42}
+        st={8}
+        sa={10}
+        sd={7}
+        speed={0.25}
+        width={280}
+        height={320}
+        viewBox="0 0 280 320"
+        variant="hero"
+      />
+    </div>
+
+    {/* Background watermark text */}
+    <div
+      className="hero-bg-text pointer-events-none absolute bottom-[-24px] left-[-8px] z-0 font-display text-[140px] font-black italic uppercase leading-none tracking-tight text-[color:var(--color-text-inv)]"
+      style={{ opacity: 0.022 }}
+      aria-hidden="true"
+    >
+      <BrandName />
+    </div>
+  </section>
+);

@@ -1,8 +1,9 @@
 import type { JSX } from 'react';
 import Link from 'next/link';
+import { BRAND_NAME } from '../../config';
 
 export const metadata = {
-  title: 'Offline | 1r0nf1st',
+  title: `Offline | ${BRAND_NAME}`,
   description: 'You are offline. Some features may be unavailable.',
 };
 

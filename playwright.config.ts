@@ -23,9 +23,7 @@ export default defineConfig({
       },
     }),
   },
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-  ],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: !process.env.BASE_URL
     ? {
         command: 'pnpm dev',

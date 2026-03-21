@@ -9,6 +9,7 @@ import { Menu, X } from 'lucide-react';
 import { useMobileMenu } from '../hooks/useMobileMenu';
 import { ThemeToggle } from './Navigation/ThemeToggle';
 import { AuthControls } from './Navigation/AuthControls';
+import { BRAND_NAME } from '../config';
 import { BrandName } from './BrandName';
 
 /**
@@ -124,7 +125,7 @@ export const UnifiedMobileMenu = (): JSX.Element => {
                       href="/"
                       onClick={mobileMenu.close}
                       className="flex items-center gap-2 no-underline text-inherit"
-                      aria-label="1r0nf1st"
+                      aria-label={BRAND_NAME}
                     >
                       <BrandName className="font-semibold text-foreground text-lg tracking-tight" />
                     </Link>
@@ -143,7 +144,9 @@ export const UnifiedMobileMenu = (): JSX.Element => {
 
                   {/* Main Navigation Section */}
                   <div className="flex-1 px-6 py-4 overflow-y-auto">
-                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">Navigation</h2>
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted mb-2">
+                      Navigation
+                    </h2>
                     <nav aria-label="Main navigation">{mainNavLinks}</nav>
                   </div>
 

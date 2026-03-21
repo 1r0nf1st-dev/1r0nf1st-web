@@ -7,11 +7,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../middleware/auth.js', () => ({
-  authenticateToken: (
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) => {
+  authenticateToken: (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const auth = req.headers.authorization;
     if (!auth) {
       res.status(401).json({ error: 'Access token required' });
@@ -64,9 +60,7 @@ describe('GET /notes/shared/count', () => {
 
   it('returns shared count payload', async () => {
     mocks.getSharedNotesCountMock.mockResolvedValue(5);
-    const res = await request(app)
-      .get('/notes/shared/count')
-      .set('Authorization', 'Bearer test');
+    const res = await request(app).get('/notes/shared/count').set('Authorization', 'Bearer test');
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ data: { count: 5 }, error: null });
@@ -74,9 +68,7 @@ describe('GET /notes/shared/count', () => {
 
   it('returns COUNT_FAILED on errors', async () => {
     mocks.getSharedNotesCountMock.mockRejectedValue(new Error('boom'));
-    const res = await request(app)
-      .get('/notes/shared/count')
-      .set('Authorization', 'Bearer test');
+    const res = await request(app).get('/notes/shared/count').set('Authorization', 'Bearer test');
 
     expect(res.status).toBe(500);
     expect(res.body).toMatchObject({

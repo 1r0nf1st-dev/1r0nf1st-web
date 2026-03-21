@@ -237,51 +237,51 @@ export const ProjectsPage = (): JSX.Element => {
                 {projects
                   .filter((project) => project.id === 21) // Only show Notes project
                   .map((project) => {
-                  const IconComponent = project.icon;
-                  const isInternalLink = project.link.startsWith('/');
-                  const projectNumber = formatProjectNumber(0); // Notes is 001
-                  const cardContent = (
-                    <>
-                      <span
-                        className="text-xs font-mono text-muted absolute top-4 right-4"
-                        aria-hidden
-                      >
-                        {projectNumber}
-                      </span>
-                      <div className="flex items-center gap-4 mb-3">
-                        <IconComponent className="text-3xl text-primary shrink-0" />
-                        <h3 className="m-0 text-xl font-semibold">{project.title}</h3>
-                      </div>
-                      <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
-                        {project.description}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
-                        <span>View project</span>
-                        <span>→</span>
-                      </div>
-                    </>
-                  );
+                    const IconComponent = project.icon;
+                    const isInternalLink = project.link.startsWith('/');
+                    const projectNumber = formatProjectNumber(0); // Notes is 001
+                    const cardContent = (
+                      <>
+                        <span
+                          className="text-xs font-mono text-muted absolute top-4 right-4"
+                          aria-hidden
+                        >
+                          {projectNumber}
+                        </span>
+                        <div className="flex items-center gap-4 mb-3">
+                          <IconComponent className="text-3xl text-primary shrink-0" />
+                          <h3 className="m-0 text-xl font-semibold">{project.title}</h3>
+                        </div>
+                        <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
+                          {project.description}
+                        </p>
+                        <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
+                          <span>View project</span>
+                          <span>→</span>
+                        </div>
+                      </>
+                    );
 
-                  return isInternalLink ? (
-                    <Link
-                      key={project.id}
-                      href={project.link}
-                      className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
-                    >
-                      {cardContent}
-                    </Link>
-                  ) : (
-                    <a
-                      key={project.id}
-                      href={project.link}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
-                    >
-                      {cardContent}
-                    </a>
-                  );
-                })}
+                    return isInternalLink ? (
+                      <Link
+                        key={project.id}
+                        href={project.link}
+                        className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+                      >
+                        {cardContent}
+                      </Link>
+                    ) : (
+                      <a
+                        key={project.id}
+                        href={project.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="relative block p-6 border border-slate-200/50 dark:border-slate-700/50 rounded-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm md:backdrop-blur-md shadow-lg glass-card-fallback no-underline text-inherit transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-800/90 hover:shadow-xl focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900"
+                      >
+                        {cardContent}
+                      </a>
+                    );
+                  })}
                 {isAdmin ? (
                   <Link
                     href="/projects/second-brain"
@@ -298,7 +298,8 @@ export const ProjectsPage = (): JSX.Element => {
                       <h3 className="m-0 text-xl font-semibold">Second Brain</h3>
                     </div>
                     <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">
-                      Capture thoughts, semantic search, browse projects, people, ideas, and view digests. Admin only.
+                      Capture thoughts, semantic search, browse projects, people, ideas, and view
+                      digests. Admin only.
                     </p>
                     <div className="flex items-center gap-2 text-sm opacity-70 text-primary">
                       <span>View project</span>

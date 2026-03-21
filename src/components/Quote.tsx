@@ -10,7 +10,6 @@ export const Quote = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="quote">
-
         <h2 className={cardTitle}>Quote</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="h-5 w-full mb-4" />
@@ -23,7 +22,6 @@ export const Quote = (): JSX.Element | null => {
   if (error) {
     return (
       <article className={cardClasses} id="quote">
-
         <h2 className={cardTitle}>Quote</h2>
         <div className={cardBody}>
           <p className="mb-4">Quote unavailable right now. Try again later.</p>
@@ -47,7 +45,6 @@ export const Quote = (): JSX.Element | null => {
   if (!quote) {
     return (
       <article className={cardClasses} id="quote">
-
         <h2 className={cardTitle}>Quote</h2>
         <p className={cardBody}>No quote available. Make sure the API server is running.</p>
       </article>
@@ -56,7 +53,6 @@ export const Quote = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses} id="quote">
-
       <h2 className={cardTitle}>Quote</h2>
       <div className={cardBody}>
         <blockquote className="m-0 p-0 border-none text-[1.05rem] leading-relaxed opacity-95">

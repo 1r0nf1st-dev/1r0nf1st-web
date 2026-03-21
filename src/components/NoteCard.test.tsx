@@ -62,10 +62,10 @@ describe('NoteCard', () => {
     vi.useRealTimers();
     const user = userEvent.setup();
     render(<NoteCard note={mockNote} isSelected={false} onClick={mockOnClick} />);
-    
+
     const card = screen.getByRole('button', { name: /Note: Test Note/ });
     await user.click(card);
-    
+
     expect(mockOnClick).toHaveBeenCalledWith(mockNote);
     vi.useFakeTimers();
   });
@@ -75,11 +75,11 @@ describe('NoteCard', () => {
     vi.useRealTimers();
     const user = userEvent.setup();
     render(<NoteCard note={mockNote} isSelected={false} onClick={mockOnClick} />);
-    
+
     const card = screen.getByRole('button', { name: /Note: Test Note/ });
     card.focus();
     await user.keyboard('{Enter}');
-    
+
     expect(mockOnClick).toHaveBeenCalledWith(mockNote);
     vi.useFakeTimers();
   });
@@ -89,11 +89,11 @@ describe('NoteCard', () => {
     vi.useRealTimers();
     const user = userEvent.setup();
     render(<NoteCard note={mockNote} isSelected={false} onClick={mockOnClick} />);
-    
+
     const card = screen.getByRole('button', { name: /Note: Test Note/ });
     card.focus();
     await user.keyboard(' ');
-    
+
     expect(mockOnClick).toHaveBeenCalledWith(mockNote);
     vi.useFakeTimers();
   });
@@ -101,22 +101,24 @@ describe('NoteCard', () => {
   it('shows pin icon when note is pinned', () => {
     const pinnedNote = { ...mockNote, is_pinned: true };
     render(<NoteCard note={pinnedNote} isSelected={false} onClick={mockOnClick} />);
-    
+
     const pinIcon = screen.getByLabelText('Pinned note');
     expect(pinIcon).toBeInTheDocument();
   });
 
   it('does not show pin icon when note is not pinned', () => {
     render(<NoteCard note={mockNote} isSelected={false} onClick={mockOnClick} />);
-    
+
     const pinIcon = screen.queryByLabelText('Pinned note');
     expect(pinIcon).not.toBeInTheDocument();
   });
 
   it('applies selected state styling when isSelected is true', () => {
-    const { container } = render(<NoteCard note={mockNote} isSelected={true} onClick={mockOnClick} />);
+    const { container } = render(
+      <NoteCard note={mockNote} isSelected={true} onClick={mockOnClick} />,
+    );
     const card = container.querySelector('article');
-    
+
     expect(card).toHaveAttribute('aria-selected', 'true');
     expect(card?.className).toContain('ring-2');
     expect(card?.className).toContain('ring-blue-600/50');
@@ -124,9 +126,11 @@ describe('NoteCard', () => {
   });
 
   it('does not apply selected state styling when isSelected is false', () => {
-    const { container } = render(<NoteCard note={mockNote} isSelected={false} onClick={mockOnClick} />);
+    const { container } = render(
+      <NoteCard note={mockNote} isSelected={false} onClick={mockOnClick} />,
+    );
     const card = container.querySelector('article');
-    
+
     expect(card).toHaveAttribute('aria-selected', 'false');
     // Check for selected-specific background class that is only added when isSelected is true
     // Note: ring classes are also used for focus states, so we check for bg-blue-50/30

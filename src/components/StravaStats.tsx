@@ -38,7 +38,6 @@ export const StravaStats = (): JSX.Element | null => {
 
   const card = (id: string, title: string, body: ReactNode): JSX.Element => (
     <article className={cardClasses} id={id}>
-
       <h2 className={cardTitle}>{title}</h2>
       <div className={cardBody}>{body}</div>
     </article>
@@ -68,7 +67,6 @@ export const StravaStats = (): JSX.Element | null => {
 
   return (
     <article className={cardClasses} id="strava">
-
       <h2 className={cardTitle}>Strava</h2>
       <div className={cardBody}>
         <TotalsSection title="Last 4 weeks" period={totals.recent} />

@@ -143,8 +143,6 @@ describe('NotesHomeView', () => {
     );
 
     expect(screen.getByRole('heading', { name: /no notes yet/i })).toBeInTheDocument();
-    expect(
-      screen.getByText(/create your first note to get started/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/create your first note to get started/i)).toBeInTheDocument();
   });
 });

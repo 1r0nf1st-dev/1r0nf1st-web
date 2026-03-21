@@ -104,10 +104,7 @@ app.get('/health', async (_req, res) => {
 
   try {
     // Cheap check that Postgres is reachable and Open Brain schema is present.
-    const { error } = await supabase
-      .from('ob_nodes')
-      .select('id')
-      .limit(1);
+    const { error } = await supabase.from('ob_nodes').select('id').limit(1);
 
     if (error) {
       logger.warn({ err: error.message }, '/health ob_nodes check failed');
@@ -128,10 +125,7 @@ app.get('/health', async (_req, res) => {
       ob: true,
     });
   } catch (err) {
-    logger.warn(
-      { err: err instanceof Error ? err.message : String(err) },
-      '/health check threw',
-    );
+    logger.warn({ err: err instanceof Error ? err.message : String(err) }, '/health check threw');
     res.status(503).json({
       status: 'degraded',
       timestamp,

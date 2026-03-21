@@ -12,7 +12,6 @@ export const SpotifyListening = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="spotify">
-
         <h2 className={cardTitle}>Recently played</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="mb-3 h-16 w-full" />
@@ -30,7 +29,6 @@ export const SpotifyListening = (): JSX.Element | null => {
   if (!tracks || tracks.length === 0) {
     return (
       <article className={cardClasses} id="spotify">
-
         <h2 className={cardTitle}>Recently played</h2>
         <p className={cardBody}>
           No recent tracks. Make sure the API server is running and <code>SPOTIFY_CLIENT_ID</code>,{' '}

@@ -77,7 +77,11 @@ export function useNotebooks(): NotebooksState {
 
   const fetchNotebooks = async () => {
     if (!user) {
-      setState({ notebooks: null, isLoading: false, error: 'Please log in to view your notebooks.' });
+      setState({
+        notebooks: null,
+        isLoading: false,
+        error: 'Please log in to view your notebooks.',
+      });
       return;
     }
 

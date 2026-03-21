@@ -9,16 +9,7 @@ import type { Goal } from '../useGoals';
 import { useAlert } from '../contexts/AlertContext';
 import { Skeleton } from './Skeleton';
 import { btnBase, btnGhost, btnPrimary } from '../styles/buttons';
-import {
-  Target,
-  Plus,
-  Check,
-  Circle,
-  Trash2,
-  Lock,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { Target, Plus, Check, Circle, Trash2, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
@@ -67,32 +58,20 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
 
   const tasksForDate = useMemo(() => {
     if (!goals) return [];
-    return goals.filter(
-      (g) =>
-        g.status === 'active' &&
-        g.target_date === selectedDate,
-    );
+    return goals.filter((g) => g.status === 'active' && g.target_date === selectedDate);
   }, [goals, selectedDate]);
 
   const overdueTasks = useMemo(() => {
     if (!goals || selectedDate >= TODAY_ISO) return [];
     return goals.filter(
-      (g) =>
-        g.status === 'active' &&
-        g.target_date &&
-        g.target_date < selectedDate,
+      (g) => g.status === 'active' && g.target_date && g.target_date < selectedDate,
     );
   }, [goals, selectedDate]);
 
   const upcomingTasks = useMemo(() => {
     if (!goals) return [];
     return goals
-      .filter(
-        (g) =>
-          g.status === 'active' &&
-          g.target_date &&
-          g.target_date > selectedDate,
-      )
+      .filter((g) => g.status === 'active' && g.target_date && g.target_date > selectedDate)
       .slice(0, 5);
   }, [goals, selectedDate]);
 
@@ -109,10 +88,7 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
       setIsAdding(false);
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to add task.',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to add task.', 'Error');
     }
   };
 
@@ -124,10 +100,7 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
       });
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to update task.',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to update task.', 'Error');
     }
   };
 
@@ -138,22 +111,13 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
       await deleteGoal(goalId);
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to delete task.',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to delete task.', 'Error');
     } finally {
       setDeletingId(null);
     }
   };
 
-  const TaskItem = ({
-    goal,
-    showDate = false,
-  }: {
-    goal: Goal;
-    showDate?: boolean;
-  }) => (
+  const TaskItem = ({ goal, showDate = false }: { goal: Goal; showDate?: boolean }) => (
     <div
       key={goal.id}
       className="flex items-center gap-2 py-2 px-2 min-h-[44px] rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 group touch-manipulation"
@@ -172,17 +136,13 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
       </button>
       <span
         className={`flex-1 text-sm truncate ${
-          goal.status === 'completed'
-            ? 'line-through text-muted'
-            : 'text-foreground'
+          goal.status === 'completed' ? 'line-through text-muted' : 'text-foreground'
         }`}
       >
         {goal.title}
       </span>
       {showDate && goal.target_date && (
-        <span className="text-xs text-muted shrink-0">
-          {formatDisplayDate(goal.target_date)}
-        </span>
+        <span className="text-xs text-muted shrink-0">{formatDisplayDate(goal.target_date)}</span>
       )}
       <button
         type="button"
@@ -199,15 +159,11 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
   if (!user) {
     return (
       <div
-        className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 ${
-          'md:rounded-xl'
-        }`}
+        className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 ${'md:rounded-xl'}`}
       >
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-4 h-4 text-primary shrink-0" aria-hidden />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
-            Daily tasks
-          </h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">Daily tasks</h2>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted">
           <Lock className="w-3.5 h-3.5 shrink-0" aria-hidden />
@@ -226,15 +182,11 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
   if (isLoading) {
     return (
       <div
-        className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface ${
-          'md:rounded-xl'
-        }`}
+        className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface ${'md:rounded-xl'}`}
       >
         <div className="flex items-center gap-2 mb-4">
           <Target className="w-4 h-4 text-primary shrink-0" aria-hidden />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
-            Daily tasks
-          </h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">Daily tasks</h2>
         </div>
         <div aria-busy>
           <Skeleton className="mb-4 h-10 w-full" />
@@ -249,9 +201,7 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
   if (error) {
     return (
       <div
-        className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface ${
-          'md:rounded-xl'
-        }`}
+        className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface ${'md:rounded-xl'}`}
       >
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-2">
           Daily tasks
@@ -262,11 +212,7 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
   }
 
   return (
-    <div
-      className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 ${
-        'md:px-8 lg:px-10'
-      }`}
-    >
+    <div className={`flex flex-col h-full overflow-y-auto p-4 md:p-6 lg:p-8 ${'md:px-8 lg:px-10'}`}>
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex items-center justify-between gap-4">
           {onBack ? (
@@ -285,9 +231,7 @@ export function DailyTodoView({ onBack }: DailyTodoViewProps): JSX.Element {
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-primary shrink-0" aria-hidden />
             <h2
-              className={`text-sm font-semibold uppercase tracking-wider text-muted ${
-                'tracking-widest'
-              }`}
+              className={`text-sm font-semibold uppercase tracking-wider text-muted ${'tracking-widest'}`}
             >
               Daily tasks
             </h2>

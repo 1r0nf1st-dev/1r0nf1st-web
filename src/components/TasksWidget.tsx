@@ -37,21 +37,11 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
   const [newTitle, setNewTitle] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const todayGoals =
-    goals?.filter((g) => g.status === 'active' && g.target_date === TODAY) || [];
+  const todayGoals = goals?.filter((g) => g.status === 'active' && g.target_date === TODAY) || [];
   const upcomingGoals =
-    goals?.filter(
-      (g) =>
-        g.status === 'active' &&
-        g.target_date &&
-        g.target_date > TODAY,
-    ) || [];
-  const noDateGoals =
-    goals?.filter((g) => g.status === 'active' && !g.target_date) || [];
-  const hasTasks =
-    todayGoals.length > 0 ||
-    upcomingGoals.length > 0 ||
-    noDateGoals.length > 0;
+    goals?.filter((g) => g.status === 'active' && g.target_date && g.target_date > TODAY) || [];
+  const noDateGoals = goals?.filter((g) => g.status === 'active' && !g.target_date) || [];
+  const hasTasks = todayGoals.length > 0 || upcomingGoals.length > 0 || noDateGoals.length > 0;
 
   const handleAddTask = async () => {
     if (!newTitle.trim()) return;
@@ -61,10 +51,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
       setIsAdding(false);
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to add task.',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to add task.', 'Error');
     }
   };
 
@@ -76,10 +63,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
       });
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to update task.',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to update task.', 'Error');
     }
   };
 
@@ -90,10 +74,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
       await deleteGoal(goalId);
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to delete task.',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to delete task.', 'Error');
     } finally {
       setDeletingId(null);
     }
@@ -102,9 +83,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
   if (!user) {
     return (
       <section
-        className={`rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 p-4 ${
-          'md:rounded-xl'
-        }`}
+        className={`rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 p-4 ${'md:rounded-xl'}`}
         aria-labelledby="tasks-widget-heading"
       >
         <div className="flex items-center gap-2 mb-3">
@@ -133,9 +112,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
   if (isLoading) {
     return (
       <section
-        className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-          'md:rounded-xl'
-        }`}
+        className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${'md:rounded-xl'}`}
         aria-labelledby="tasks-widget-heading"
       >
         <div className="flex items-center gap-2 mb-3">
@@ -159,9 +136,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
   if (error) {
     return (
       <section
-        className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-          'md:rounded-xl'
-        }`}
+        className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${'md:rounded-xl'}`}
         aria-labelledby="tasks-widget-heading"
       >
         <h2
@@ -175,13 +150,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
     );
   }
 
-  const TaskItem = ({
-    goal,
-    showDate = false,
-  }: {
-    goal: Goal;
-    showDate?: boolean;
-  }) => (
+  const TaskItem = ({ goal, showDate = false }: { goal: Goal; showDate?: boolean }) => (
     <div
       key={goal.id}
       className="flex items-center gap-2 py-2 px-2 min-h-[44px] rounded-xl hover:bg-primary/5 dark:hover:bg-primary/10 group touch-manipulation"
@@ -200,17 +169,13 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
       </button>
       <span
         className={`flex-1 text-sm truncate ${
-          goal.status === 'completed'
-            ? 'line-through text-muted'
-            : 'text-foreground'
+          goal.status === 'completed' ? 'line-through text-muted' : 'text-foreground'
         }`}
       >
         {goal.title}
       </span>
       {showDate && (
-        <span className="text-xs text-muted shrink-0">
-          {formatTaskDate(goal.target_date)}
-        </span>
+        <span className="text-xs text-muted shrink-0">{formatTaskDate(goal.target_date)}</span>
       )}
       <button
         type="button"
@@ -226,9 +191,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
 
   return (
     <section
-      className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-        'md:rounded-xl'
-      }`}
+      className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${'md:rounded-xl'}`}
       aria-labelledby="tasks-widget-heading"
     >
       <div className="flex items-center justify-between mb-3">
@@ -236,9 +199,7 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
           <Target className="w-4 h-4 text-primary shrink-0" aria-hidden />
           <h2
             id="tasks-widget-heading"
-            className={`text-sm font-semibold uppercase tracking-wider text-muted ${
-              'tracking-widest'
-            }`}
+            className={`text-sm font-semibold uppercase tracking-wider text-muted ${'tracking-widest'}`}
           >
             Today
           </h2>
@@ -255,16 +216,16 @@ export function TasksWidget({ onViewDaily }: TasksWidgetProps): JSX.Element {
             </button>
           )}
           {!isAdding && (
-          <button
-            type="button"
-            onClick={() => setIsAdding(true)}
-            className={`${btnBase} ${btnGhost} text-xs py-1.5 px-2 flex items-center gap-1.5`}
-            aria-label="Add task"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add
-          </button>
-        )}
+            <button
+              type="button"
+              onClick={() => setIsAdding(true)}
+              className={`${btnBase} ${btnGhost} text-xs py-1.5 px-2 flex items-center gap-1.5`}
+              aria-label="Add task"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add
+            </button>
+          )}
         </div>
       </div>
 

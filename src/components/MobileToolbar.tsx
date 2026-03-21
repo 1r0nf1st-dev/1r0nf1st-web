@@ -4,14 +4,25 @@ import type { JSX } from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { Editor } from '@tiptap/react';
-import { MoreVertical, Bold, Italic, List, ListOrdered, Link as LinkIcon, CheckSquare, Table as TableIcon, Image as ImageIcon, Undo2, Redo2, Mic, Circle, Loader2 } from 'lucide-react';
+import {
+  MoreVertical,
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Link as LinkIcon,
+  CheckSquare,
+  Table as TableIcon,
+  Image as ImageIcon,
+  Undo2,
+  Redo2,
+  Mic,
+  Circle,
+  Loader2,
+} from 'lucide-react';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 import { Tooltip } from './Tooltip';
-import {
-  btnToolbar,
-  btnToolbarActive,
-  btnToolbarInactive,
-} from '../styles/buttons';
+import { btnToolbar, btnToolbarActive, btnToolbarInactive } from '../styles/buttons';
 
 interface MobileToolbarProps {
   editor: Editor;
@@ -139,7 +150,7 @@ export const MobileToolbar = ({
         type="button"
         onClick={onClick}
         disabled={disabled}
-        className={`${btnToolbar} ${isActive ? btnToolbarActive : btnToolbarInactive}`}
+        className={`tool-btn ${btnToolbar} ${isActive ? btnToolbarActive : btnToolbarInactive}`}
         aria-label={ariaLabel}
       >
         {children}
@@ -148,13 +159,13 @@ export const MobileToolbar = ({
   );
 
   return (
-    <div className="border-b border-primary/20 dark:border-border p-2 flex items-center gap-2 bg-gray-50 dark:bg-surface-soft overflow-x-auto touch-scroll min-w-0">
+    <div className="editor-toolbar border-b border-[rgba(255,255,255,0.11)] p-2 flex items-center gap-2 overflow-x-auto touch-scroll min-w-0">
       {/* More tools FIRST so always visible without horizontal scroll */}
       <div ref={moreMenuRef} className="relative shrink-0">
         <button
           type="button"
           onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-          className={`${btnToolbar} ${moreMenuOpen ? btnToolbarActive : btnToolbarInactive} touch-manipulation min-h-[44px] min-w-[44px]`}
+          className={`tool-btn ${btnToolbar} ${moreMenuOpen ? btnToolbarActive : btnToolbarInactive} touch-manipulation min-h-[44px] min-w-[44px]`}
           aria-label="More tools"
           aria-expanded={moreMenuOpen}
         >
@@ -170,163 +181,167 @@ export const MobileToolbar = ({
                 moreDropdownRef.current = el;
               }}
               role="menu"
-              className="fixed z-[9999] w-56 max-h-96 overflow-y-auto touch-scroll rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface shadow-lg p-2"
+              className="mobile-editor-more-menu fixed z-[9999] w-56 max-h-96 overflow-y-auto touch-scroll rounded-none border border-[rgba(255,255,255,0.11)] bg-[#2a2520] p-2 shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
               style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
             >
               <div className="flex flex-col gap-1">
-              {/* Link */}
-              <ToolbarButton
-                onClick={() => {
-                  const url = window.prompt('Enter URL:');
-                  if (url) {
-                    editor.chain().focus().setLink({ href: url }).run();
-                  }
-                  setMoreMenuOpen(false);
-                }}
-                isActive={editor.isActive('link')}
-                ariaLabel="Add Link"
-              >
-                <div className="flex items-center gap-2">
-                  <LinkIcon className="w-4 h-4" aria-hidden />
-                  <span className="text-sm">Link</span>
-                </div>
-              </ToolbarButton>
-
-              {/* Task List */}
-              <ToolbarButton
-                onClick={() => {
-                  editor.chain().focus().toggleTaskList().run();
-                  setMoreMenuOpen(false);
-                }}
-                isActive={editor.isActive('taskList')}
-                ariaLabel="Task List"
-              >
-                <div className="flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4" aria-hidden />
-                  <span className="text-sm">Task List</span>
-                </div>
-              </ToolbarButton>
-
-              {/* Table */}
-              <ToolbarButton
-                onClick={() => {
-                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
-                  setMoreMenuOpen(false);
-                }}
-                ariaLabel="Insert Table"
-              >
-                <div className="flex items-center gap-2">
-                  <TableIcon className="w-4 h-4" aria-hidden />
-                  <span className="text-sm">Table</span>
-                </div>
-              </ToolbarButton>
-
-              {/* Image */}
-              <ToolbarButton
-                onClick={() => {
-                  const url = window.prompt('Enter image URL:');
-                  if (url) {
-                    editor.chain().focus().setImage({ src: url }).run();
-                  }
-                  setMoreMenuOpen(false);
-                }}
-                ariaLabel="Insert Image"
-              >
-                <div className="flex items-center gap-2">
-                  <ImageIcon className="w-4 h-4" aria-hidden />
-                  <span className="text-sm">Image</span>
-                </div>
-              </ToolbarButton>
-
-              {/* Undo */}
-              <ToolbarButton
-                onClick={() => {
-                  editor.chain().focus().undo().run();
-                  setMoreMenuOpen(false);
-                }}
-                ariaLabel="Undo"
-                disabled={!editor.can().undo()}
-              >
-                <div className="flex items-center gap-2">
-                  <Undo2 className="w-4 h-4" aria-hidden />
-                  <span className="text-sm">Undo</span>
-                </div>
-              </ToolbarButton>
-
-              {/* Redo */}
-              <ToolbarButton
-                onClick={() => {
-                  editor.chain().focus().redo().run();
-                  setMoreMenuOpen(false);
-                }}
-                ariaLabel="Redo"
-                disabled={!editor.can().redo()}
-              >
-                <div className="flex items-center gap-2">
-                  <Redo2 className="w-4 h-4" aria-hidden />
-                  <span className="text-sm">Redo</span>
-                </div>
-              </ToolbarButton>
-
-              {/* Speech to text */}
-              {onToggleSpeech && (
+                {/* Link */}
                 <ToolbarButton
                   onClick={() => {
-                    onToggleSpeech();
+                    const url = window.prompt('Enter URL:');
+                    if (url) {
+                      editor.chain().focus().setLink({ href: url }).run();
+                    }
                     setMoreMenuOpen(false);
                   }}
-                  isActive={isListening}
-                  ariaLabel={isListening ? 'Stop voice input' : 'Voice input'}
+                  isActive={editor.isActive('link')}
+                  ariaLabel="Add Link"
                 >
                   <div className="flex items-center gap-2">
-                    <Mic className="w-4 h-4" aria-hidden />
-                    <span className="text-sm">Voice Input</span>
+                    <LinkIcon className="w-4 h-4" aria-hidden />
+                    <span className="text-sm">Link</span>
                   </div>
                 </ToolbarButton>
-              )}
 
-              {/* Record & transcribe */}
-              {onRecordAndTranscribeToggle && recordAndTranscribeSupported && (
+                {/* Task List */}
                 <ToolbarButton
                   onClick={() => {
-                    onRecordAndTranscribeToggle();
-                    if (!isRecordAndTranscribeRecording && !recordAndTranscribeLoading) {
-                      setMoreMenuOpen(false);
-                    }
+                    editor.chain().focus().toggleTaskList().run();
+                    setMoreMenuOpen(false);
                   }}
-                  isActive={isRecordAndTranscribeRecording}
-                  disabled={recordAndTranscribeLoading}
-                  ariaLabel={
-                    isRecordAndTranscribeRecording
-                      ? 'Stop recording and transcribe'
-                      : recordAndTranscribeLoading
-                        ? 'Transcribing...'
-                        : 'Record & transcribe'
-                  }
+                  isActive={editor.isActive('taskList')}
+                  ariaLabel="Task List"
                 >
                   <div className="flex items-center gap-2">
-                    {recordAndTranscribeLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
-                    ) : isRecordAndTranscribeRecording ? (
-                      <Circle className="w-4 h-4 fill-red-500 text-red-500" aria-hidden />
-                    ) : (
-                      <Mic className="w-4 h-4" aria-hidden />
-                    )}
-                    <span className="text-sm">Record & transcribe</span>
+                    <CheckSquare className="w-4 h-4" aria-hidden />
+                    <span className="text-sm">Task List</span>
                   </div>
                 </ToolbarButton>
-              )}
 
-              {/* Additional items */}
-              {moreItems.map((item, index) => (
-                <div key={index} onClick={() => setMoreMenuOpen(false)}>
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>,
-          document.body,
-        )}
+                {/* Table */}
+                <ToolbarButton
+                  onClick={() => {
+                    editor
+                      .chain()
+                      .focus()
+                      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                      .run();
+                    setMoreMenuOpen(false);
+                  }}
+                  ariaLabel="Insert Table"
+                >
+                  <div className="flex items-center gap-2">
+                    <TableIcon className="w-4 h-4" aria-hidden />
+                    <span className="text-sm">Table</span>
+                  </div>
+                </ToolbarButton>
+
+                {/* Image */}
+                <ToolbarButton
+                  onClick={() => {
+                    const url = window.prompt('Enter image URL:');
+                    if (url) {
+                      editor.chain().focus().setImage({ src: url }).run();
+                    }
+                    setMoreMenuOpen(false);
+                  }}
+                  ariaLabel="Insert Image"
+                >
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" aria-hidden />
+                    <span className="text-sm">Image</span>
+                  </div>
+                </ToolbarButton>
+
+                {/* Undo */}
+                <ToolbarButton
+                  onClick={() => {
+                    editor.chain().focus().undo().run();
+                    setMoreMenuOpen(false);
+                  }}
+                  ariaLabel="Undo"
+                  disabled={!editor.can().undo()}
+                >
+                  <div className="flex items-center gap-2">
+                    <Undo2 className="w-4 h-4" aria-hidden />
+                    <span className="text-sm">Undo</span>
+                  </div>
+                </ToolbarButton>
+
+                {/* Redo */}
+                <ToolbarButton
+                  onClick={() => {
+                    editor.chain().focus().redo().run();
+                    setMoreMenuOpen(false);
+                  }}
+                  ariaLabel="Redo"
+                  disabled={!editor.can().redo()}
+                >
+                  <div className="flex items-center gap-2">
+                    <Redo2 className="w-4 h-4" aria-hidden />
+                    <span className="text-sm">Redo</span>
+                  </div>
+                </ToolbarButton>
+
+                {/* Speech to text */}
+                {onToggleSpeech && (
+                  <ToolbarButton
+                    onClick={() => {
+                      onToggleSpeech();
+                      setMoreMenuOpen(false);
+                    }}
+                    isActive={isListening}
+                    ariaLabel={isListening ? 'Stop voice input' : 'Voice input'}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Mic className="w-4 h-4" aria-hidden />
+                      <span className="text-sm">Voice Input</span>
+                    </div>
+                  </ToolbarButton>
+                )}
+
+                {/* Record & transcribe */}
+                {onRecordAndTranscribeToggle && recordAndTranscribeSupported && (
+                  <ToolbarButton
+                    onClick={() => {
+                      onRecordAndTranscribeToggle();
+                      if (!isRecordAndTranscribeRecording && !recordAndTranscribeLoading) {
+                        setMoreMenuOpen(false);
+                      }
+                    }}
+                    isActive={isRecordAndTranscribeRecording}
+                    disabled={recordAndTranscribeLoading}
+                    ariaLabel={
+                      isRecordAndTranscribeRecording
+                        ? 'Stop recording and transcribe'
+                        : recordAndTranscribeLoading
+                          ? 'Transcribing...'
+                          : 'Record & transcribe'
+                    }
+                  >
+                    <div className="flex items-center gap-2">
+                      {recordAndTranscribeLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                      ) : isRecordAndTranscribeRecording ? (
+                        <Circle className="w-4 h-4 fill-red-500 text-red-500" aria-hidden />
+                      ) : (
+                        <Mic className="w-4 h-4" aria-hidden />
+                      )}
+                      <span className="text-sm">Record & transcribe</span>
+                    </div>
+                  </ToolbarButton>
+                )}
+
+                {/* Additional items */}
+                {moreItems.map((item, index) => (
+                  <div key={index} onClick={() => setMoreMenuOpen(false)}>
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>,
+            document.body,
+          )}
       </div>
 
       {/* Primary tools */}

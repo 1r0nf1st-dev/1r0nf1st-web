@@ -119,7 +119,7 @@ describe('NotesListSection', () => {
     const noteButton = screen.getByLabelText('Open note: Test Note 1');
     const noteContainer = noteButton.closest('.group');
     expect(noteContainer).toBeInTheDocument();
-    
+
     const deleteButton = screen.getByLabelText('Delete note Test Note 1');
     expect(deleteButton).toBeInTheDocument();
     expect(deleteButton).toHaveClass('opacity-0');
@@ -128,9 +128,9 @@ describe('NotesListSection', () => {
   it('shows confirmation dialog when delete button is clicked', () => {
     renderComponent();
     const deleteButton = screen.getByLabelText('Delete note Test Note 1');
-    
+
     fireEvent.click(deleteButton);
-    
+
     expect(screen.getByText('Delete?')).toBeInTheDocument();
     expect(screen.getByText('Yes')).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
@@ -139,11 +139,11 @@ describe('NotesListSection', () => {
   it('cancels deletion when Cancel is clicked', async () => {
     renderComponent();
     const deleteButton = screen.getByLabelText('Delete note Test Note 1');
-    
+
     fireEvent.click(deleteButton);
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
-    
+
     await waitFor(() => {
       expect(screen.queryByText('Delete?')).not.toBeInTheDocument();
     });
@@ -154,11 +154,11 @@ describe('NotesListSection', () => {
     mockDeleteNote.mockResolvedValue(undefined);
     renderComponent();
     const deleteButton = screen.getByLabelText('Delete note Test Note 1');
-    
+
     fireEvent.click(deleteButton);
     const yesButton = screen.getByText('Yes');
     fireEvent.click(yesButton);
-    
+
     await waitFor(() => {
       expect(mockDeleteNote).toHaveBeenCalledWith('1');
     });
@@ -169,24 +169,24 @@ describe('NotesListSection', () => {
   it('shows error alert when deletion fails', async () => {
     const error = new Error('Delete failed');
     mockDeleteNote.mockRejectedValue(error);
-    
+
     // Mock showAlert from AlertContext
     const AlertContext = await import('../../contexts/AlertContext');
     vi.spyOn(AlertContext, 'useAlert').mockReturnValue({
       showAlert: mockShowAlert,
     });
-    
+
     renderComponent();
     const deleteButton = screen.getByLabelText('Delete note Test Note 1');
-    
+
     fireEvent.click(deleteButton);
     const yesButton = screen.getByText('Yes');
     fireEvent.click(yesButton);
-    
+
     await waitFor(() => {
       expect(mockDeleteNote).toHaveBeenCalled();
     });
-    
+
     // Note: Alert context mocking may need adjustment based on actual implementation
   });
 

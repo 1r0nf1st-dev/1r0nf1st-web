@@ -14,14 +14,17 @@ interface RateLimitStore {
 const rateLimitStore: RateLimitStore = {};
 
 // Clean up expired entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  Object.keys(rateLimitStore).forEach((key) => {
-    if (rateLimitStore[key].resetTime < now) {
-      delete rateLimitStore[key];
-    }
-  });
-}, 5 * 60 * 1000);
+setInterval(
+  () => {
+    const now = Date.now();
+    Object.keys(rateLimitStore).forEach((key) => {
+      if (rateLimitStore[key].resetTime < now) {
+        delete rateLimitStore[key];
+      }
+    });
+  },
+  5 * 60 * 1000,
+);
 
 /**
  * Get client identifier for rate limiting
@@ -55,7 +58,12 @@ interface RateLimitOptions {
  * Rate limiting middleware factory
  */
 export function createRateLimiter(options: RateLimitOptions) {
-  const { max, windowMs, message = 'Too many requests, please try again later', skipInDevelopment = true } = options;
+  const {
+    max,
+    windowMs,
+    message = 'Too many requests, please try again later',
+    skipInDevelopment = true,
+  } = options;
 
   return (req: Request, res: Response, next: NextFunction): void => {
     // Skip rate limiting in development if configured

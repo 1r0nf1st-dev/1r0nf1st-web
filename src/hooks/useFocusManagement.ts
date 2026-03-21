@@ -44,7 +44,7 @@ export const useFocusManagement = ({
     // Focus first focusable element
     if (autoFocus) {
       const focusables = container.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       const firstFocusable = focusables[0];
       if (firstFocusable) {
@@ -75,7 +75,7 @@ export const useFocusManagement = ({
 
     const container = containerRef.current;
     const focusables = container.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
 
     if (focusables.length === 0) return;

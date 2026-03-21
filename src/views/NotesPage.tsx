@@ -27,6 +27,9 @@ import { TasksWidget } from '../components/TasksWidget';
 import { StravaWidget } from '../components/StravaWidget';
 import { WebClipperModal } from '../components/Sidebar/WebClipperModal';
 import { SearchModal } from '../components/Sidebar/SearchModal';
+import { PageHero } from '../components/PageHero';
+import { StatsBar } from '../components/StatsBar';
+import { ListCard } from '../components/ListCard';
 
 interface NotesPageProps {
   useChrome?: boolean;
@@ -37,7 +40,15 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
   const router = useRouter();
   const { user } = useAuth();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
-  const { registerHandlers, registerRefetch, refetchAllNotes, isWebClipperOpen, closeWebClipper, isSearchOpen, closeSearch } = useNotesActions();
+  const {
+    registerHandlers,
+    registerRefetch,
+    refetchAllNotes,
+    isWebClipperOpen,
+    closeWebClipper,
+    isSearchOpen,
+    closeSearch,
+  } = useNotesActions();
   const { announce } = useLiveRegion();
   const { handleError } = useErrorHandler();
 
@@ -77,7 +88,6 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
     );
   }, [searchParams, useChrome]);
 
-
   useEffect(() => {
     if (user && !previousUser.current && !hasRefetchedAfterLogin.current) {
       hasRefetchedAfterLogin.current = true;
@@ -101,7 +111,10 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
 
   const handleCreateNote = async () => {
     if (!user) {
-      handleError('Please log in to create notes.', { fallback: 'Log in required', showAlert: true });
+      handleError('Please log in to create notes.', {
+        fallback: 'Log in required',
+        showAlert: true,
+      });
       return;
     }
 
@@ -132,7 +145,10 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
         Object.keys(error).length === 0
           ? new Error('Failed to create note. Please try again.')
           : error;
-      handleError(err, { prefix: 'Failed to create note:', fallback: 'Failed to create note. Please try again.' });
+      handleError(err, {
+        prefix: 'Failed to create note:',
+        fallback: 'Failed to create note. Please try again.',
+      });
     }
   };
 
@@ -155,7 +171,10 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
       setSelectedNote(newNote);
       announce('Note created from template');
     } catch (error) {
-      handleError(error, { prefix: 'Failed to create note from template:', fallback: 'Failed to create note. Please try again.' });
+      handleError(error, {
+        prefix: 'Failed to create note from template:',
+        fallback: 'Failed to create note. Please try again.',
+      });
     }
   };
 
@@ -309,7 +328,6 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
   if (!user) {
     return wrapWithChrome(
       <article className={cardClasses} style={{ maxWidth: '600px' }}>
-
         <div className="relative z-10 flex flex-col items-center text-center">
           <Lock className="text-4xl text-primary mb-4" />
           <h2 className={cardTitle}>Notes</h2>
@@ -326,6 +344,116 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
 
   const isAdmin = !!user?.email && user.email.toLowerCase() === 'admin@1r0nf1st.com';
   const widgetArray = Array.from(activeWidgets).filter((id) => id !== 'strava' || isAdmin);
+
+  const totalNotes = notes?.length ?? 0;
+  const totalNotebooks = notebooks?.length ?? 0;
+  const totalTags = tags?.length ?? 0;
+  const pinnedCount = notes?.filter((n) => n.is_pinned).length ?? 0;
+
+  const [activeTab, setActiveTab] = useState<'all' | 'pinned' | 'recent' | 'archived'>('all');
+
+  const filteredNotes = useMemo(() => {
+    const base = notes ?? [];
+    if (activeTab === 'archived') return base.filter((n) => n.is_archived);
+    if (activeTab === 'pinned') return base.filter((n) => n.is_pinned && !n.is_archived);
+    if (activeTab === 'recent')
+      return base
+        .filter((n) => !n.is_archived)
+        .slice()
+        .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    return base.filter((n) => !n.is_archived);
+  }, [notes, activeTab]);
+
+  const hero = (
+    <PageHero
+      flagLabel="Library"
+      watermark="All Notes"
+      title="All Notes"
+      actions={
+        <>
+          <button type="button" className="act-btn">
+            Export
+          </button>
+          <button
+            type="button"
+            className="act-btn primary"
+            onClick={() => void handleCreateNoteRef.current()}
+          >
+            + New Note
+          </button>
+        </>
+      }
+      tabs={[
+        { id: 'all', label: 'All' },
+        { id: 'pinned', label: 'Pinned' },
+        { id: 'recent', label: 'Recent' },
+        { id: 'archived', label: 'Archived' },
+      ]}
+      activeTabId={activeTab}
+      onTabChange={(id) => {
+        if (id === 'archived') setShowArchived(true);
+        if (id !== 'archived') setShowArchived(false);
+        setActiveTab(id as typeof activeTab);
+      }}
+    />
+  );
+
+  if (!useChrome) {
+    return (
+      <div className="flex flex-col min-h-0 h-full">
+        {hero}
+        <div className="page-content">
+          <StatsBar
+            items={[
+              { label: 'Total Notes', value: totalNotes },
+              { label: 'Notebooks', value: totalNotebooks },
+              { label: 'Tags', value: totalTags },
+              { label: 'Pinned', value: pinnedCount, accent: true },
+            ]}
+          />
+
+          {isWebClipperOpen ? (
+            <WebClipperModal isOpen={isWebClipperOpen} onClose={closeWebClipper} />
+          ) : null}
+          {isSearchOpen ? <SearchModal isOpen={isSearchOpen} onClose={closeSearch} /> : null}
+
+          {selectedNote ? (
+            <NoteDetail
+              note={selectedNote}
+              tags={tags || []}
+              notebooks={notebooks || []}
+              notes={notes || []}
+              onSave={handleSave}
+              onDelete={handleDelete}
+              onClose={() => setSelectedNote(null)}
+              onNoteClick={handleNoteClick}
+              onNotesChanged={() => refetch()}
+            />
+          ) : (
+            <div>
+              {filteredNotes.map((note) => (
+                <ListCard
+                  key={note.id}
+                  icon="📄"
+                  title={note.title || 'Untitled'}
+                  tag={note.tags?.[0]?.name}
+                  date={new Date(note.updated_at).toLocaleString()}
+                  onClick={() => {
+                    void handleNoteClick(note);
+                  }}
+                />
+              ))}
+              {filteredNotes.length === 0 ? (
+                <div className="mt-8 text-[color:var(--color-text-inv-2)] font-mono text-[11px]">
+                  No notes in this view.
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return wrapWithChrome(
     <div className="w-full h-full flex flex-col min-h-0 min-h-screen">
@@ -362,9 +490,7 @@ export const NotesPage = ({ useChrome = true }: NotesPageProps): JSX.Element => 
                 <WebClipperModal isOpen={isWebClipperOpen} onClose={closeWebClipper} />
               )}
               {/* Search Modal - positioned at top-left */}
-              {isSearchOpen && (
-                <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
-              )}
+              {isSearchOpen && <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />}
               {selectedNote ? (
                 <div className="flex-1 min-w-0 flex flex-col overflow-y-auto overflow-x-hidden touch-scroll p-3 lg:p-6">
                   <NoteDetail

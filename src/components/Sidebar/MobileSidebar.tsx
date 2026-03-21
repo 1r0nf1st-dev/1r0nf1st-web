@@ -38,7 +38,7 @@ export const MobileSidebar = (): JSX.Element => {
   useEffect(() => {
     if (isOpen && panelRef.current) {
       const firstFocusable = panelRef.current.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       firstFocusable?.focus();
     }

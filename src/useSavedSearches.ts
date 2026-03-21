@@ -44,7 +44,11 @@ export function useSavedSearches(): {
 
   const fetchSavedSearches = useCallback(async () => {
     if (!user) {
-      setState({ savedSearches: null, isLoading: false, error: 'Please log in to view saved searches.' });
+      setState({
+        savedSearches: null,
+        isLoading: false,
+        error: 'Please log in to view saved searches.',
+      });
       return;
     }
 

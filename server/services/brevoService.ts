@@ -78,7 +78,7 @@ export async function sendTransactionalEmail(params: SendEmailParams): Promise<S
   if (!fromEmail) {
     throw new Error('Sender email is not configured. Set BREVO_FROM_EMAIL in your .env.');
   }
-  const fromName = params.fromName ?? (config.brevoFromName || '1r0nf1st');
+  const fromName = params.fromName ?? (config.brevoFromName || config.brandName);
 
   const body = params.message;
   const sanitized = sanitizeMessageBody(body);

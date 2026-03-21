@@ -3,8 +3,6 @@
 import type { JSX } from 'react';
 import { useState, useCallback } from 'react';
 import { obApi, type ObSearchResult } from '../../lib/obApi';
-import { btnBase, btnPrimary } from '../../styles/buttons';
-import { cardClasses } from '../../styles/cards';
 import { Search, MessageCircle, Loader2 } from 'lucide-react';
 
 interface ChatPanelProps {
@@ -54,15 +52,19 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
     }
   }, [chatQuery, brainOwnerId]);
 
-  return (
-    <div className={cardClasses + ' space-y-6'}>
-      <h2 className="text-lg font-semibold text-foreground">Ask your brain</h2>
+  const inputClass =
+    'flex-1 border border-[color:var(--color-rule-dark)] bg-[color:var(--color-ink)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-inv)] placeholder:text-[color:var(--color-text-inv-2)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-orange)] focus-visible:outline-offset-2';
 
+  return (
+    <div className="space-y-6">
       <section>
-        <label htmlFor="ob-search" className="block text-sm font-medium text-foreground mb-1">
+        <label
+          htmlFor="ob-search"
+          className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-inv-2)]"
+        >
           Semantic search
         </label>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <input
             id="ob-search"
             type="text"
@@ -70,7 +72,7 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onSearch()}
             placeholder="Search nodes by meaning…"
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-foreground text-sm focus:ring-2 focus:ring-primary"
+            className={inputClass}
             aria-label="Search your brain"
             data-testid="search-input"
           />
@@ -78,7 +80,7 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
             type="button"
             onClick={onSearch}
             disabled={searching || !searchQuery.trim()}
-            className={`${btnBase} ${btnPrimary} flex items-center gap-1.5`}
+            className="flex items-center gap-1.5 bg-[color:var(--color-orange)] px-3 py-[7px] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-white disabled:opacity-70"
           >
             {searching ? (
               <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
@@ -89,31 +91,40 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
           </button>
         </div>
         {searchError && (
-          <p className="mt-1 text-sm text-destructive" role="alert">
+          <p
+            className="mt-1 font-display text-[12px] text-[color:var(--color-orange)]"
+            role="alert"
+          >
             {searchError}
           </p>
         )}
         {searchResults && (
-          <ul
-            className="mt-2 space-y-2 max-h-48 overflow-y-auto"
-            data-testid="search-results"
-          >
+          <ul className="mt-2 max-h-48 space-y-2 overflow-y-auto" data-testid="search-results">
             {searchResults.length === 0 ? (
-              <li className="text-sm text-muted" data-testid="no-results">
+            <li
+              className="font-display text-[12px] text-[color:var(--color-text-inv-2)]"
+              data-testid="no-results"
+            >
                 No matching nodes.
               </li>
             ) : (
               searchResults.map((r) => (
                 <li
                   key={r.id}
-                  className="text-sm border-b border-border/50 pb-2 last:border-0"
+                  className="border-b border-[color:var(--color-rule-dark)] pb-2 last:border-0"
                   data-testid="search-result-item"
                 >
-                  <span className="font-medium text-foreground">{r.title || 'Untitled'}</span>
+                  <span className="font-display text-[13px] font-bold text-[color:var(--color-text-inv)]">
+                    {r.title || 'Untitled'}
+                  </span>
                   {r.ai_summary && (
-                    <p className="text-muted line-clamp-2 mt-0.5">{r.ai_summary}</p>
+                    <p className="mt-0.5 font-display text-[12px] text-[color:var(--color-text-inv-2)] line-clamp-2">
+                      {r.ai_summary}
+                    </p>
                   )}
-                  <span className="text-xs text-muted">{(r.similarity * 100).toFixed(0)}% match</span>
+                  <span className="font-mono text-[10px] text-[color:var(--color-text-inv-2)]">
+                    {(r.similarity * 100).toFixed(0)}% match
+                  </span>
                 </li>
               ))
             )}
@@ -122,10 +133,13 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
       </section>
 
       <section>
-        <label htmlFor="ob-chat" className="block text-sm font-medium text-foreground mb-1">
+        <label
+          htmlFor="ob-chat"
+          className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-inv-2)]"
+        >
           Chat (RAG)
         </label>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <input
             id="ob-chat"
             type="text"
@@ -133,7 +147,7 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
             onChange={(e) => setChatQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onChat()}
             placeholder="Ask a question…"
-            className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-foreground text-sm focus:ring-2 focus:ring-primary"
+            className={inputClass}
             aria-label="Chat with your brain"
             data-testid="chat-input"
           />
@@ -141,7 +155,7 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
             type="button"
             onClick={onChat}
             disabled={chatting || !chatQuery.trim()}
-            className={`${btnBase} ${btnPrimary} flex items-center gap-1.5`}
+            className="flex items-center gap-1.5 bg-[color:var(--color-orange)] px-3 py-[7px] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-white disabled:opacity-70"
             data-testid="chat-send"
           >
             {chatting ? (
@@ -153,13 +167,16 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
           </button>
         </div>
         {chatError && (
-          <p className="mt-1 text-sm text-destructive" role="alert">
+          <p
+            className="mt-1 font-display text-[12px] text-[color:var(--color-orange)]"
+            role="alert"
+          >
             {chatError}
           </p>
         )}
         {chatResponse && (
           <div
-            className="mt-2 p-3 rounded-lg bg-muted/40 text-sm text-foreground whitespace-pre-wrap"
+            className="mt-2 border border-[color:var(--color-rule-dark)] bg-[color:var(--color-surface)] p-3 font-display text-[12px] text-[color:var(--color-text-inv)] whitespace-pre-wrap"
             role="region"
             aria-label="Chat response"
             data-testid="chat-response"

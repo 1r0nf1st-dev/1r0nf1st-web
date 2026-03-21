@@ -10,6 +10,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { ThemeToggle } from '../Navigation/ThemeToggle';
 import { AuthControls } from '../Navigation/AuthControls';
 import { UnifiedMobileMenu } from '../UnifiedMobileMenu';
+import { BRAND_NAME } from '../../config';
 import { BrandName } from '../BrandName';
 import { btnBase, btnGhost } from '../../styles/buttons';
 
@@ -24,14 +25,9 @@ export const CorporateNav = (): JSX.Element => {
   const isAppShellPage =
     (pathname?.startsWith('/notes') || pathname?.startsWith('/projects')) ?? false;
 
-
   const navLinks = (
     <>
-      <Link
-        href="/about"
-        className={linkClass(pathname === '/about')}
-        onClick={mobileMenu.close}
-      >
+      <Link href="/about" className={linkClass(pathname === '/about')} onClick={mobileMenu.close}>
         01 ABOUT
       </Link>
       <Link
@@ -51,14 +47,17 @@ export const CorporateNav = (): JSX.Element => {
     </>
   );
 
-
   return (
     <header className="w-full border-b border-border bg-surface/95 dark:bg-surface backdrop-blur-sm sticky top-0 z-40">
       <nav
         className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center"
         aria-label="Main navigation"
       >
-        <Link href="/" className="flex items-center gap-2 no-underline text-inherit shrink-0" aria-label="1r0nf1st">
+        <Link
+          href="/"
+          className="flex items-center gap-2 no-underline text-inherit shrink-0"
+          aria-label={BRAND_NAME}
+        >
           <BrandName className="font-semibold text-foreground text-lg tracking-tight" />
         </Link>
 
@@ -71,10 +70,7 @@ export const CorporateNav = (): JSX.Element => {
           <AuthControls />
         </div>
 
-        <div
-          className="flex lg:hidden items-center gap-2 shrink-0 ml-auto"
-          style={{ minWidth: 0 }}
-        >
+        <div className="flex lg:hidden items-center gap-2 shrink-0 ml-auto" style={{ minWidth: 0 }}>
           <ThemeToggle />
           {isAppShellPage ? (
             <UnifiedMobileMenu />
@@ -127,42 +123,42 @@ export const CorporateNav = (): JSX.Element => {
                 inset: 0,
               }}
             >
-          <div className="min-h-screen min-h-dvh flex flex-col">
-            {/* Header: logo left, close right */}
-            <div className="flex justify-between items-center px-6 py-6 border-b border-border shrink-0">
-              <Link
-                href="/"
-                onClick={mobileMenu.close}
-                className="flex items-center gap-2 no-underline text-inherit"
-                aria-label="1r0nf1st"
-              >
-                <BrandName className="font-semibold text-foreground text-lg tracking-tight" />
-              </Link>
-              <button
-                type="button"
-                onClick={mobileMenu.close}
-                className="flex items-center justify-center min-h-[44px] min-w-[44px] p-2 rounded-xl text-muted hover:text-foreground hover:bg-surface-soft transition-colors"
-                aria-label="Close menu"
-              >
-                <X className="w-6 h-6" aria-hidden />
-              </button>
-            </div>
-            {/* Main nav - centered, takes remaining space */}
-            <nav
-              className="flex-1 flex flex-col justify-center gap-0 px-6 py-8 [&_a]:text-lg [&_a]:py-4 [&_a]:border-b [&_a]:border-border [&_a:last-of-type]:border-b-0"
-              aria-label="Mobile navigation"
-            >
-              {navLinks}
-            </nav>
-            {/* Footer: auth */}
-            <div className="shrink-0 border-t border-border px-6 py-6 flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <AuthControls onMenuClose={mobileMenu.close} />
+              <div className="min-h-screen min-h-dvh flex flex-col">
+                {/* Header: logo left, close right */}
+                <div className="flex justify-between items-center px-6 py-6 border-b border-border shrink-0">
+                  <Link
+                    href="/"
+                    onClick={mobileMenu.close}
+                    className="flex items-center gap-2 no-underline text-inherit"
+                    aria-label={BRAND_NAME}
+                  >
+                    <BrandName className="font-semibold text-foreground text-lg tracking-tight" />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={mobileMenu.close}
+                    className="flex items-center justify-center min-h-[44px] min-w-[44px] p-2 rounded-xl text-muted hover:text-foreground hover:bg-surface-soft transition-colors"
+                    aria-label="Close menu"
+                  >
+                    <X className="w-6 h-6" aria-hidden />
+                  </button>
+                </div>
+                {/* Main nav - centered, takes remaining space */}
+                <nav
+                  className="flex-1 flex flex-col justify-center gap-0 px-6 py-8 [&_a]:text-lg [&_a]:py-4 [&_a]:border-b [&_a]:border-border [&_a:last-of-type]:border-b-0"
+                  aria-label="Mobile navigation"
+                >
+                  {navLinks}
+                </nav>
+                {/* Footer: auth */}
+                <div className="shrink-0 border-t border-border px-6 py-6 flex flex-col gap-4">
+                  <div className="flex flex-col gap-2">
+                    <AuthControls onMenuClose={mobileMenu.close} />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>,
+          </div>,
           document.body,
         )}
     </header>

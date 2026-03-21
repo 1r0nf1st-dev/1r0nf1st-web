@@ -28,7 +28,11 @@ export const LoadingSpinner = ({
   label = 'Loading',
 }: LoadingSpinnerProps): JSX.Element => {
   return (
-    <div className={`flex items-center justify-center ${className}`} role="status" aria-label={label}>
+    <div
+      className={`flex items-center justify-center ${className}`}
+      role="status"
+      aria-label={label}
+    >
       <Loader2 className={`${sizeClasses[size]} animate-spin text-primary`} aria-hidden />
       <span className="sr-only">{label}</span>
     </div>

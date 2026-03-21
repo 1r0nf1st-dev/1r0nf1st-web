@@ -109,12 +109,10 @@ describe('transcribe routes', () => {
     });
 
     it('returns 400 for unsupported audio mime type', async () => {
-      const res = await request(app)
-        .post('/transcribe/audio')
-        .attach('file', Buffer.from('fake'), {
-          filename: 'test.aiff',
-          contentType: 'audio/aiff',
-        });
+      const res = await request(app).post('/transcribe/audio').attach('file', Buffer.from('fake'), {
+        filename: 'test.aiff',
+        contentType: 'audio/aiff',
+      });
       expect(res.status).toBe(400);
       expect(res.body).toMatchObject({ error: 'Unsupported file type' });
       expect(transcribeService.transcribeAudio).not.toHaveBeenCalled();

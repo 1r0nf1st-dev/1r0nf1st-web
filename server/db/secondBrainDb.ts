@@ -38,11 +38,7 @@ export interface InsertThoughtData {
 
 export async function insertThought(data: InsertThoughtData): Promise<{ id: string }> {
   const db = requireDb();
-  const { data: thought, error } = await db
-    .from('sb_thoughts')
-    .insert(data)
-    .select('id')
-    .single();
+  const { data: thought, error } = await db.from('sb_thoughts').insert(data).select('id').single();
   if (error) throw new Error(`Failed to store thought: ${error.message}`);
   return { id: thought.id };
 }
@@ -163,10 +159,7 @@ export async function listTable<T>(table: SbTable, limit = 50): Promise<T[]> {
   return (data ?? []) as T[];
 }
 
-export async function updateProject(
-  id: string,
-  updates: Record<string, unknown>,
-): Promise<void> {
+export async function updateProject(id: string, updates: Record<string, unknown>): Promise<void> {
   const db = requireDb();
   const { error } = await db.from('sb_projects').update(updates).eq('id', id);
   if (error) throw new Error(`Failed to update project: ${error.message}`);

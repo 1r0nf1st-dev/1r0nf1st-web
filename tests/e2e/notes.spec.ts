@@ -6,9 +6,7 @@ test.describe('Notes page', () => {
 
     await expect(page).toHaveURL(/\/notes/);
     await expect(page.getByRole('heading', { name: /^notes$/i })).toBeVisible();
-    await expect(
-      page.getByText(/please log in to access your notes/i),
-    ).toBeVisible();
+    await expect(page.getByText(/please log in to access your notes/i)).toBeVisible();
     await expect(page.getByRole('link', { name: /log in/i })).toBeVisible();
   });
 

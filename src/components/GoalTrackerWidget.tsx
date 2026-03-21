@@ -41,13 +41,8 @@ export function GoalTrackerWidget(): JSX.Element {
       setIsAdding(false);
       await refetch();
     } catch (err) {
-      setAddError(
-        err instanceof Error ? err.message : 'Failed to create goal. Please try again.',
-      );
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to create goal.',
-        'Error',
-      );
+      setAddError(err instanceof Error ? err.message : 'Failed to create goal. Please try again.');
+      showAlert(err instanceof Error ? err.message : 'Failed to create goal.', 'Error');
     }
   };
 
@@ -57,10 +52,7 @@ export function GoalTrackerWidget(): JSX.Element {
       setEditingId(null);
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to update goal.',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to update goal.', 'Error');
     }
   };
 
@@ -71,10 +63,7 @@ export function GoalTrackerWidget(): JSX.Element {
       await deleteGoal(goalId);
       await refetch();
     } catch (err) {
-      showAlert(
-        err instanceof Error ? err.message : 'Failed to delete goal.',
-        'Error',
-      );
+      showAlert(err instanceof Error ? err.message : 'Failed to delete goal.', 'Error');
     } finally {
       setDeletingId(null);
     }
@@ -83,9 +72,7 @@ export function GoalTrackerWidget(): JSX.Element {
   if (!user) {
     return (
       <section
-        className={`rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 p-4 ${
-          'md:rounded-xl'
-        }`}
+        className={`rounded-xl border border-primary/20 dark:border-border bg-white/50 dark:bg-surface/50 p-4 ${'md:rounded-xl'}`}
         aria-labelledby="goals-widget-heading"
       >
         <div className="flex items-center gap-2 mb-3">
@@ -114,9 +101,7 @@ export function GoalTrackerWidget(): JSX.Element {
   if (isLoading) {
     return (
       <section
-        className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-          'md:rounded-xl'
-        }`}
+        className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${'md:rounded-xl'}`}
         aria-labelledby="goals-widget-heading"
       >
         <div className="flex items-center gap-2 mb-3">
@@ -140,9 +125,7 @@ export function GoalTrackerWidget(): JSX.Element {
   if (error) {
     return (
       <section
-        className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-          'md:rounded-xl'
-        }`}
+        className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${'md:rounded-xl'}`}
         aria-labelledby="goals-widget-heading"
       >
         <h2
@@ -158,9 +141,7 @@ export function GoalTrackerWidget(): JSX.Element {
 
   return (
     <section
-      className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${
-        'md:rounded-xl'
-      }`}
+      className={`rounded-xl border border-primary/20 dark:border-border bg-white dark:bg-surface p-4 ${'md:rounded-xl'}`}
       aria-labelledby="goals-widget-heading"
     >
       <div className="flex items-center justify-between mb-3">
@@ -168,9 +149,7 @@ export function GoalTrackerWidget(): JSX.Element {
           <Target className="w-4 h-4 text-primary shrink-0" aria-hidden />
           <h2
             id="goals-widget-heading"
-            className={`text-sm font-semibold uppercase tracking-wider text-muted ${
-              'tracking-widest'
-            }`}
+            className={`text-sm font-semibold uppercase tracking-wider text-muted ${'tracking-widest'}`}
           >
             Goals
           </h2>
@@ -190,9 +169,7 @@ export function GoalTrackerWidget(): JSX.Element {
 
       {isAdding && (
         <div className="space-y-2 mb-4 p-3 border border-primary/20 dark:border-border rounded-xl">
-          {addError && (
-            <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>
-          )}
+          {addError && <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>}
           <input
             type="text"
             value={newTitle}
@@ -278,9 +255,7 @@ export function GoalTrackerWidget(): JSX.Element {
                   min={0}
                   max={100}
                   value={editProgress}
-                  onChange={(e) =>
-                    setEditProgress(Number.parseInt(e.target.value, 10))
-                  }
+                  onChange={(e) => setEditProgress(Number.parseInt(e.target.value, 10))}
                   className="w-full"
                   aria-label={`Progress: ${editProgress}%`}
                 />

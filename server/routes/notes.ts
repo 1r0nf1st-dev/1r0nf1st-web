@@ -78,7 +78,9 @@ const upload = multer({
 notesRouter.get('/clip/notebooks', authenticateWebClipper, async (req: AuthRequest, res) => {
   try {
     if (!req.userId || !supabase) {
-      res.status(req.userId ? 503 : 401).json({ error: req.userId ? 'Database not configured' : 'Web Clipper token invalid' });
+      res
+        .status(req.userId ? 503 : 401)
+        .json({ error: req.userId ? 'Database not configured' : 'Web Clipper token invalid' });
       return;
     }
     const notebooks = await getNotebooksByUserId(supabase, req.userId);
@@ -125,7 +127,11 @@ notesRouter.post('/clip', authenticateWebClipper, async (req: AuthRequest, res) 
       res.status(503).json({ error: 'Database not configured' });
       return;
     }
-    const note = await createNote(supabase, req.userId, { title, content, notebook_id: notebookId ?? undefined });
+    const note = await createNote(supabase, req.userId, {
+      title,
+      content,
+      notebook_id: notebookId ?? undefined,
+    });
     res.status(201).json(note);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to clip note';
@@ -318,8 +324,7 @@ notesRouter.get('/saved-searches', async (req: AuthRequest, res) => {
     const savedSearches = await getSavedSearches(req.supabase!, req.userId);
     res.json(savedSearches);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch saved searches';
+    const message = error instanceof Error ? error.message : 'Failed to fetch saved searches';
     res.status(500).json({ error: message });
   }
 });
@@ -347,8 +352,7 @@ notesRouter.post('/saved-searches', async (req: AuthRequest, res) => {
     });
     res.status(201).json(savedSearch);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to create saved search';
+    const message = error instanceof Error ? error.message : 'Failed to create saved search';
     res.status(500).json({ error: message });
   }
 });
@@ -363,8 +367,7 @@ notesRouter.get('/templates', async (req: AuthRequest, res) => {
     const templates = await getNoteTemplates(req.supabase!, req.userId);
     res.json(templates);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch templates';
+    const message = error instanceof Error ? error.message : 'Failed to fetch templates';
     res.status(500).json({ error: message });
   }
 });
@@ -387,8 +390,7 @@ notesRouter.post('/templates', async (req: AuthRequest, res) => {
     });
     res.status(201).json(template);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to create template';
+    const message = error instanceof Error ? error.message : 'Failed to create template';
     res.status(500).json({ error: message });
   }
 });
@@ -404,8 +406,7 @@ notesRouter.delete('/templates/:id', async (req: AuthRequest, res) => {
     await deleteNoteTemplate(req.supabase!, id, req.userId);
     res.status(204).send();
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to delete template';
+    const message = error instanceof Error ? error.message : 'Failed to delete template';
     const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
@@ -423,8 +424,7 @@ notesRouter.delete('/saved-searches/:id', async (req: AuthRequest, res) => {
     await deleteSavedSearch(req.supabase!, id, req.userId);
     res.status(204).send();
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to delete saved search';
+    const message = error instanceof Error ? error.message : 'Failed to delete saved search';
     res.status(500).json({ error: message });
   }
 });
@@ -673,8 +673,7 @@ notesRouter.get('/:id/backlinks', async (req: AuthRequest, res) => {
     const notes = await getBacklinks(req.supabase!, noteId, req.userId);
     res.json(notes);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch backlinks';
+    const message = error instanceof Error ? error.message : 'Failed to fetch backlinks';
     const status = error instanceof Error && message.includes('not found') ? 404 : 500;
     res.status(status).json({ error: message });
   }
@@ -957,8 +956,8 @@ notesRouter.post(
       let uploadError: { message: string; statusCode?: number } | null = null;
 
       try {
-        const result = await req.supabase!.storage
-          .from('note-attachments')
+        const result = await req
+          .supabase!.storage.from('note-attachments')
           .upload(filePath, file.buffer, {
             contentType: file.mimetype || 'application/octet-stream',
             upsert: false,
@@ -974,8 +973,7 @@ notesRouter.post(
             }
           : null;
       } catch (storageErr) {
-        const errMsg =
-          storageErr instanceof Error ? storageErr.message : String(storageErr);
+        const errMsg = storageErr instanceof Error ? storageErr.message : String(storageErr);
         logger.error(
           { err: storageErr, filePath, bucket: 'note-attachments' },
           'Storage upload threw',
@@ -1133,11 +1131,9 @@ notesRouter.get('/attachments/:id/download', async (req: AuthRequest, res) => {
       .createSignedUrl(attachment.file_path, 3600);
 
     if (signedUrlError || !signedUrlData) {
-      res
-        .status(500)
-        .json({
-          error: `Failed to create download URL: ${signedUrlError?.message || 'Unknown error'}`,
-        });
+      res.status(500).json({
+        error: `Failed to create download URL: ${signedUrlError?.message || 'Unknown error'}`,
+      });
       return;
     }
 
@@ -1192,7 +1188,7 @@ notesRouter.post('/:id/share', async (req: AuthRequest, res) => {
           await sendTransactionalEmail({
             to: [recipientEmail],
             subject: `You've been given access to a note: ${noteTitle}`,
-            message: `Hello,\n\nSomeone has shared a note with you: "${noteTitle}".\n\nTo view it:\n1. Log in at ${loginUrl}\n2. Go to Notes at ${notesUrl}\n3. Open the "Shared" tab to see notes shared with you.\n\nIf you don't have an account yet, sign up at ${loginUrl} to get started.\n\nBest,\n1r0nf1st`,
+            message: `Hello,\n\nSomeone has shared a note with you: "${noteTitle}".\n\nTo view it:\n1. Log in at ${loginUrl}\n2. Go to Notes at ${notesUrl}\n3. Open the "Shared" tab to see notes shared with you.\n\nIf you don't have an account yet, sign up at ${loginUrl} to get started.\n\nBest,\n${config.brandName}`,
           });
         } catch (emailErr) {
           const { logger } = await import('../utils/logger.js');
@@ -1213,7 +1209,7 @@ notesRouter.post('/:id/share', async (req: AuthRequest, res) => {
           await sendTransactionalEmail({
             to: [recipientEmail],
             subject: `You've been given access to a note: ${noteTitle}`,
-            message: `Hello,\n\nSomeone has shared a note with you: "${noteTitle}".\n\nView it here (no account needed): ${viewLink}\n\nIf you sign up later with this email, you can also see shared notes in the Shared tab at ${config.siteUrl}/notes.\n\nBest,\n1r0nf1st`,
+            message: `Hello,\n\nSomeone has shared a note with you: "${noteTitle}".\n\nView it here (no account needed): ${viewLink}\n\nIf you sign up later with this email, you can also see shared notes in the Shared tab at ${config.siteUrl}/notes.\n\nBest,\n${config.brandName}`,
           });
         } catch (emailErr) {
           const { logger } = await import('../utils/logger.js');

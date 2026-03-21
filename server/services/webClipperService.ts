@@ -14,7 +14,9 @@ export interface WebClipperToken {
  * Generate a new Web Clipper token for the user. Revokes any existing token.
  * Returns the raw token (shown once); store hash in DB.
  */
-export async function createWebClipperToken(userId: string): Promise<{ token: string; createdAt: string }> {
+export async function createWebClipperToken(
+  userId: string,
+): Promise<{ token: string; createdAt: string }> {
   if (!supabase) {
     throw new Error('Database not configured');
   }

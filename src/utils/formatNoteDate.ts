@@ -8,7 +8,7 @@ export function formatNoteDate(dateString: string): string {
   const diffMs = now.getTime() - date.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
-  
+
   if (diffHours < 1) return 'Just now';
   if (diffHours < 24) {
     const hours = Math.floor(diffHours);
@@ -19,10 +19,10 @@ export function formatNoteDate(dateString: string): string {
     const days = Math.floor(diffDays);
     return `${days} day${days !== 1 ? 's' : ''} ago`;
   }
-  
+
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric'
+    day: 'numeric',
   });
 }

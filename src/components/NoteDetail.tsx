@@ -15,8 +15,6 @@ import { BacklinksSection } from './BacklinksSection';
 import { tiptapToMarkdown } from '../utils/tiptapToMarkdown';
 import { createNoteTemplate } from '../useNoteTemplates';
 import { useAlert } from '../contexts/AlertContext';
-import { cardClasses, cardTitle } from '../styles/cards';
-import { btnBase, btnPrimary, btnGhost, btnIcon, btnCompact } from '../styles/buttons';
 import { ChevronDown, X } from 'lucide-react';
 
 export interface NoteDetailProps {
@@ -85,10 +83,7 @@ export const NoteDetail = ({
   // Close tags dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        tagsDropdownRef.current &&
-        !tagsDropdownRef.current.contains(event.target as Node)
-      ) {
+      if (tagsDropdownRef.current && !tagsDropdownRef.current.contains(event.target as Node)) {
         setIsTagsDropdownOpen(false);
       }
     };
@@ -255,308 +250,323 @@ export const NoteDetail = ({
     );
   }
 
+  const isNewNote =
+    note.title === 'New Note' &&
+    (!note.content ||
+      (typeof note.content === 'object' &&
+        (!(note.content as { content?: unknown[] }).content ||
+          ((note.content as { content?: unknown[] }).content?.length ?? 0) === 0)));
+
   return (
     <>
-      <article className={cardClasses}>
-
-        <div className="relative z-10 flex flex-col h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className={cardTitle}>Edit Note</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className={`${btnBase} ${btnGhost} ${btnIcon}`}
-              aria-label="Close"
-            >
-              ✕
+      <div className="note-modal-overlay" role="dialog" aria-modal="true" aria-label="Edit Note">
+        <div className="note-modal">
+          <div className="note-modal-header">
+            <h2 className="note-modal-title">{isNewNote ? 'New Note' : 'Edit Note'}</h2>
+            <button type="button" onClick={onClose} className="note-modal-close" aria-label="Close">
+              <X className="w-4 h-4" aria-hidden />
             </button>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <div>
-              <label
-                htmlFor="note-title"
-                className="block text-sm font-medium mb-1 text-foreground"
-              >
-                Title
-              </label>
-              <input
-                ref={titleInputRef}
-                id="note-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Note title..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-foreground">Notebook</label>
-              <select
-                value={notebookId || ''}
-                onChange={(e) => setNotebookId(e.target.value || null)}
-                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">No notebook</option>
-                {notebooks.map((nb) => (
-                  <option key={nb.id} value={nb.id}>
-                    {nb.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-foreground">Tags</label>
-              <div ref={tagsDropdownRef} className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsTagsDropdownOpen(!isTagsDropdownOpen)}
-                  className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary flex items-center justify-between"
+          <div className="note-modal-body">
+            <div className="flex flex-col gap-4">
+              <div>
+                <label
+                  htmlFor="note-title"
+                  className="field-label block font-mono text-[9px] uppercase tracking-[0.16em] text-[#5C574F] mb-[7px]"
                 >
-                  <span className="truncate">
-                    {selectedTagIds.length === 0
-                      ? 'No tags'
-                      : selectedTagIds.length === 1
-                        ? tags.find((t) => t.id === selectedTagIds[0])?.name || '1 tag'
-                        : `${selectedTagIds.length} tags`}
-                  </span>
-                  <ChevronDown
-                    className={`h-4 w-4 shrink-0 transition-transform ${
-                      isTagsDropdownOpen ? 'rotate-180' : ''
-                    }`}
-                    aria-hidden
-                  />
-                </button>
-                {isTagsDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface shadow-lg max-h-60 overflow-y-auto">
-                    {tags.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-muted">No tags available</div>
-                    ) : (
-                      <div className="p-2 space-y-1">
-                        {tags.map((tag) => {
-                          const isSelected = selectedTagIds.includes(tag.id);
-                          return (
-                            <label
-                              key={tag.id}
-                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedTagIds([...selectedTagIds, tag.id]);
-                                  } else {
-                                    setSelectedTagIds(selectedTagIds.filter((id) => id !== tag.id));
-                                  }
-                                }}
-                                className="rounded border-primary/40 text-primary focus:ring-primary"
-                              />
-                              <span className="text-sm text-foreground flex-1">{tag.name}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
+                  Title
+                </label>
+                <input
+                  ref={titleInputRef}
+                  id="note-title"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="field-input"
+                  placeholder="Note title..."
+                />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-foreground">Content</label>
-              <NoteEditor
-                content={content}
-                onChange={setContent}
-                notesForLinking={notes}
-              />
-            </div>
+              <div>
+                <label className="field-label block font-mono text-[9px] uppercase tracking-[0.16em] text-[#5C574F] mb-[7px]">
+                  Notebook
+                </label>
+                <select
+                  value={notebookId || ''}
+                  onChange={(e) => setNotebookId(e.target.value || null)}
+                  className="field-input"
+                >
+                  <option value="">No notebook</option>
+                  {notebooks.map((nb) => (
+                    <option key={nb.id} value={nb.id}>
+                      {nb.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {note && onNoteClick && (
-              <BacklinksSection noteId={note.id} onNoteClick={onNoteClick} />
-            )}
-
-            {note && (
-              <>
-                <div>
-                  <FileUpload
-                    noteId={note.id}
-                    onUploadComplete={handleAttachmentUploadComplete}
-                    onError={(error) => {
-                      setAttachmentError(error);
-                      setTimeout(() => setAttachmentError(null), 10000);
-                    }}
-                  />
-                  {attachmentError && (
-                    <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
-                      {attachmentError}
+              <div>
+                <label className="field-label block font-mono text-[9px] uppercase tracking-[0.16em] text-[#5C574F] mb-[7px]">
+                  Tags
+                </label>
+                <div ref={tagsDropdownRef} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsTagsDropdownOpen(!isTagsDropdownOpen)}
+                    className="field-input flex items-center justify-between gap-2"
+                  >
+                    <span className="truncate">
+                      {selectedTagIds.length === 0
+                        ? 'No tags'
+                        : selectedTagIds.length === 1
+                          ? tags.find((t) => t.id === selectedTagIds[0])?.name || '1 tag'
+                          : `${selectedTagIds.length} tags`}
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 transition-transform ${
+                        isTagsDropdownOpen ? 'rotate-180' : ''
+                      }`}
+                      aria-hidden
+                    />
+                  </button>
+                  {isTagsDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 border border-[color:var(--color-rule-md)] bg-[color:var(--color-sidebar-bg)] shadow-lg max-h-60 overflow-y-auto">
+                      {tags.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-[color:var(--color-text-inv-2)]">
+                          No tags available
+                        </div>
+                      ) : (
+                        <div className="p-2 space-y-1">
+                          {tags.map((tag) => {
+                            const isSelected = selectedTagIds.includes(tag.id);
+                            return (
+                              <label
+                                key={tag.id}
+                                className="flex items-center gap-2 px-2 py-1.5 hover:bg-[rgba(255,255,255,0.03)] cursor-pointer"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setSelectedTagIds([...selectedTagIds, tag.id]);
+                                    } else {
+                                      setSelectedTagIds(
+                                        selectedTagIds.filter((id) => id !== tag.id),
+                                      );
+                                    }
+                                  }}
+                                  className="rounded-none"
+                                />
+                                <span className="text-sm text-[color:var(--color-text-inv)] flex-1">
+                                  {tag.name}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-                <AttachmentsList
-                  attachments={attachments || []}
-                  onDelete={handleAttachmentDelete}
-                />
-              </>
-            )}
+              </div>
 
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isPinned}
-                  onChange={(e) => setIsPinned(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm text-foreground">Pin note</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isArchived}
-                  onChange={(e) => setIsArchived(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm text-foreground">Archive</span>
-              </label>
-            </div>
+              <div>
+                <label className="field-label block font-mono text-[9px] uppercase tracking-[0.16em] text-[#5C574F] mb-[7px]">
+                  Content
+                </label>
+                <NoteEditor content={content} onChange={setContent} notesForLinking={notes} />
+              </div>
 
-            <div className="flex flex-wrap gap-2 pt-4 border-t border-primary/20 dark:border-border [&_button]:touch-manipulation">
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={isSaving}
-                className={`${btnBase} ${btnPrimary} flex-1 min-w-[80px]`}
-              >
-                {isSaving ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const md = `# ${title}\n\n${tiptapToMarkdown(content)}`;
-                  const blob = new Blob([md], { type: 'text/markdown' });
-                  const a = document.createElement('a');
-                  a.href = URL.createObjectURL(blob);
-                  a.download = `${(title || 'note').replace(/[^a-z0-9-]/gi, '_')}.md`;
-                  a.click();
-                  URL.revokeObjectURL(a.href);
-                }}
-                className={`${btnBase} ${btnGhost} ${btnCompact}`}
-                title="Export as Markdown"
-              >
-                Export
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowVersionHistory(true)}
-                className={`${btnBase} ${btnGhost} ${btnCompact}`}
-                title="View version history"
-              >
-                History
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowSaveAsTemplateModal(true)}
-                disabled={isSavingTemplate}
-                className={`${btnBase} ${btnGhost} ${btnCompact}`}
-                title="Save as template"
-              >
-                {isSavingTemplate ? '...' : 'Save as template'}
-              </button>
-              <SaveAsTemplateModal
-                isOpen={showSaveAsTemplateModal}
-                defaultName={title || 'Untitled'}
-                isSaving={isSavingTemplate}
-                onSave={async (templateName) => {
-                  setIsSavingTemplate(true);
-                  try {
-                    await createNoteTemplate({ name: templateName, content });
-                    setShowSaveAsTemplateModal(false);
-                    onNotesChanged?.();
-                    showAlert('Template saved.', 'Success');
-                  } catch (err) {
-                    showAlert(
-                      err instanceof Error ? err.message : 'Failed to save template.',
-                      'Error',
-                    );
-                  } finally {
-                    setIsSavingTemplate(false);
-                  }
-                }}
-                onCancel={() => setShowSaveAsTemplateModal(false)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowShareModal(true)}
-                className={`${btnBase} ${btnGhost} ${btnCompact}`}
-              >
-                Share
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowShareSettings(true)}
-                className={`${btnBase} ${btnGhost} ${btnCompact}`}
-              >
-                Share Settings
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteClick}
-                className={`${btnBase} ${btnGhost} ${btnCompact}`}
-              >
-                Delete
-              </button>
+              {note && onNoteClick && (
+                <BacklinksSection noteId={note.id} onNoteClick={onNoteClick} />
+              )}
+
+              {note && (
+                <>
+                  <div className="attach-row">
+                    <FileUpload
+                      noteId={note.id}
+                      buttonClassName="btn-attach"
+                      onUploadComplete={handleAttachmentUploadComplete}
+                      onError={(error) => {
+                        setAttachmentError(error);
+                        setTimeout(() => setAttachmentError(null), 10000);
+                      }}
+                    />
+                    {attachmentError && (
+                      <div className="mt-2 p-2 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
+                        {attachmentError}
+                      </div>
+                    )}
+                  </div>
+                  <AttachmentsList
+                    attachments={attachments || []}
+                    onDelete={handleAttachmentDelete}
+                  />
+                </>
+              )}
+
+              <div className="checks-row">
+                <label className="check-item flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isPinned}
+                    onChange={(e) => setIsPinned(e.target.checked)}
+                  />
+                  <span className={`check-box ${isPinned ? 'checked' : ''}`} aria-hidden />
+                  <span className="check-label">Pin note</span>
+                </label>
+                <label className="check-item flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isArchived}
+                    onChange={(e) => setIsArchived(e.target.checked)}
+                  />
+                  <span className={`check-box ${isArchived ? 'checked' : ''}`} aria-hidden />
+                  <span className="check-label">Archive</span>
+                </label>
+              </div>
+
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-[color:var(--color-rule-dark)] [&_button]:touch-manipulation [&_button]:min-h-[44px] [&_button]:whitespace-nowrap">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="act-btn primary"
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+                {!isNewNote && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const md = `# ${title}\n\n${tiptapToMarkdown(content)}`;
+                        const blob = new Blob([md], { type: 'text/markdown' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `${(title || 'note').replace(/[^a-z0-9-]/gi, '_')}.md`;
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                      }}
+                      className="act-btn"
+                      title="Export as Markdown"
+                    >
+                      Export
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowVersionHistory(true)}
+                      className="act-btn"
+                      title="View version history"
+                    >
+                      History
+                    </button>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowSaveAsTemplateModal(true)}
+                  disabled={isSavingTemplate}
+                  className="act-btn"
+                  title="Save as template"
+                >
+                  {isSavingTemplate ? '...' : 'Save as template'}
+                </button>
+                {!isNewNote && (
+                  <>
+                    <button type="button" onClick={() => setShowShareModal(true)} className="act-btn">
+                      Share
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowShareSettings(true)}
+                      className="act-btn"
+                    >
+                      Share Settings
+                    </button>
+                    <button type="button" onClick={handleDeleteClick} className="act-btn text-red-500 border-red-500/50 hover:border-red-500/70 hover:bg-red-500/10 ml-auto">
+                      Delete
+                    </button>
+                  </>
+                )}
+                <SaveAsTemplateModal
+                  isOpen={showSaveAsTemplateModal}
+                  defaultName={title || 'Untitled'}
+                  isSaving={isSavingTemplate}
+                  onSave={async (templateName) => {
+                    setIsSavingTemplate(true);
+                    try {
+                      await createNoteTemplate({ name: templateName, content });
+                      setShowSaveAsTemplateModal(false);
+                      onNotesChanged?.();
+                      showAlert('Template saved.', 'Success');
+                    } catch (err) {
+                      showAlert(
+                        err instanceof Error ? err.message : 'Failed to save template.',
+                        'Error',
+                      );
+                    } finally {
+                      setIsSavingTemplate(false);
+                    }
+                  }}
+                  onCancel={() => setShowSaveAsTemplateModal(false)}
+                />
+              </div>
             </div>
           </div>
         </div>
-        <SaveConfirmationModal
-          isOpen={showSaveModal}
-          onReturnToDashboard={() => {
-            setShowSaveModal(false);
-            onClose();
-          }}
-          onContinueEditing={() => {
-            setShowSaveModal(false);
+      </div>
+      <SaveConfirmationModal
+        isOpen={showSaveModal}
+        onReturnToDashboard={() => {
+          setShowSaveModal(false);
+          onClose();
+        }}
+        onContinueEditing={() => {
+          setShowSaveModal(false);
+        }}
+      />
+      {showShareModal && (
+        <ShareNoteModal
+          noteId={note.id}
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+          onShareCreated={() => {
+            setShowShareModal(false);
+            setShowShareSettings(true);
+            onNotesChanged?.();
           }}
         />
-        {showShareModal && (
-          <ShareNoteModal
-            noteId={note.id}
-            isOpen={showShareModal}
-            onClose={() => setShowShareModal(false)}
-            onShareCreated={() => {
-              setShowShareModal(false);
-              setShowShareSettings(true);
-              onNotesChanged?.();
-            }}
-          />
-        )}
-        {showShareSettings && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/50 dark:bg-black/70 overscroll-contain">
-            <div
-              ref={shareSettingsModalRef}
-              className="max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto"
-            >
-              <ShareSettings noteId={note.id} onClose={() => setShowShareSettings(false)} />
-            </div>
+      )}
+      {showShareSettings && (
+        <div
+          className="modal-overlay fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto p-4 overscroll-contain"
+          style={{ background: 'rgba(10,10,8,0.82)' }}
+        >
+          <div
+            ref={shareSettingsModalRef}
+            className="max-w-2xl w-full max-h-[90vh] overflow-y-auto my-auto"
+          >
+            <ShareSettings noteId={note.id} onClose={() => setShowShareSettings(false)} />
           </div>
-        )}
-        <ConfirmDeleteModal
-          isOpen={showDeleteModal}
-          title="Delete note"
-          message="Are you sure you want to delete this note? This action cannot be undone."
-          confirmLabel="Delete"
-          onConfirm={handleDeleteConfirm}
-          onCancel={() => {
-            setShowDeleteModal(false);
-            setDeleteError(null);
-          }}
-          isLoading={isDeleting}
-          errorMessage={deleteError}
-        />
-      </article>
+        </div>
+      )}
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        title="Delete note"
+        message="Are you sure you want to delete this note? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setShowDeleteModal(false);
+          setDeleteError(null);
+        }}
+        isLoading={isDeleting}
+        errorMessage={deleteError}
+      />
     </>
   );
 };

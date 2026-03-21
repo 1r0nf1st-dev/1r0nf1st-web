@@ -2,8 +2,6 @@
 
 import type { JSX } from 'react';
 import { useState, useEffect, useRef } from 'react';
-import { cardClasses, cardTitle } from '../styles/cards';
-import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 export interface SaveAsTemplateModalProps {
   isOpen: boolean;
@@ -59,21 +57,60 @@ export const SaveAsTemplateModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/50 dark:bg-black/70 overscroll-contain"
+      className="modal-overlay fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto p-4 overscroll-contain"
+      style={{ background: 'rgba(10,10,8,0.82)' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="save-as-template-title"
     >
       <div
         ref={modalRef}
-        className={`${cardClasses} max-w-md w-full`}
+        className="max-w-md w-full"
+        style={{
+          background: '#201D1A',
+          border: '1px solid rgba(255,255,255,0.11)',
+          borderTop: '2px solid #E05C1A',
+          borderRadius: 0,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id="save-as-template-title" className={cardTitle}>
-          Save as template
-        </h2>
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <label htmlFor="template-name" className="block text-sm font-medium text-foreground">
+        <div
+          style={{
+            padding: '18px 22px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <div style={{ width: '14px', height: '1px', background: '#E05C1A' }} />
+          <h2
+            id="save-as-template-title"
+            style={{
+              fontFamily: 'Barlow, sans-serif',
+              fontSize: '13px',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: '#F4F2EE',
+            }}
+          >
+            Save as template
+          </h2>
+        </div>
+        <form onSubmit={handleSubmit} style={{ padding: '22px' }}>
+          <label
+            htmlFor="template-name"
+            style={{
+              display: 'block',
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '9px',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: '#5C574F',
+              marginBottom: '8px',
+            }}
+          >
             Template name
           </label>
           <input
@@ -83,22 +120,57 @@ export const SaveAsTemplateModal = ({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Meeting notes"
-            className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary min-h-[44px]"
             disabled={isSaving}
+            style={{
+              width: '100%',
+              padding: '11px 14px',
+              border: '1px solid rgba(255,255,255,0.11)',
+              background: '#2A2520',
+              color: '#F4F2EE',
+              fontFamily: 'Barlow, sans-serif',
+              fontSize: '13px',
+              borderRadius: 0,
+              marginBottom: '20px',
+              boxSizing: 'border-box',
+            }}
           />
-          <div className="flex flex-wrap gap-3 justify-end">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'flex-end' }}>
             <button
               type="button"
               onClick={onCancel}
               disabled={isSaving}
-              className={`${btnBase} ${btnGhost} min-h-[44px] touch-manipulation`}
+              style={{
+                background: 'transparent',
+                color: '#A8A39A',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '9px',
+                fontWeight: 500,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                padding: '8px 18px',
+                border: '1px solid rgba(255,255,255,0.11)',
+                cursor: 'pointer',
+                borderRadius: 0,
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!name.trim() || isSaving}
-              className={`${btnBase} ${btnPrimary} min-h-[44px] touch-manipulation`}
+              style={{
+                background: '#E05C1A',
+                color: '#fff',
+                fontFamily: 'Barlow, sans-serif',
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.10em',
+                textTransform: 'uppercase',
+                padding: '8px 22px',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: 0,
+              }}
             >
               {isSaving ? 'Saving...' : 'Save template'}
             </button>

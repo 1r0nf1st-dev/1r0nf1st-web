@@ -14,7 +14,7 @@ export function FaviconSwitcher(): null {
     const href = `${FAVICON}${CACHE_BUST}`;
 
     const links = document.querySelectorAll<HTMLLinkElement>(
-      'link[rel="icon"], link[rel="shortcut icon"]'
+      'link[rel="icon"], link[rel="shortcut icon"]',
     );
 
     if (links.length > 0) {

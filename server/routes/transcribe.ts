@@ -34,17 +34,15 @@ const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): void {
   const email = req.email?.toLowerCase().trim();
   if (email !== ADMIN_EMAIL) {
-    res.status(403).json({ error: 'Admin only', message: 'Transcription is available to admin users only.' });
+    res
+      .status(403)
+      .json({ error: 'Admin only', message: 'Transcription is available to admin users only.' });
     return;
   }
   next();
 }
 
-function requireGeminiKey(
-  _req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): void {
+function requireGeminiKey(_req: AuthRequest, res: Response, next: NextFunction): void {
   if (!config.geminiApiKey) {
     res.status(503).json({
       error: 'Transcription not available',
@@ -75,11 +73,7 @@ transcribeRouter.post(
         });
         return;
       }
-      const text = await transcribeImage(
-        req.file.buffer,
-        mime,
-        config.geminiApiKey,
-      );
+      const text = await transcribeImage(req.file.buffer, mime, config.geminiApiKey);
       res.json({ text });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Transcription failed';
@@ -109,11 +103,7 @@ transcribeRouter.post(
         });
         return;
       }
-      const text = await transcribeAudio(
-        req.file.buffer,
-        mime,
-        config.geminiApiKey,
-      );
+      const text = await transcribeAudio(req.file.buffer, mime, config.geminiApiKey);
       res.json({ text });
     } catch (err) {
       let message = 'Transcription failed. Please try again.';

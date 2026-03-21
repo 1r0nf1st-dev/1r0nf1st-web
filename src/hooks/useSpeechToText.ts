@@ -71,7 +71,9 @@ export function useSpeechToText(): {
       }
       if (parts.length > 0) {
         const addition = parts.join(' ');
-        const next = (transcriptRef.current ? `${transcriptRef.current} ${addition}` : addition).trim();
+        const next = (
+          transcriptRef.current ? `${transcriptRef.current} ${addition}` : addition
+        ).trim();
         transcriptRef.current = next;
         setTranscript(next);
       }
@@ -81,7 +83,9 @@ export function useSpeechToText(): {
       if (event.error === 'no-speech') return;
       if (event.error === 'aborted') return;
       if (event.error === 'network') {
-        setError('Speech recognition requires internet access. Please check your connection and try again.');
+        setError(
+          'Speech recognition requires internet access. Please check your connection and try again.',
+        );
       } else if (event.error === 'not-allowed') {
         setError('Microphone access denied.');
       } else {

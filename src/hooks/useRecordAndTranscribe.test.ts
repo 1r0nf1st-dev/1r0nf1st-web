@@ -50,9 +50,13 @@ describe('useRecordAndTranscribe', () => {
       configurable: true,
     });
     const mockRecorder = createMockRecorder();
-    vi.stubGlobal('MediaRecorder', vi.fn(() => mockRecorder));
-    (MediaRecorder as unknown as { isTypeSupported: () => boolean }).isTypeSupported =
-      vi.fn().mockReturnValue(true);
+    vi.stubGlobal(
+      'MediaRecorder',
+      vi.fn(() => mockRecorder),
+    );
+    (MediaRecorder as unknown as { isTypeSupported: () => boolean }).isTypeSupported = vi
+      .fn()
+      .mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -130,9 +134,7 @@ describe('useRecordAndTranscribe', () => {
   });
 
   it('clearError clears the error state', async () => {
-    vi.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValue(
-      new Error('Test error'),
-    );
+    vi.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValue(new Error('Test error'));
 
     const { result } = renderHook(() => useRecordAndTranscribe());
 

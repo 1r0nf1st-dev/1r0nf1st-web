@@ -21,18 +21,14 @@ export function buildSearchQuery(params: {
   if (params.notebookId && params.notebooks) {
     const nb = params.notebooks.find((n) => n.id === params.notebookId);
     if (nb) {
-      parts.push(
-        nb.name.includes(' ') ? `notebook:"${nb.name}"` : `notebook:${nb.name}`,
-      );
+      parts.push(nb.name.includes(' ') ? `notebook:"${nb.name}"` : `notebook:${nb.name}`);
     }
   }
 
   if (params.tagId && params.tags) {
     const tag = params.tags.find((t) => t.id === params.tagId);
     if (tag) {
-      parts.push(
-        tag.name.includes(' ') ? `tag:"${tag.name}"` : `tag:${tag.name}`,
-      );
+      parts.push(tag.name.includes(' ') ? `tag:"${tag.name}"` : `tag:${tag.name}`);
     }
   }
 

@@ -1,3 +1,4 @@
+import { config } from '../config.js';
 import { supabase } from '../db/supabase.js';
 
 function requireSupabase(): NonNullable<typeof supabase> {
@@ -183,6 +184,6 @@ export async function submitContact(
   await sendTransactionalEmail({
     to: [submission.email],
     subject: "We've received your message",
-    message: `Hi ${submission.name},\n\nThank you for getting in touch. We've received your message and will get back to you as soon as we can.\n\nBest,\n1r0nf1st`,
+    message: `Hi ${submission.name},\n\nThank you for getting in touch. We've received your message and will get back to you as soon as we can.\n\nBest,\n${config.brandName}`,
   });
 }

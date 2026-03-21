@@ -44,7 +44,7 @@ describe('SidebarProfile', () => {
     // User icon should be present (SVG element)
     const icon = container.querySelector('svg');
     expect(icon).toBeInTheDocument();
-    
+
     // Display name should be shown
     expect(screen.getByText('testuser')).toBeInTheDocument();
   });

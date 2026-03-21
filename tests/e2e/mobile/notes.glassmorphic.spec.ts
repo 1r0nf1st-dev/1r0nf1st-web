@@ -4,18 +4,21 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
   test.beforeEach(async ({ page }) => {
     // Set mobile viewport (390x844 - iPhone 14)
     await page.setViewportSize({ width: 390, height: 844 });
-    
+
     // Navigate to notes page
     await page.goto('/notes');
-    
+
     // Check if we need to log in
     const loginPrompt = page.getByText(/please log in/i);
     if (await loginPrompt.isVisible()) {
       return;
     }
-    
+
     // Wait for notes to load (either cards or empty state)
-    await page.waitForSelector('article[role="button"][aria-label*="Note:"], .text-center:has-text("No notes")', { timeout: 10000 });
+    await page.waitForSelector(
+      'article[role="button"][aria-label*="Note:"], .text-center:has-text("No notes")',
+      { timeout: 10000 },
+    );
   });
 
   test('notes card renders with glassmorphic styling on mobile', async ({ page }) => {
@@ -25,10 +28,10 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       const classes = await firstCard.getAttribute('class');
-      
+
       // Verify glassmorphic classes
       expect(classes).toContain('backdrop-blur-sm'); // Mobile uses sm blur (performance optimization)
       expect(classes).toContain('glass-card-fallback'); // Fallback class
@@ -46,14 +49,14 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       const classes = await firstCard.getAttribute('class');
-      
+
       // Verify mobile uses backdrop-blur-sm (not md)
       expect(classes).toContain('backdrop-blur-sm');
       expect(classes).not.toContain('backdrop-blur-md'); // Should not have md on mobile
-      
+
       // Verify responsive blur: md:backdrop-blur-md should be present for desktop breakpoint
       expect(classes).toContain('md:backdrop-blur-md'); // Desktop breakpoint uses md
     }
@@ -66,8 +69,8 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       const box = await firstCard.boundingBox();
       expect(box?.height).toBeGreaterThanOrEqual(44);
     }
@@ -81,11 +84,11 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
 
     const cards = page.locator('article[role="button"]');
     const count = await cards.count();
-    
+
     if (count >= 2) {
       const firstBox = await cards.first().boundingBox();
       const secondBox = await cards.nth(1).boundingBox();
-      
+
       if (firstBox && secondBox) {
         const spacing = secondBox.y - (firstBox.y + firstBox.height);
         expect(spacing).toBeGreaterThanOrEqual(8);
@@ -101,12 +104,12 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
 
     const cards = page.locator('article[role="button"]');
     const count = await cards.count();
-    
+
     if (count > 0) {
       // Verify grid layout
       const grid = page.locator('.grid');
       await expect(grid).toBeVisible();
-      
+
       // Verify single column on mobile
       const gridClasses = await grid.getAttribute('class');
       expect(gridClasses).toContain('grid-cols-1');
@@ -120,10 +123,10 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       const classes = await firstCard.getAttribute('class');
-      
+
       // Verify mobile padding (p-4)
       expect(classes).toContain('p-4');
     }
@@ -136,13 +139,13 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       const classes = await firstCard.getAttribute('class');
-      
+
       // Verify mobile min-height (160px)
       expect(classes).toContain('min-h-[160px]');
-      
+
       // Verify actual height meets minimum
       const box = await firstCard.boundingBox();
       expect(box?.height).toBeGreaterThanOrEqual(160);
@@ -156,11 +159,11 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       await firstCard.tap();
       await page.waitForTimeout(500);
-      
+
       // Verify selected state
       const selectedCard = page.locator('article[aria-selected="true"]');
       await expect(selectedCard).toBeVisible();
@@ -174,10 +177,10 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       const classes = await firstCard.getAttribute('class');
-      
+
       // Verify active state classes
       expect(classes).toContain('active:scale-[0.98]');
       expect(classes).toContain('motion-reduce:active:scale-100'); // Respects reduced motion
@@ -194,7 +197,7 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
         backgroundImage: styles.backgroundImage,
       };
     });
-    
+
     // Verify gradient is present
     expect(bodyStyles.background || bodyStyles.backgroundImage).toContain('linear-gradient');
   });
@@ -206,12 +209,12 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       // Hover should not trigger scale transform on mobile
       // Verify motion-reduce classes prevent hover transforms
       const classes = await firstCard.getAttribute('class');
-      
+
       // Note: The hover classes are still present but should not trigger on mobile
       // This is handled by CSS media queries and touch events
       // We verify that motion-reduce classes are present for reduced motion preference
@@ -226,21 +229,21 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       // Focus first card
       await firstCard.focus();
       await expect(firstCard).toBeFocused();
-      
+
       // Verify focus ring classes
       const classes = await firstCard.getAttribute('class');
       expect(classes).toContain('focus:ring-2');
       expect(classes).toContain('focus:ring-blue-600/50');
-      
+
       // Press Enter
       await page.keyboard.press('Enter');
       await page.waitForTimeout(500);
-      
+
       // Verify selected state
       const selectedCard = page.locator('article[aria-selected="true"]');
       await expect(selectedCard).toBeVisible();
@@ -254,19 +257,19 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       // Verify title is visible and readable
       const title = firstCard.locator('h3');
       await expect(title).toBeVisible();
-      
+
       const titleText = await title.textContent();
       expect(titleText?.length).toBeGreaterThan(0);
-      
+
       // Verify preview is visible
       const preview = firstCard.locator('p.text-sm');
       await expect(preview).toBeVisible();
-      
+
       // Verify date is visible
       const date = firstCard.locator('span.text-xs').last();
       await expect(date).toBeVisible();
@@ -280,17 +283,17 @@ test.describe('Notes Card - Glassmorphic Design (Mobile)', () => {
     }
 
     const firstCard = page.locator('article[role="button"]').first();
-    
-    if (await firstCard.count() > 0) {
+
+    if ((await firstCard.count()) > 0) {
       // Verify fallback class is present
       const classes = await firstCard.getAttribute('class');
       expect(classes).toContain('glass-card-fallback');
-      
+
       // Check if backdrop-filter is supported
       const supportsBackdropFilter = await page.evaluate(() => {
         return CSS.supports('backdrop-filter', 'blur(4px)');
       });
-      
+
       if (supportsBackdropFilter) {
         // Modern browser - verify backdrop-filter is applied
         const styles = await firstCard.evaluate((el) => {

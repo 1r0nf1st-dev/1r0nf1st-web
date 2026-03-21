@@ -1,3 +1,6 @@
+/** Brand display name used across the site. Single source of truth. */
+export const BRAND_NAME = '1r0nf1st';
+
 export interface EnvConfig {
   apiBaseUrl: string;
 }

@@ -44,13 +44,21 @@ describe('noteService CRUD', () => {
         single: vi.fn().mockResolvedValue({ data: null, error: { message: 'duplicate' } }),
       });
 
-      await expect(createNote(crudMockSupabase as never, 'u1', { title: 'X' })).rejects.toThrow('Failed to create note');
+      await expect(createNote(crudMockSupabase as never, 'u1', { title: 'X' })).rejects.toThrow(
+        'Failed to create note',
+      );
     });
   });
 
   describe('getNoteById', () => {
     it('returns note when found', async () => {
-      const noteData = { id: 'n1', user_id: 'u1', title: 'My Note', content: {}, notebook_id: null };
+      const noteData = {
+        id: 'n1',
+        user_id: 'u1',
+        title: 'My Note',
+        content: {},
+        notebook_id: null,
+      };
       crudFromMock.mockImplementation((table: string) => {
         if (table === 'notes')
           return {
@@ -103,7 +111,13 @@ describe('noteService CRUD', () => {
 
   describe('updateNote', () => {
     it('updates note and returns it', async () => {
-      const existingNote = { id: 'n1', user_id: 'u1', title: 'Old', content: {}, notebook_id: null };
+      const existingNote = {
+        id: 'n1',
+        user_id: 'u1',
+        title: 'Old',
+        content: {},
+        notebook_id: null,
+      };
       const updatedNote = { ...existingNote, title: 'Updated' };
       let notesCallCount = 0;
       crudFromMock.mockImplementation((table: string) => {
@@ -128,11 +142,16 @@ describe('noteService CRUD', () => {
           };
         }
         if (table === 'note_tags')
-          return { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ data: [], error: null }) };
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+          };
         if (table === 'attachments')
           return {
             select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnValue({ order: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+            eq: vi
+              .fn()
+              .mockReturnValue({ order: vi.fn().mockResolvedValue({ data: [], error: null }) }),
           };
         return {};
       });
@@ -153,9 +172,9 @@ describe('noteService CRUD', () => {
         }),
       });
 
-      await expect(updateNote(crudMockSupabase as never, 'n99', 'u1', { title: 'X' })).rejects.toThrow(
-        'Note not found or access denied',
-      );
+      await expect(
+        updateNote(crudMockSupabase as never, 'n99', 'u1', { title: 'X' }),
+      ).rejects.toThrow('Note not found or access denied');
     });
   });
 
@@ -183,11 +202,16 @@ describe('noteService CRUD', () => {
           };
         }
         if (table === 'note_tags')
-          return { select: vi.fn().mockReturnThis(), eq: vi.fn().mockResolvedValue({ data: [], error: null }) };
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockResolvedValue({ data: [], error: null }),
+          };
         if (table === 'attachments')
           return {
             select: vi.fn().mockReturnThis(),
-            eq: vi.fn().mockReturnValue({ order: vi.fn().mockResolvedValue({ data: [], error: null }) }),
+            eq: vi
+              .fn()
+              .mockReturnValue({ order: vi.fn().mockResolvedValue({ data: [], error: null }) }),
           };
         return {};
       });
@@ -208,7 +232,9 @@ describe('noteService CRUD', () => {
         }),
       });
 
-      await expect(deleteNote(crudMockSupabase as never, 'n99', 'u1')).rejects.toThrow('Note not found or access denied');
+      await expect(deleteNote(crudMockSupabase as never, 'n99', 'u1')).rejects.toThrow(
+        'Note not found or access denied',
+      );
     });
   });
 });

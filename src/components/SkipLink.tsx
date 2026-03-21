@@ -14,7 +14,10 @@ interface SkipLinkProps {
  * Allows users to skip navigation and jump directly to main content.
  * Only visible when focused via keyboard navigation.
  */
-export const SkipLink = ({ targetId = 'main-content', label = 'Skip to main content' }: SkipLinkProps): JSX.Element => {
+export const SkipLink = ({
+  targetId = 'main-content',
+  label = 'Skip to main content',
+}: SkipLinkProps): JSX.Element => {
   return (
     <a
       href={`#${targetId}`}

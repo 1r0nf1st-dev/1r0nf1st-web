@@ -18,22 +18,24 @@ import type { ObNode } from '../../lib/obApi';
 import type { ObPublicEdge } from '../../lib/obApi';
 
 const EDGE_COLORS: Record<ObPublicEdge['edge_type'], string> = {
-  supports: '#34d399',
-  contradicts: '#ef4444',
-  extends: '#3b82f6',
-  inspired_by: '#f59e0b',
-  references: '#94a3b8',
+  supports: 'var(--color-steel)',
+  contradicts: 'var(--color-orange)',
+  extends: 'var(--color-steel)',
+  inspired_by: 'var(--color-orange)',
+  references: 'var(--color-text-3)',
 };
 
-/** Node styles for readable labels on the graph (high contrast) */
+/** Node styles aligned with brand tokens (sharp, industrial) */
 const NODE_STYLE: CSSProperties = {
-  background: '#1e293b',
-  color: '#e2e8f0',
-  border: '1px solid rgba(148, 163, 184, 0.4)',
-  borderRadius: 8,
+  background: 'var(--color-white)',
+  color: 'var(--color-text-1)',
+  border: '1px solid var(--color-rule)',
+  borderRadius: 0,
   padding: '8px 12px',
-  fontSize: 14,
-  fontWeight: 500,
+  fontSize: 12,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
 };
 
 function buildGraph(
@@ -55,7 +57,10 @@ function buildGraph(
     target: e.to_node_id,
     type: 'smoothstep',
     animated: e.created_by === 'ai',
-    style: { stroke: EDGE_COLORS[e.edge_type] ?? '#94a3b8' },
+    style: {
+      stroke: EDGE_COLORS[e.edge_type] ?? 'var(--color-text-3)',
+      strokeWidth: 2,
+    },
   }));
 
   return { flowNodes, flowEdges };
@@ -67,11 +72,7 @@ interface BrainGraphProps {
   onNodeClick: (node: ObNode) => void;
 }
 
-export function BrainGraph({
-  nodes,
-  edges,
-  onNodeClick,
-}: BrainGraphProps): JSX.Element {
+export function BrainGraph({ nodes, edges, onNodeClick }: BrainGraphProps): JSX.Element {
   const { flowNodes: initialNodes, flowEdges: initialEdges } = useMemo(
     () => buildGraph(nodes, edges),
     [nodes, edges],
@@ -96,8 +97,8 @@ export function BrainGraph({
 
   return (
     <div
-      className="w-full rounded-lg border border-border bg-muted/20"
-      style={{ height: 400 }}
+      className="w-full border border-[color:var(--color-rule)] bg-[color:var(--color-white)]"
+      style={{ height: 520 }}
       data-testid="brain-graph"
     >
       <ReactFlow
@@ -111,9 +112,24 @@ export function BrainGraph({
         minZoom={0.2}
         maxZoom={1.5}
       >
-        <Background />
-        <Controls />
-        <MiniMap />
+        <Background color="var(--color-rule)" gap={20} size={1} />
+        <Controls
+          style={{
+            borderRadius: 0,
+            overflow: 'hidden',
+            border: '1px solid var(--color-rule)',
+            background: 'var(--color-white)',
+          }}
+        />
+        <MiniMap
+          nodeColor={() => 'var(--color-text-3)'}
+          style={{
+            borderRadius: 0,
+            overflow: 'hidden',
+            border: '1px solid var(--color-rule)',
+            background: 'var(--color-white)',
+          }}
+        />
       </ReactFlow>
     </div>
   );

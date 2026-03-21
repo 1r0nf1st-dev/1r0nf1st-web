@@ -1,8 +1,6 @@
 import type { JSX } from 'react';
 import { useState, useEffect, useRef } from 'react';
 import { shareNote, type ShareNoteInput } from '../useNoteSharing';
-import { cardClasses, cardTitle, cardBody } from '../styles/cards';
-import { btnBase, btnPrimary, btnGhost } from '../styles/buttons';
 
 export interface ShareNoteModalProps {
   noteId: string;
@@ -78,9 +76,31 @@ export const ShareNoteModal = ({
     }
   };
 
+  const inputStyle = {
+    width: '100%',
+    padding: '11px 14px',
+    border: '1px solid rgba(255,255,255,0.11)',
+    background: '#2A2520',
+    color: '#F4F2EE',
+    fontFamily: 'Barlow, sans-serif',
+    fontSize: '13px',
+    borderRadius: 0,
+    boxSizing: 'border-box' as const,
+  };
+  const labelStyle = {
+    display: 'block' as const,
+    fontFamily: 'JetBrains Mono, monospace',
+    fontSize: '9px',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase' as const,
+    color: '#5C574F',
+    marginBottom: '8px',
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4 bg-black/50 dark:bg-black/70 overscroll-contain"
+      className="modal-overlay fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto p-4 overscroll-contain"
+      style={{ background: 'rgba(10,10,8,0.82)' }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -88,135 +108,226 @@ export const ShareNoteModal = ({
     >
       <article
         ref={modalRef}
-        className={`${cardClasses} max-w-md w-full`}
+        className="max-w-md w-full"
+        style={{
+          background: '#201D1A',
+          border: '1px solid rgba(255,255,255,0.11)',
+          borderTop: '2px solid #E05C1A',
+          borderRadius: 0,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
+        <div
+          style={{
+            padding: '18px 22px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <h2
+            id="share-modal-title"
+            style={{
+              fontFamily: 'Barlow, sans-serif',
+              fontSize: '13px',
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              color: '#F4F2EE',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}
+          >
+            <div style={{ width: '14px', height: '1px', background: '#E05C1A' }} />
+            Share Note
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              width: '26px',
+              height: '26px',
+              background: '#2A2520',
+              border: '1px solid rgba(255,255,255,0.11)',
+              color: '#A8A39A',
+              cursor: 'pointer',
+              fontSize: '13px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'JetBrains Mono, monospace',
+              borderRadius: 0,
+            }}
+          >
+            ×
+          </button>
+        </div>
 
-        <div className="relative z-10">
-          <div className="flex items-center justify-between gap-2 mb-4 min-h-[44px]">
-            <h2 id="share-modal-title" className={`${cardTitle} truncate min-w-0`}>
-              Share Note
-            </h2>
+        <form onSubmit={handleSubmit} style={{ padding: '22px' }}>
+          {error && (
+            <div
+              style={{
+                padding: '12px 14px',
+                marginBottom: '16px',
+                background: 'rgba(192,57,43,0.12)',
+                border: '1px solid rgba(192,57,43,0.25)',
+                color: '#C0392B',
+                fontSize: '12px',
+                lineHeight: 1.5,
+                borderRadius: 0,
+              }}
+            >
+              {error}
+            </div>
+          )}
+          {success && (
+            <div
+              style={{
+                padding: '12px 14px',
+                marginBottom: '16px',
+                background: 'rgba(34,139,34,0.12)',
+                border: '1px solid rgba(34,139,34,0.25)',
+                color: '#2E8B2E',
+                fontSize: '12px',
+                lineHeight: 1.5,
+                borderRadius: 0,
+              }}
+            >
+              {success}
+            </div>
+          )}
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={labelStyle}>Share Type</label>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="shareType"
+                  value="user"
+                  checked={shareType === 'user'}
+                  onChange={(e) => setShareType(e.target.value as 'user' | 'public')}
+                />
+                <span style={{ fontSize: '13px', color: '#F4F2EE' }}>With User</span>
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="shareType"
+                  value="public"
+                  checked={shareType === 'public'}
+                  onChange={(e) => setShareType(e.target.value as 'user' | 'public')}
+                />
+                <span style={{ fontSize: '13px', color: '#F4F2EE' }}>Public Link</span>
+              </label>
+            </div>
+          </div>
+
+          {shareType === 'user' && (
+            <div style={{ marginBottom: '16px' }}>
+              <label htmlFor="user-email" style={labelStyle}>
+                User Email
+              </label>
+              <input
+                id="user-email"
+                type="email"
+                value={userEmail}
+                onChange={(e) => setUserEmail(e.target.value)}
+                placeholder="user@example.com"
+                style={inputStyle}
+              />
+              <p style={{ marginTop: '8px', fontSize: '11px', color: '#A8A39A', lineHeight: 1.5 }}>
+                Enter the email address of the user to share with
+              </p>
+            </div>
+          )}
+
+          <div style={{ marginBottom: '16px' }}>
+            <label style={labelStyle}>Permission</label>
+            <select
+              value={permission}
+              onChange={(e) => setPermission(e.target.value as 'view' | 'edit')}
+              style={inputStyle}
+            >
+              <option value="view">View Only</option>
+              <option value="edit">Can Edit</option>
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label htmlFor="expires" style={labelStyle}>
+              Expires In (days, optional)
+            </label>
+            <input
+              id="expires"
+              type="number"
+              min={1}
+              value={expiresInDays}
+              onChange={(e) =>
+                setExpiresInDays(e.target.value === '' ? '' : Number.parseInt(e.target.value, 10))
+              }
+              placeholder="Leave empty for no expiration"
+              style={inputStyle}
+            />
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '8px',
+              paddingTop: '8px',
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <button
+              type="submit"
+              disabled={isSharing}
+              style={{
+                flex: 1,
+                minWidth: '120px',
+                background: '#E05C1A',
+                color: '#fff',
+                fontFamily: 'Barlow, sans-serif',
+                fontSize: '11px',
+                fontWeight: 700,
+                letterSpacing: '0.10em',
+                textTransform: 'uppercase',
+                padding: '8px 22px',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: 0,
+              }}
+            >
+              {isSharing ? 'Sharing...' : 'Share'}
+            </button>
             <button
               type="button"
               onClick={onClose}
-              className={`${btnBase} ${btnGhost} text-sm min-h-[44px] min-w-[44px] shrink-0`}
-              aria-label="Close"
+              disabled={isSharing}
+              style={{
+                flex: 1,
+                minWidth: '120px',
+                background: 'transparent',
+                color: '#A8A39A',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '9px',
+                fontWeight: 500,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                padding: '8px 18px',
+                border: '1px solid rgba(255,255,255,0.11)',
+                cursor: 'pointer',
+                borderRadius: 0,
+              }}
             >
-              ✕
+              Cancel
             </button>
           </div>
-
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-600 dark:text-green-400 text-sm">
-                {success}
-              </div>
-            )}
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-foreground">Share Type</label>
-              <div className="flex gap-3">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="shareType"
-                    value="user"
-                    checked={shareType === 'user'}
-                    onChange={(e) => setShareType(e.target.value as 'user' | 'public')}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm text-foreground">With User</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="shareType"
-                    value="public"
-                    checked={shareType === 'public'}
-                    onChange={(e) => setShareType(e.target.value as 'user' | 'public')}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm text-foreground">Public Link</span>
-                </label>
-              </div>
-            </div>
-
-            {shareType === 'user' && (
-              <div className="mb-4">
-                <label
-                  htmlFor="user-email"
-                  className="block text-sm font-medium mb-1 text-foreground"
-                >
-                  User Email
-                </label>
-                <input
-                  id="user-email"
-                  type="email"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  placeholder="user@example.com"
-                  className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <p className="mt-1 text-xs text-muted">
-                  Enter the email address of the user to share with
-                </p>
-              </div>
-            )}
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-foreground">Permission</label>
-              <select
-                value={permission}
-                onChange={(e) => setPermission(e.target.value as 'view' | 'edit')}
-                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="view">View Only</option>
-                <option value="edit">Can Edit</option>
-              </select>
-            </div>
-
-            <div className="mb-6">
-              <label htmlFor="expires" className="block text-sm font-medium mb-1 text-foreground">
-                Expires In (days, optional)
-              </label>
-              <input
-                id="expires"
-                type="number"
-                min="1"
-                value={expiresInDays}
-                onChange={(e) =>
-                  setExpiresInDays(e.target.value === '' ? '' : Number.parseInt(e.target.value, 10))
-                }
-                placeholder="Leave empty for no expiration"
-                className="w-full px-3 py-2 border-2 border-primary/40 dark:border-border rounded-xl bg-white dark:bg-surface text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className={`${btnBase} ${btnPrimary} flex-1 min-h-[44px] touch-manipulation`}
-                disabled={isSharing}
-              >
-                {isSharing ? 'Sharing...' : 'Share'}
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className={`${btnBase} ${btnGhost} flex-1 min-h-[44px] touch-manipulation`}
-                disabled={isSharing}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+        </form>
       </article>
     </div>
   );

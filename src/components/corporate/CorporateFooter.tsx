@@ -20,8 +20,7 @@ export const CorporateFooter = (): JSX.Element => {
           <p className="text-muted text-sm mt-1">
             Web experiences crafted with Next.js, React, TypeScript
           </p>
-          <p className="text-muted text-sm mt-2">
-          </p>
+          <p className="text-muted text-sm mt-2"></p>
         </div>
         <nav
           className="flex flex-col sm:flex-row sm:flex-wrap gap-4 sm:gap-6 items-center"
@@ -51,7 +50,9 @@ export const CorporateFooter = (): JSX.Element => {
         <p>
           Version: <span className="font-mono font-semibold opacity-90">{buildVersion}</span>
         </p>
-        <p className="mt-1">© {new Date().getFullYear()} <BrandName />. All rights reserved.</p>
+        <p className="mt-1">
+          © {new Date().getFullYear()} <BrandName />. All rights reserved.
+        </p>
       </div>
     </footer>
   );

@@ -55,7 +55,6 @@ export const DevToArticles = (): JSX.Element | null => {
   if (isLoading) {
     return (
       <article className={cardClasses} id="devto">
-
         <h2 className={cardTitle}>{getTitle()}</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="mb-3 h-4 w-full" />
@@ -69,7 +68,6 @@ export const DevToArticles = (): JSX.Element | null => {
   if (error) {
     return (
       <article className={cardClasses} id="devto">
-
         <h2 className={cardTitle}>{getTitle()}</h2>
         <p className={cardBody}>Error: {error}</p>
       </article>

@@ -78,8 +78,7 @@ export const SavedSearchesSection = ({
       await refetch();
     } catch (err) {
       console.error('Failed to save search:', err);
-      const msg =
-        err instanceof Error ? err.message : 'Failed to save search. Try again.';
+      const msg = err instanceof Error ? err.message : 'Failed to save search. Try again.';
       showAlert(`Save search failed: ${msg}`, 'Error');
     }
   };
@@ -195,9 +194,7 @@ export const SavedSearchesSection = ({
         </ul>
       ) : (
         !isSaving && (
-          <p className="text-xs text-muted px-2">
-            Save a search to quick-access it later.
-          </p>
+          <p className="text-xs text-muted px-2">Save a search to quick-access it later.</p>
         )
       )}
     </div>

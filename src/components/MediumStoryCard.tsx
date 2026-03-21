@@ -23,7 +23,6 @@ function formatPubDate(iso: string): string {
 export const MediumStoryCard = ({ story, isExpanded, id }: MediumStoryCardProps): JSX.Element => {
   return (
     <article className={cardClasses} id={id}>
-
       <div className={`${cardBody} flex flex-col h-full`}>
         <div className="flex items-start gap-3 mb-2">
           {story.thumbnailUrl && (

@@ -74,7 +74,6 @@ export const WebClipperModal = ({ isOpen, onClose }: WebClipperModalProps): JSX.
       aria-labelledby="web-clipper-modal-title"
     >
       <article className={`${cardClasses} max-w-md w-full`} onClick={(e) => e.stopPropagation()}>
-
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <h2 id="web-clipper-modal-title" className={cardTitle}>
@@ -132,8 +131,13 @@ export const WebClipperModal = ({ isOpen, onClose }: WebClipperModalProps): JSX.
                   </button>
                 </div>
                 {confirmRegen ? (
-                  <div aria-live="polite" className="space-y-2 rounded-xl border border-primary/20 p-3 text-sm">
-                    <p className="text-foreground">This will invalidate your current token. Are you sure?</p>
+                  <div
+                    aria-live="polite"
+                    className="space-y-2 rounded-xl border border-primary/20 p-3 text-sm"
+                  >
+                    <p className="text-foreground">
+                      This will invalidate your current token. Are you sure?
+                    </p>
                     <div className="flex gap-2">
                       <button
                         type="button"

@@ -14,10 +14,7 @@ import {
   type ObVisibility,
   type ObNodeUpdate,
 } from '../../services/obNodeService.js';
-import {
-  sanitizeFreeText,
-  sanitizeFreeTextPreserveNewlines,
-} from '../../utils/sanitize.js';
+import { sanitizeFreeText, sanitizeFreeTextPreserveNewlines } from '../../utils/sanitize.js';
 import { logger } from '../../utils/logger.js';
 
 const obNodesRouter = Router();
@@ -26,13 +23,7 @@ obNodesRouter.use(requireAdmin);
 
 const TITLE_MAX_LENGTH = 2000;
 const BODY_MAX_LENGTH = 100_000;
-const VALID_NODE_TYPES: ObNodeType[] = [
-  'note',
-  'concept',
-  'question',
-  'source',
-  'project',
-];
+const VALID_NODE_TYPES: ObNodeType[] = ['note', 'concept', 'question', 'source', 'project'];
 const VALID_VISIBILITIES: ObVisibility[] = ['public', 'private', 'shared'];
 
 function parseIdParam(id: string | string[] | undefined): string | null {
@@ -48,10 +39,7 @@ obNodesRouter.get('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    const limit = Math.min(
-      Math.max(0, Number.parseInt(String(req.query.limit), 10) || 50),
-      100,
-    );
+    const limit = Math.min(Math.max(0, Number.parseInt(String(req.query.limit), 10) || 50), 100);
     const offset = Math.max(0, Number.parseInt(String(req.query.offset), 10) || 0);
     const node_type = req.query.node_type as ObNodeType | undefined;
     const visibility = req.query.visibility as ObVisibility | undefined;
@@ -112,8 +100,7 @@ obNodesRouter.post('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { title, body, node_type, visibility, source_url, linked_note_id, user_tags } =
-      req.body;
+    const { title, body, node_type, visibility, source_url, linked_note_id, user_tags } = req.body;
 
     if (!title || typeof title !== 'string' || title.trim() === '') {
       res.status(400).json({ error: 'Title is required' });
@@ -143,9 +130,7 @@ obNodesRouter.post('/', async (req: AuthRequest, res) => {
           ? sanitizeFreeText(source_url, 2048)
           : null,
       linked_note_id:
-        linked_note_id != null && linked_note_id !== ''
-          ? String(linked_note_id)
-          : null,
+        linked_note_id != null && linked_note_id !== '' ? String(linked_note_id) : null,
       user_tags: Array.isArray(user_tags) ? user_tags.map(String).slice(0, 50) : [],
     });
 
@@ -180,8 +165,7 @@ obNodesRouter.patch('/:id', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { title, body, node_type, visibility, source_url, linked_note_id, user_tags } =
-      req.body;
+    const { title, body, node_type, visibility, source_url, linked_note_id, user_tags } = req.body;
 
     const update: ObNodeUpdate = {};
     if (title !== undefined) {
@@ -213,9 +197,7 @@ obNodesRouter.patch('/:id', async (req: AuthRequest, res) => {
     }
     if (source_url !== undefined) {
       update.source_url =
-        source_url == null || source_url === ''
-          ? null
-          : sanitizeFreeText(String(source_url), 2048);
+        source_url == null || source_url === '' ? null : sanitizeFreeText(String(source_url), 2048);
     }
     if (linked_note_id !== undefined) {
       update.linked_note_id =

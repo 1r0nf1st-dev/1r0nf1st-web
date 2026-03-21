@@ -47,12 +47,7 @@ export interface ObProfile {
   bio: string | null;
 }
 
-export type ObEdgeType =
-  | 'supports'
-  | 'contradicts'
-  | 'extends'
-  | 'inspired_by'
-  | 'references';
+export type ObEdgeType = 'supports' | 'contradicts' | 'extends' | 'inspired_by' | 'references';
 
 export interface ObPublicEdge {
   id: string;
@@ -114,11 +109,7 @@ export const obApi = {
     getMe: () => getJson<ObProfile>('/api/ob/profile/me'),
   },
   explore: {
-    search: (
-      query: string,
-      limit?: number,
-      nodeType?: ObNode['node_type'] | null,
-    ) =>
+    search: (query: string, limit?: number, nodeType?: ObNode['node_type'] | null) =>
       getJson<ObExploreResult[]>(`${OB}/explore`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -166,8 +157,7 @@ export const obApi = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       }),
-    delete: (id: string) =>
-      getJson<void>(`${OB}/nodes/${id}`, { method: 'DELETE' }),
+    delete: (id: string) => getJson<void>(`${OB}/nodes/${id}`, { method: 'DELETE' }),
   },
   ai: {
     search: (query: string, brainOwnerId?: string, limit?: number) =>
@@ -176,7 +166,11 @@ export const obApi = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, brainOwnerId, limit }),
       }),
-    chat: (query: string, brainOwnerId: string, history?: Array<{ role: string; content: string }>) =>
+    chat: (
+      query: string,
+      brainOwnerId: string,
+      history?: Array<{ role: string; content: string }>,
+    ) =>
       getJson<{ response: string; citedNodeIds: string[] }>(`${OB}/ai/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -194,8 +188,11 @@ export const obApi = {
         body: JSON.stringify({ nodeId, type, note: note ?? undefined }),
       }),
     remove: (nodeId: string, type: ObReactionType) =>
-      getJson<void>(`${OB}/reactions?nodeId=${encodeURIComponent(nodeId)}&type=${encodeURIComponent(type)}`, {
-        method: 'DELETE',
-      }),
+      getJson<void>(
+        `${OB}/reactions?nodeId=${encodeURIComponent(nodeId)}&type=${encodeURIComponent(type)}`,
+        {
+          method: 'DELETE',
+        },
+      ),
   },
 };

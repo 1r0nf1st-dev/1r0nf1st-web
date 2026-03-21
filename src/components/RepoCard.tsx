@@ -59,9 +59,7 @@ export const RepoCard = ({ repo, isExpanded, onToggle }: RepoCardProps): JSX.Ele
               <Skeleton className="h-4 w-2/3" />
             </div>
           )}
-          {commitsError && (
-            <ErrorDisplay error={commitsError} variant="inline" announce={false} />
-          )}
+          {commitsError && <ErrorDisplay error={commitsError} variant="inline" announce={false} />}
           {!commitsLoading && !commitsError && commits && commits.length > 0 && (
             <ul className="text-[0.85rem] list-none p-0 m-0 max-h-[400px] overflow-y-auto">
               {commits.map((commit) => (

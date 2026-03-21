@@ -36,7 +36,6 @@ export const VersionPreview = ({
 
   return (
     <article className={cardClasses}>
-
       <div className="relative z-10">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
           <div className="min-w-0">

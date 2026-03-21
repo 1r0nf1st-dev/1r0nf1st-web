@@ -1,7 +1,6 @@
 import type { JSX } from 'react';
 import Link from 'next/link';
 import { Lock } from 'lucide-react';
-import { btnBase, btnPrimary } from '../styles/buttons';
 
 export interface AdminOnlyPlaceholderCardProps {
   title: string;
@@ -25,18 +24,25 @@ export const AdminOnlyPlaceholderCard = ({
   const loginTo = `/login?returnTo=${encodeURIComponent(returnTo)}`;
   return (
     <div
-      className="block p-6 border border-border rounded-xl bg-surface-soft/30 text-foreground transition-all duration-200 focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+      className="block border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-6 py-5 text-[color:var(--color-text-1)]"
       aria-label={title}
     >
-      <div className="flex items-center gap-4 mb-3">
-        <Icon className="text-3xl text-primary shrink-0" />
-        <h3 className="m-0 text-xl font-semibold">{title}</h3>
+      <div className="mb-3 flex items-center gap-3">
+        <Icon className="text-2xl text-[color:var(--color-orange)] shrink-0" />
+        <h3 className="m-0 font-display text-[14px] font-bold uppercase tracking-[0.06em]">
+          {title}
+        </h3>
       </div>
-      <p className="m-0 mb-4 opacity-80 text-sm leading-relaxed">{description}</p>
-      <p className="m-0 mb-4 text-sm text-amber-600 dark:text-amber-400">
-        Sorry, you need to be logged in as admin to access this.
+      <p className="m-0 mb-3 font-display text-[12px] leading-[1.7] text-[color:var(--color-text-2)]">
+        {description}
       </p>
-      <Link href={loginTo} className={`${btnBase} ${btnPrimary} text-sm`}>
+      <p className="m-0 mb-4 font-display text-[12px] text-[color:var(--color-orange)]">
+        Admin access required. Log in with an admin account to continue.
+      </p>
+      <Link
+        href={loginTo}
+        className="inline-flex px-4 py-[9px] bg-[color:var(--color-orange)] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-white"
+      >
         Log in
       </Link>
     </div>

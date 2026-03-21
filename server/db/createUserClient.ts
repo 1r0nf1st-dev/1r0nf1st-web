@@ -7,9 +7,7 @@ import { config } from '../config.js';
  */
 export function createUserClient(accessToken: string): SupabaseClient {
   if (!config.supabaseUrl || !config.supabaseAnonKey) {
-    throw new Error(
-      'SUPABASE_URL and SUPABASE_ANON_KEY required for user-scoped client',
-    );
+    throw new Error('SUPABASE_URL and SUPABASE_ANON_KEY required for user-scoped client');
   }
   return createClient(config.supabaseUrl, config.supabaseAnonKey, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },

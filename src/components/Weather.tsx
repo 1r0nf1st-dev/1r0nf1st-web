@@ -13,7 +13,6 @@ export const Weather = ({ city = 'London' }: WeatherProps): JSX.Element | null =
   if (isLoading) {
     return (
       <article className={cardClasses} id="weather">
-
         <h2 className={cardTitle}>Weather</h2>
         <div className={cardBody} aria-busy>
           <Skeleton className="mb-4 h-12 w-24" />
@@ -27,7 +26,6 @@ export const Weather = ({ city = 'London' }: WeatherProps): JSX.Element | null =
   if (error) {
     return (
       <article className={cardClasses} id="weather">
-
         <h2 className={cardTitle}>Weather</h2>
         <p className={cardBody}>Error: {error}</p>
       </article>
@@ -37,7 +35,6 @@ export const Weather = ({ city = 'London' }: WeatherProps): JSX.Element | null =
   if (!weather) {
     return (
       <article className={cardClasses} id="weather">
-
         <h2 className={cardTitle}>Weather</h2>
         <p className={cardBody}>
           No weather data. Make sure the API server is running and OpenWeather is configured in{' '}
@@ -51,7 +48,6 @@ export const Weather = ({ city = 'London' }: WeatherProps): JSX.Element | null =
 
   return (
     <article className={cardClasses} id="weather">
-
       <h2 className={cardTitle}>Weather</h2>
       <div className={cardBody}>
         <div className="flex items-center gap-4 mb-4 relative z-20">

@@ -1,12 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 /** OpenBrain node type (matches ob_node_type enum). */
-export type ObNodeType =
-  | 'note'
-  | 'concept'
-  | 'question'
-  | 'source'
-  | 'project';
+export type ObNodeType = 'note' | 'concept' | 'question' | 'source' | 'project';
 
 /** OpenBrain visibility (matches ob_visibility enum). */
 export type ObVisibility = 'public' | 'private' | 'shared';
@@ -156,15 +151,8 @@ export async function listObNodes(
 /**
  * Get a single ob_node by id. RLS ensures user can only read own or public nodes.
  */
-export async function getObNode(
-  db: SupabaseClient,
-  nodeId: string,
-): Promise<ObNodeRow | null> {
-  const { data, error } = await db
-    .from(OB_NODES)
-    .select('*')
-    .eq('id', nodeId)
-    .single();
+export async function getObNode(db: SupabaseClient, nodeId: string): Promise<ObNodeRow | null> {
+  const { data, error } = await db.from(OB_NODES).select('*').eq('id', nodeId).single();
   if (error) {
     if (error.code === 'PGRST116') return null;
     throw error;
@@ -175,10 +163,7 @@ export async function getObNode(
 /**
  * Create an ob_node. RLS ensures user_id matches auth.uid().
  */
-export async function createObNode(
-  db: SupabaseClient,
-  insert: ObNodeInsert,
-): Promise<ObNodeRow> {
+export async function createObNode(db: SupabaseClient, insert: ObNodeInsert): Promise<ObNodeRow> {
   const row = {
     ...insert,
     user_tags: insert.user_tags ?? [],
@@ -217,10 +202,6 @@ export async function deleteObNode(
   nodeId: string,
   userId: string,
 ): Promise<void> {
-  const { error } = await db
-    .from(OB_NODES)
-    .delete()
-    .eq('id', nodeId)
-    .eq('user_id', userId);
+  const { error } = await db.from(OB_NODES).delete().eq('id', nodeId).eq('user_id', userId);
   if (error) throw error;
 }

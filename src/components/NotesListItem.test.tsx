@@ -16,9 +16,7 @@ const mockNote: Note = {
   deleted_at: null,
   is_pinned: false,
   is_archived: false,
-  tags: [
-    { id: '1', user_id: 'user1', name: 'Work', color: null, created_at: '2024-01-01' },
-  ],
+  tags: [{ id: '1', user_id: 'user1', name: 'Work', color: null, created_at: '2024-01-01' }],
 };
 
 describe('NotesListItem', () => {
@@ -58,24 +56,24 @@ describe('NotesListItem', () => {
 
   it('calls onClick when item is clicked', () => {
     render(<NotesListItem note={mockNote} isSelected={false} onClick={mockOnClick} />);
-    
+
     const item = screen.getByRole('button', { name: /Note: Test Note/ });
     item.click();
-    
+
     expect(mockOnClick).toHaveBeenCalledWith(mockNote);
   });
 
   it('shows pin icon when note is pinned', () => {
     const pinnedNote = { ...mockNote, is_pinned: true };
     render(<NotesListItem note={pinnedNote} isSelected={false} onClick={mockOnClick} />);
-    
+
     const pinIcon = screen.getByLabelText('Pinned note');
     expect(pinIcon).toBeInTheDocument();
   });
 
   it('shows file icon when note is not pinned', () => {
     render(<NotesListItem note={mockNote} isSelected={false} onClick={mockOnClick} />);
-    
+
     // FileText icon is aria-hidden, so we check for the SVG element directly
     const fileIcon = document.querySelector('.lucide-file-text');
     expect(fileIcon).toBeInTheDocument();
@@ -83,18 +81,22 @@ describe('NotesListItem', () => {
   });
 
   it('applies selected state styling when isSelected is true', () => {
-    const { container } = render(<NotesListItem note={mockNote} isSelected={true} onClick={mockOnClick} />);
+    const { container } = render(
+      <NotesListItem note={mockNote} isSelected={true} onClick={mockOnClick} />,
+    );
     const button = container.querySelector('button');
-    
+
     expect(button).toHaveAttribute('aria-selected', 'true');
     expect(button?.className).toContain('bg-primary/10');
     expect(button?.className).toContain('ring-inset');
   });
 
   it('does not apply selected state styling when isSelected is false', () => {
-    const { container } = render(<NotesListItem note={mockNote} isSelected={false} onClick={mockOnClick} />);
+    const { container } = render(
+      <NotesListItem note={mockNote} isSelected={false} onClick={mockOnClick} />,
+    );
     const button = container.querySelector('button');
-    
+
     expect(button).toHaveAttribute('aria-selected', 'false');
     expect(button?.className).not.toContain('bg-primary/10');
   });

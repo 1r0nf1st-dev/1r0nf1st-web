@@ -4,11 +4,7 @@ import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { Search, Trash2 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import {
-  createSavedSearch,
-  deleteSavedSearch,
-  useSavedSearches,
-} from '../../useSavedSearches';
+import { createSavedSearch, deleteSavedSearch, useSavedSearches } from '../../useSavedSearches';
 
 export const SavedSearchesSection = (): JSX.Element => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -75,8 +71,9 @@ export const SavedSearchesSection = (): JSX.Element => {
             const queryParams = new URLSearchParams(saved.query);
             const searchText = queryParams.get('q') || queryParams.get('search') || '';
             const hasEmailInQuery = /@/.test(searchText);
-            const displayName = saved.name === 'Saved search' && searchText ? searchText : saved.name;
-            
+            const displayName =
+              saved.name === 'Saved search' && searchText ? searchText : saved.name;
+
             return (
               <li key={saved.id} className="rounded-xl p-1 hover:bg-primary/5">
                 <div className="flex items-center gap-1">

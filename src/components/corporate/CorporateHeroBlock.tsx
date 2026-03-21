@@ -20,11 +20,13 @@ export const CorporateHeroBlock = (): JSX.Element => {
         >
           <span className="block">WEB EXPERIENCES</span>
           <span className="block">CRAFTED</span>
-          <span className="block">BY <BrandName /></span>
+          <span className="block">
+            BY <BrandName />
+          </span>
         </h1>
         <p className="mt-6 text-muted text-center max-w-xl text-lg">
-          A collection of tools and web experiences <BrandName /> uses, built with Next.js, React, TypeScript,
-          and modern web technologies.
+          A collection of tools and web experiences <BrandName /> uses, built with Next.js, React,
+          TypeScript, and modern web technologies.
         </p>
         <Link
           href="/projects"

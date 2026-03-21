@@ -149,7 +149,18 @@ export const PacManGame = (): JSX.Element => {
       const canvas = canvasRef.current;
       const focused = container && document.activeElement === container;
 
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+      if (
+        [
+          'ArrowUp',
+          'ArrowDown',
+          'ArrowLeft',
+          'ArrowRight',
+          'KeyW',
+          'KeyA',
+          'KeyS',
+          'KeyD',
+        ].includes(e.code)
+      ) {
         if (!focused) return;
         e.preventDefault();
         keys.current.add(e.code);
@@ -279,7 +290,13 @@ export const PacManGame = (): JSX.Element => {
         }
         if (best) {
           gh.dir =
-            best.x > ghCellX ? 'right' : best.x < ghCellX ? 'left' : best.y < ghCellY ? 'up' : 'down';
+            best.x > ghCellX
+              ? 'right'
+              : best.x < ghCellX
+                ? 'left'
+                : best.y < ghCellY
+                  ? 'up'
+                  : 'down';
           const [gmx, gmy] = move[gh.dir];
           const gspeed = g.frightened > 0 ? 1.5 : 2.2;
           gh.x += gmx * (gspeed / speed);
@@ -333,12 +350,24 @@ export const PacManGame = (): JSX.Element => {
           } else if (v === 2) {
             ctx.fillStyle = '#ffb897';
             ctx.beginPath();
-            ctx.arc(c * CELL_SIZE + CELL_SIZE / 2, r * CELL_SIZE + CELL_SIZE / 2, 3, 0, 2 * Math.PI);
+            ctx.arc(
+              c * CELL_SIZE + CELL_SIZE / 2,
+              r * CELL_SIZE + CELL_SIZE / 2,
+              3,
+              0,
+              2 * Math.PI,
+            );
             ctx.fill();
           } else if (v === 3) {
             ctx.fillStyle = '#ffb897';
             ctx.beginPath();
-            ctx.arc(c * CELL_SIZE + CELL_SIZE / 2, r * CELL_SIZE + CELL_SIZE / 2, 6, 0, 2 * Math.PI);
+            ctx.arc(
+              c * CELL_SIZE + CELL_SIZE / 2,
+              r * CELL_SIZE + CELL_SIZE / 2,
+              6,
+              0,
+              2 * Math.PI,
+            );
             ctx.fill();
           }
         }
@@ -348,18 +377,21 @@ export const PacManGame = (): JSX.Element => {
       ctx.fillStyle = '#ff0';
       ctx.beginPath();
       const mouth = 0.3 * Math.sin(g.pacAnim) + 0.4;
-      ctx.moveTo(
-        g.pacman.x * CELL_SIZE + CELL_SIZE / 2,
-        g.pacman.y * CELL_SIZE + CELL_SIZE / 2
-      );
+      ctx.moveTo(g.pacman.x * CELL_SIZE + CELL_SIZE / 2, g.pacman.y * CELL_SIZE + CELL_SIZE / 2);
       const start =
-        g.pacDir === 'right' ? mouth * Math.PI : g.pacDir === 'left' ? Math.PI + mouth * Math.PI : g.pacDir === 'up' ? (3 * Math.PI) / 2 + mouth * Math.PI : Math.PI / 2 + mouth * Math.PI;
+        g.pacDir === 'right'
+          ? mouth * Math.PI
+          : g.pacDir === 'left'
+            ? Math.PI + mouth * Math.PI
+            : g.pacDir === 'up'
+              ? (3 * Math.PI) / 2 + mouth * Math.PI
+              : Math.PI / 2 + mouth * Math.PI;
       ctx.arc(
         g.pacman.x * CELL_SIZE + CELL_SIZE / 2,
         g.pacman.y * CELL_SIZE + CELL_SIZE / 2,
         CELL_SIZE / 2 - 1,
         start,
-        start + (2 * Math.PI - mouth * Math.PI)
+        start + (2 * Math.PI - mouth * Math.PI),
       );
       ctx.closePath();
       ctx.fill();
@@ -369,10 +401,22 @@ export const PacManGame = (): JSX.Element => {
         const gh = g.ghosts[i];
         ctx.fillStyle = g.frightened > 0 ? '#2121de' : ghostColors[i];
         ctx.beginPath();
-        ctx.arc(gh.x * CELL_SIZE + CELL_SIZE / 2, gh.y * CELL_SIZE + CELL_SIZE / 2 - 2, CELL_SIZE / 2 - 2, Math.PI, 0);
-        ctx.lineTo(gh.x * CELL_SIZE + CELL_SIZE / 2 + CELL_SIZE / 2 - 2, gh.y * CELL_SIZE + CELL_SIZE / 2 + 2);
+        ctx.arc(
+          gh.x * CELL_SIZE + CELL_SIZE / 2,
+          gh.y * CELL_SIZE + CELL_SIZE / 2 - 2,
+          CELL_SIZE / 2 - 2,
+          Math.PI,
+          0,
+        );
+        ctx.lineTo(
+          gh.x * CELL_SIZE + CELL_SIZE / 2 + CELL_SIZE / 2 - 2,
+          gh.y * CELL_SIZE + CELL_SIZE / 2 + 2,
+        );
         ctx.lineTo(gh.x * CELL_SIZE + CELL_SIZE / 2, gh.y * CELL_SIZE + CELL_SIZE / 2);
-        ctx.lineTo(gh.x * CELL_SIZE + CELL_SIZE / 2 - (CELL_SIZE / 2 - 2), gh.y * CELL_SIZE + CELL_SIZE / 2 + 2);
+        ctx.lineTo(
+          gh.x * CELL_SIZE + CELL_SIZE / 2 - (CELL_SIZE / 2 - 2),
+          gh.y * CELL_SIZE + CELL_SIZE / 2 + 2,
+        );
         ctx.closePath();
         ctx.fill();
         if (g.frightened > 0) {

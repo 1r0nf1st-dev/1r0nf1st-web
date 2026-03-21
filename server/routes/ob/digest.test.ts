@@ -35,13 +35,12 @@ describe('obDigestRouter', () => {
   });
 
   it('returns 200 and digest when generateObDigest succeeds', async () => {
-    vi.mocked(obAiService.generateObDigest).mockResolvedValue('Your weekly digest: themes and connections.');
+    vi.mocked(obAiService.generateObDigest).mockResolvedValue(
+      'Your weekly digest: themes and connections.',
+    );
     const res = await request(app).get('/api/ob/digest');
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('digest', 'Your weekly digest: themes and connections.');
-    expect(obAiService.generateObDigest).toHaveBeenCalledWith(
-      expect.anything(),
-      'user-digest-1',
-    );
+    expect(obAiService.generateObDigest).toHaveBeenCalledWith(expect.anything(), 'user-digest-1');
   });
 });
