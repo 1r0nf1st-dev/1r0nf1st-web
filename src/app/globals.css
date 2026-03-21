@@ -281,7 +281,7 @@ body {
   color: var(--color-text-inv-2);
 }
 
-/* Interior page hero (Interior brief Section 5) */
+/* Interior page hero (Interior brief Section 5) — keep stacking below modals and main content */
 .page-hero {
   background: var(--color-sidebar-bg);
   border-bottom: 3px solid var(--color-orange);
@@ -289,6 +289,8 @@ body {
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+  z-index: 0;
+  isolation: isolate;
 }
 
 .page-hero-watermark {
@@ -439,6 +441,9 @@ body {
   -webkit-overflow-scrolling: touch;
   padding: 20px 28px;
   background: var(--color-ink);
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
 }
 
 .page-content::-webkit-scrollbar {
@@ -678,8 +683,8 @@ select.field-input {
 .note-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 8, 0.85);
-  z-index: 50;
+  background: rgba(10, 10, 8, 0.92);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -741,6 +746,7 @@ select.field-input {
   align-items: center;
   justify-content: center;
   transition: color 0.15s;
+  flex-shrink: 0;
 }
 
 .note-modal-close:hover {
@@ -771,17 +777,18 @@ select.field-input {
   border-radius: 0;
 }
 
-/* Mobile note modal: avoid centered overlay clipping; body scrolls inside bounded height */
+/* Mobile note modal: overlay does NOT scroll (header+close must stay visible); only modal-body scrolls */
+/* padding-top ensures modal content (incl. close button) sits below fixed nav (h-14 = 56px) */
 @media (max-width: 768px) {
   .note-modal-overlay {
     align-items: flex-start;
     justify-content: center;
-    padding-top: max(8px, env(safe-area-inset-top, 0px));
+    padding-top: max(72px, calc(56px + env(safe-area-inset-top, 0px)));
     padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
     padding-left: 12px;
     padding-right: 12px;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
+    overflow: hidden;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -789,22 +796,42 @@ select.field-input {
     width: 100%;
     max-width: 100%;
     max-height: calc(
-      100vh - max(16px, env(safe-area-inset-top, 0px)) - max(16px, env(safe-area-inset-bottom, 0px))
+      100vh - max(32px, env(safe-area-inset-top, 0px)) - max(32px, env(safe-area-inset-bottom, 0px))
     );
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   @supports (height: 100dvh) {
     .note-modal {
       max-height: calc(
-        100dvh - max(16px, env(safe-area-inset-top, 0px)) - max(16px, env(safe-area-inset-bottom, 0px))
+        100dvh - max(32px, env(safe-area-inset-top, 0px)) - max(32px, env(safe-area-inset-bottom, 0px))
       );
     }
+  }
+
+  .note-modal-header {
+    flex-shrink: 0;
+    background: #201d1a;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .note-modal-close {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .note-modal-body {
     flex: 1 1 0%;
     min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
   }
 }
@@ -1998,6 +2025,12 @@ button {
 
   .page-hero {
     padding: 16px 16px 0 !important;
+    overflow: hidden;
+  }
+
+  .page-content {
+    margin-top: 0;
+    background: var(--color-ink);
   }
 
   .page-h1 {

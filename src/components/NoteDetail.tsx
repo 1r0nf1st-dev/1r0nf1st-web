@@ -1,5 +1,6 @@
 import type { JSX } from 'react';
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import type { Note, Tag } from '../useNotes';
 import { NoteEditor } from './NoteEditor';
 import { updateNote, deleteNote, getNoteById } from '../useNotes';
@@ -60,10 +61,15 @@ export const NoteDetail = ({
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [showSaveAsTemplateModal, setShowSaveAsTemplateModal] = useState(false);
   const [isTagsDropdownOpen, setIsTagsDropdownOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const tagsDropdownRef = useRef<HTMLDivElement>(null);
   const shareSettingsModalRef = useRef<HTMLDivElement>(null);
   const { showAlert } = useAlert();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (showShareSettings && shareSettingsModalRef.current) {
@@ -257,11 +263,10 @@ export const NoteDetail = ({
         (!(note.content as { content?: unknown[] }).content ||
           ((note.content as { content?: unknown[] }).content?.length ?? 0) === 0)));
 
-  return (
-    <>
-      <div className="note-modal-overlay" role="dialog" aria-modal="true" aria-label="Edit Note">
-        <div className="note-modal">
-          <div className="note-modal-header">
+  const modalContent = (
+    <div className="note-modal-overlay" role="dialog" aria-modal="true" aria-label="Edit Note">
+      <div className="note-modal">
+        <div className="note-modal-header">
             <h2 className="note-modal-title">{isNewNote ? 'New Note' : 'Edit Note'}</h2>
             <button type="button" onClick={onClose} className="note-modal-close" aria-label="Close">
               <X className="w-4 h-4" aria-hidden />
@@ -519,6 +524,11 @@ export const NoteDetail = ({
           </div>
         </div>
       </div>
+  );
+
+  return (
+    <>
+      {isMounted && createPortal(modalContent, document.body)}
       <SaveConfirmationModal
         isOpen={showSaveModal}
         onReturnToDashboard={() => {
