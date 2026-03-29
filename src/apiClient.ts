@@ -1,5 +1,15 @@
 /* global RequestInit */
 
+import { getSessionAnonId } from './utils/sessionAnonId';
+import { setLastRequestIdFromResponse } from './utils/requestContext';
+
+function appendLogCorrelationHeaders(headers: Record<string, string>): void {
+  const sid = getSessionAnonId();
+  if (sid) {
+    headers['X-Session-Anon-Id'] = sid;
+  }
+}
+
 export class ApiError extends Error {
   public readonly status: number;
   public readonly url: string;
@@ -68,11 +78,13 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
     if (token && !headers.Authorization) {
       headers.Authorization = `Bearer ${token}`;
     }
+    appendLogCorrelationHeaders(headers);
 
     let response = await fetch(url, {
       ...init,
       headers,
     });
+    setLastRequestIdFromResponse(response);
 
     // If we get a 403 and we have a token, try to refresh the token and retry once
     // Skip refresh for auth endpoints to avoid infinite loops
@@ -86,6 +98,7 @@ export async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
           ...init,
           headers,
         });
+        setLastRequestIdFromResponse(response);
       } else {
         // Refresh failed, clear tokens
         localStorage.removeItem('authToken');
@@ -159,12 +172,14 @@ export async function postFormData<T>(url: string, formData: FormData): Promise<
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
+  appendLogCorrelationHeaders(headers);
 
   let response = await fetch(url, {
     method: 'POST',
     headers,
     body: formData,
   });
+  setLastRequestIdFromResponse(response);
 
   const isAuthEndpoint = url.includes('/api/auth/');
   if (response.status === 403 && token && !isAuthEndpoint) {
@@ -176,6 +191,7 @@ export async function postFormData<T>(url: string, formData: FormData): Promise<
         headers,
         body: formData,
       });
+      setLastRequestIdFromResponse(response);
     } else {
       localStorage.removeItem('authToken');
       localStorage.removeItem('refreshToken');

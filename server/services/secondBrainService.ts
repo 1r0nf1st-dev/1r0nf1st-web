@@ -5,6 +5,9 @@ export type { SearchResult };
 import { config } from '../config.js';
 import { logger } from '../utils/logger.js';
 
+/** Cosine similarity (1 − pgvector distance) minimum for matches. RAG uses the same cutoff for chunks. */
+export const SECOND_BRAIN_SEMANTIC_MATCH_THRESHOLD_DEFAULT = 0.6;
+
 export type SecondBrainCategory =
   | 'PROJECTS'
   | 'PEOPLE'
@@ -449,7 +452,7 @@ async function routeToTable(
 
 export async function semanticSearch(
   query: string,
-  matchThreshold = 0.6,
+  matchThreshold = SECOND_BRAIN_SEMANTIC_MATCH_THRESHOLD_DEFAULT,
   matchCount = 10,
 ): Promise<SearchResult[]> {
   const embedding = await getEmbedding(query);
@@ -459,7 +462,7 @@ export async function semanticSearch(
 export async function queryWithRag(question: string, matchCount = 5): Promise<string> {
   let results: SearchResult[] = [];
   try {
-    results = await semanticSearch(question, 0.6, matchCount);
+    results = await semanticSearch(question, SECOND_BRAIN_SEMANTIC_MATCH_THRESHOLD_DEFAULT, matchCount);
   } catch (err) {
     logger.warn({ err }, 'Semantic search failed, answering with empty context');
     // Continue with empty context so user gets "I don't have that stored" instead of 500

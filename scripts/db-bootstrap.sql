@@ -1,7 +1,9 @@
--- Bootstrap script: Creates all app tables with RLS enabled from the start.
+-- Canonical schema for this app (single source of truth).
 -- Usage: psql $DATABASE_URL -f scripts/db-bootstrap.sql
 -- Purpose: Fresh DB with correct schema and RLS in one run.
--- Prerequisite: Run after db-reset.sql, or on a new database. Requires auth.users.
+-- Prerequisite: Run scripts/db-reset.sql first when re-instantiating, or use on a new database.
+--              Requires Supabase auth.users. From repo root: pnpm db:reset-bootstrap
+-- Note: Do not maintain parallel migration files — extend this script and keep db-reset.sql in sync.
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
@@ -360,6 +362,21 @@ CREATE TABLE IF NOT EXISTS public.sb_thoughts (
   source TEXT, category TEXT, confidence INT, routed BOOLEAN DEFAULT FALSE,
   embedding vector(768), created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+CREATE TABLE IF NOT EXISTS public.sb_thought_attachments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  thought_id UUID NOT NULL REFERENCES public.sb_thoughts(id) ON DELETE CASCADE,
+  uploaded_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  file_path TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  file_size BIGINT NOT NULL,
+  mime_type TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_sb_thought_attachments_thought ON public.sb_thought_attachments(thought_id);
+CREATE INDEX IF NOT EXISTS idx_sb_thought_attachments_uploaded_by ON public.sb_thought_attachments(uploaded_by);
+ALTER TABLE public.sb_thought_attachments ENABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS public.sb_projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL, goal TEXT, next_action TEXT, status TEXT DEFAULT 'active',
@@ -384,7 +401,7 @@ CREATE TABLE IF NOT EXISTS public.sb_admin (
 CREATE TABLE IF NOT EXISTS public.sb_resources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL, url TEXT, summary TEXT, tags TEXT[],
-  embedding vector(768), created_at TIMESTAMPTZ DEFAULT NOW()
+  embedding vector(768), created_at TIMESTAMPTZ DEFAULT NOW(), updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE OR REPLACE FUNCTION public.sb_search_all(
@@ -608,6 +625,25 @@ CREATE POLICY "ob_profiles are publicly viewable"
 CREATE POLICY "Users can update own ob_profile"
   ON public.ob_profiles FOR UPDATE USING (auth.uid() = id);
 
+CREATE TABLE IF NOT EXISTS public.ob_node_attachments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  node_id UUID NOT NULL REFERENCES public.ob_nodes(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  file_path TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  file_size BIGINT NOT NULL,
+  mime_type TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ob_node_attachments_node_id ON public.ob_node_attachments(node_id);
+CREATE INDEX IF NOT EXISTS idx_ob_node_attachments_user_id ON public.ob_node_attachments(user_id);
+ALTER TABLE public.ob_node_attachments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users manage own ob_node_attachments"
+  ON public.ob_node_attachments FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
 -- Semantic search across ob_nodes.
 -- When owner_id IS NULL: search public nodes across all users (for Explore).
 -- When owner_id IS NOT NULL: search all nodes (public + private) for that user (for /brain).
@@ -648,12 +684,14 @@ LANGUAGE sql STABLE AS $$
   LIMIT match_count;
 $$;
 
--- Combined search: ob_nodes + sb_* for one brain owner (service_role / API)
+-- Combined search: ob_nodes + sb_* for one brain owner (service_role / API).
+-- viewer_id: when equal to owner_id, include private ob_nodes (your /brain). Otherwise public ob_nodes only (another user's public brain).
 CREATE OR REPLACE FUNCTION public.ob_search_all_brain(
   query_embedding  vector(768),
   owner_id         UUID,
-  match_threshold  FLOAT DEFAULT 0.65,
-  match_count      INT DEFAULT 15
+  match_threshold  FLOAT DEFAULT 0.55,
+  match_count      INT DEFAULT 15,
+  viewer_id        UUID DEFAULT NULL
 )
 RETURNS TABLE (
   source_table  TEXT,
@@ -668,7 +706,11 @@ LANGUAGE sql STABLE SECURITY DEFINER AS $$
     SELECT 'ob_nodes'::text AS source_table, id AS record_id, title AS label, COALESCE(ai_summary, body, '') AS detail,
       (1 - (embedding <=> query_embedding))::float AS similarity, created_at
     FROM public.ob_nodes
-    WHERE user_id = owner_id AND visibility = 'public' AND embedding IS NOT NULL
+    WHERE user_id = owner_id AND embedding IS NOT NULL
+      AND (
+        visibility = 'public'
+        OR (viewer_id IS NOT NULL AND viewer_id = owner_id)
+      )
       AND 1 - (embedding <=> query_embedding) > match_threshold
     UNION ALL
     SELECT 'sb_thoughts'::text, id, LEFT(raw_text, 200), COALESCE(raw_text, ''),
@@ -693,4 +735,178 @@ LANGUAGE sql STABLE SECURITY DEFINER AS $$
   ) sub
   ORDER BY similarity DESC
   LIMIT match_count;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Application logging (server + client errors, API interactions, platform)
+-- Written only via service_role / Express. RLS disabled; no PII (no user ids).
+-- Intended for admin dashboards: time series, path breakdowns, platform feed.
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.app_interaction_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  kind TEXT NOT NULL,
+  name TEXT NOT NULL,
+  request_id TEXT,
+  session_anon_id TEXT,
+  duration_ms INTEGER,
+  path TEXT,
+  http_method TEXT,
+  status_code INTEGER,
+  environment TEXT,
+  release TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_interaction_created ON public.app_interaction_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_app_interaction_request_id ON public.app_interaction_events (request_id)
+  WHERE request_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_app_interaction_path ON public.app_interaction_events (path)
+  WHERE path IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS public.app_error_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  source TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'error',
+  error_type TEXT,
+  message TEXT NOT NULL,
+  stack TEXT,
+  component_stack TEXT,
+  http_method TEXT,
+  path TEXT,
+  status_code INTEGER,
+  request_id TEXT,
+  session_anon_id TEXT,
+  environment TEXT,
+  release TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_error_created ON public.app_error_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_app_error_source ON public.app_error_events (source, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_app_error_request_id ON public.app_error_events (request_id)
+  WHERE request_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_app_error_path ON public.app_error_events (path)
+  WHERE path IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS public.app_platform_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  provider TEXT NOT NULL,
+  category TEXT NOT NULL,
+  severity TEXT,
+  title TEXT,
+  message TEXT,
+  external_id TEXT,
+  occurred_at TIMESTAMPTZ,
+  environment TEXT,
+  release TEXT,
+  payload JSONB NOT NULL DEFAULT '{}'::jsonb
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_platform_created ON public.app_platform_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_app_platform_provider ON public.app_platform_events (provider, created_at DESC);
+
+ALTER TABLE public.app_interaction_events DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_error_events DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_platform_events DISABLE ROW LEVEL SECURITY;
+
+-- Reporting RPCs for admin UI (time-series charts, breakdowns). Called from server only.
+CREATE OR REPLACE FUNCTION public.app_log_error_bucket_counts(
+  p_from TIMESTAMPTZ,
+  p_to TIMESTAMPTZ,
+  p_step TEXT
+)
+RETURNS TABLE (bucket_start TIMESTAMPTZ, event_count BIGINT)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT date_trunc(p_step, created_at) AS bucket_start, count(*)::bigint AS event_count
+  FROM public.app_error_events
+  WHERE created_at >= p_from AND created_at <= p_to
+  GROUP BY 1
+  ORDER BY 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.app_log_interaction_bucket_counts(
+  p_from TIMESTAMPTZ,
+  p_to TIMESTAMPTZ,
+  p_step TEXT
+)
+RETURNS TABLE (bucket_start TIMESTAMPTZ, event_count BIGINT)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT date_trunc(p_step, created_at) AS bucket_start, count(*)::bigint AS event_count
+  FROM public.app_interaction_events
+  WHERE created_at >= p_from AND created_at <= p_to
+  GROUP BY 1
+  ORDER BY 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.app_log_platform_bucket_counts(
+  p_from TIMESTAMPTZ,
+  p_to TIMESTAMPTZ,
+  p_step TEXT
+)
+RETURNS TABLE (bucket_start TIMESTAMPTZ, event_count BIGINT)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT date_trunc(p_step, created_at) AS bucket_start, count(*)::bigint AS event_count
+  FROM public.app_platform_events
+  WHERE created_at >= p_from AND created_at <= p_to
+  GROUP BY 1
+  ORDER BY 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.app_log_errors_by_path(
+  p_from TIMESTAMPTZ,
+  p_to TIMESTAMPTZ,
+  p_limit INTEGER DEFAULT 20
+)
+RETURNS TABLE (path TEXT, event_count BIGINT)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COALESCE(e.path, '') AS path, count(*)::bigint AS event_count
+  FROM public.app_error_events e
+  WHERE e.created_at >= p_from AND e.created_at <= p_to
+  GROUP BY 1
+  ORDER BY event_count DESC
+  LIMIT GREATEST(1, LEAST(p_limit, 100));
+$$;
+
+CREATE OR REPLACE FUNCTION public.app_log_errors_by_source(
+  p_from TIMESTAMPTZ,
+  p_to TIMESTAMPTZ
+)
+RETURNS TABLE (source TEXT, event_count BIGINT)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT e.source, count(*)::bigint AS event_count
+  FROM public.app_error_events e
+  WHERE e.created_at >= p_from AND e.created_at <= p_to
+  GROUP BY e.source
+  ORDER BY event_count DESC;
+$$;
+
+CREATE OR REPLACE FUNCTION public.app_log_interactions_by_path(
+  p_from TIMESTAMPTZ,
+  p_to TIMESTAMPTZ,
+  p_limit INTEGER DEFAULT 20
+)
+RETURNS TABLE (path TEXT, event_count BIGINT)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COALESCE(i.path, '') AS path, count(*)::bigint AS event_count
+  FROM public.app_interaction_events i
+  WHERE i.created_at >= p_from AND i.created_at <= p_to
+  GROUP BY 1
+  ORDER BY event_count DESC
+  LIMIT GREATEST(1, LEAST(p_limit, 100));
 $$;

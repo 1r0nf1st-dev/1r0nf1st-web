@@ -153,7 +153,12 @@ export function PublicBrainPage({ slug }: PublicBrainPageProps): JSX.Element {
 
           <section className="min-w-0 flex-1 space-y-4">
             {viewMode === 'graph' && nodes.length > 0 ? (
-              <BrainGraph nodes={nodes} edges={edges} onNodeClick={setSelectedNode} />
+              <BrainGraph
+                nodes={nodes}
+                edges={edges}
+                onNodeClick={setSelectedNode}
+                variant="light"
+              />
             ) : null}
             {selectedNode ? (
               <NodeDetailReadOnly node={selectedNode} currentUserId={currentUserIdForReactions} />

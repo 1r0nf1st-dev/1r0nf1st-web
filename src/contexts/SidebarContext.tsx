@@ -1,7 +1,16 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar_collapsed';
 
@@ -37,6 +46,19 @@ export const SidebarProvider = ({ children }: { children: ReactNode }): ReactNod
       // Ignore storage access issues in private mode.
     }
   }, []);
+
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isFirstLocation = useRef(true);
+  useEffect(() => {
+    if (isFirstLocation.current) {
+      isFirstLocation.current = false;
+      return;
+    }
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setCollapsed(true);
+    }
+  }, [pathname, searchParams, setCollapsed]);
 
   const toggleCollapsed = useCallback(() => {
     setCollapsed(!isCollapsed);

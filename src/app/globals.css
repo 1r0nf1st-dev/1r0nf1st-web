@@ -51,12 +51,52 @@
   /* ── TYPOGRAPHY (Section 3) ── */
   --font-display: 'Barlow', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* Scrollbars — thin, square ends, warm neutrals; orange on hover */
+  --scrollbar-size: 8px;
+  --scrollbar-thumb: rgba(92, 87, 79, 0.5);
+  --scrollbar-thumb-hover: var(--color-orange);
+  --scrollbar-track: rgba(221, 217, 210, 0.45);
+  --scrollbar-corner: var(--color-bg);
+}
+
+html.dark {
+  --scrollbar-thumb: #3a3530;
+  --scrollbar-thumb-hover: var(--color-orange);
+  --scrollbar-track: rgba(26, 23, 20, 0.55);
+  --scrollbar-corner: var(--color-ink);
+  /* Match interior / marketing dark shell so gutter and bleed are not cream (--color-bg). */
+  background-color: var(--color-ink);
 }
 
 /* Global reset and typography – Section 8 */
 * {
   box-sizing: border-box;
   min-width: 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 0;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-corner);
 }
 
 html,
@@ -68,6 +108,7 @@ body {
 
 html {
   scroll-behavior: smooth;
+  background-color: var(--color-bg);
 }
 
 body {
@@ -78,8 +119,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   min-height: 100vh;
-  /* Prevent horizontal layout shifts from scrollbar appearing/disappearing */
-  scrollbar-gutter: stable both-edges;
+  /* Stable avoids scrollbar layout shift; avoid `both-edges` — it reserves gutters on left AND right
+     using the page background, which reads as thick vertical “borders” on full-bleed dark pages. */
+  scrollbar-gutter: stable;
+}
+
+html.dark body {
+  background-color: var(--color-ink);
+  color: var(--color-text-inv);
 }
 
 /* Interior app shell (Interior brief Section 2) */
@@ -92,6 +139,11 @@ body {
   min-width: 0;
   overflow: hidden;
   background: var(--color-ink);
+  /* Interior scrollbars match ink/surface even if html theme is light */
+  --scrollbar-thumb: #3a3530;
+  --scrollbar-thumb-hover: var(--color-orange);
+  --scrollbar-track: rgba(26, 23, 20, 0.5);
+  --scrollbar-corner: var(--color-ink);
 }
 
 .app-body {
@@ -238,6 +290,16 @@ body {
   color: var(--color-text-inv);
 }
 
+.sidebar .nav-item-label.nav-item-label--multiline {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
 .nav-item-chevron {
   font-size: 9px;
   color: var(--color-text-inv-2);
@@ -250,6 +312,200 @@ body {
   color: #fff;
   padding: 1px 5px;
   letter-spacing: 0.06em;
+}
+
+/* Lucide rows in sidebar (match .nav-item-icon proportions) */
+.sidebar .nav-item-icon--svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.sidebar .nav-item-icon--svg svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  color: var(--color-text-inv-2);
+}
+
+.sidebar .nav-item:hover .nav-item-icon--svg svg,
+.sidebar a.nav-item:hover .nav-item-icon--svg svg {
+  color: var(--color-text-inv);
+}
+
+.sidebar .nav-item.active .nav-item-icon--svg svg,
+.sidebar a.nav-item.active .nav-item-icon--svg svg {
+  color: var(--color-orange);
+}
+
+.sidebar button.nav-item {
+  font: inherit;
+  color: inherit;
+  border: none;
+  background: transparent;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.sidebar button.nav-item.sidebar-nav-item--icon-only {
+  justify-content: center;
+}
+
+/* Flyout label when sidebar row is icon-only (collapsed / narrow contexts) */
+.sidebar .sidebar-flyout-tooltip {
+  pointer-events: none;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+  z-index: 30;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-inv);
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule-dark);
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  display: none;
+}
+
+.sidebar .group:hover .sidebar-flyout-tooltip,
+.sidebar .group:focus-visible .sidebar-flyout-tooltip {
+  display: block;
+}
+
+/* Secondary block under main nav (widgets) */
+.sidebar-tools-extras {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-rule-dark);
+}
+
+.sidebar-tools-hint {
+  font-family: var(--font-display);
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--color-text-inv-2);
+  padding: 4px 14px 10px;
+  margin: 0;
+}
+
+.sidebar-tools-text-btn {
+  display: block;
+  width: calc(100% - 28px);
+  margin: 0 14px 8px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+  color: var(--color-text-inv-2);
+  border: 1px solid var(--color-rule-dark);
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    color 0.12s,
+    border-color 0.12s,
+    background 0.12s;
+}
+
+.sidebar-tools-text-btn:hover {
+  color: var(--color-text-inv);
+  border-color: var(--color-orange);
+  background: rgba(224, 92, 26, 0.08);
+}
+
+.sidebar-tools-icon-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 36px;
+  margin-right: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text-inv-2);
+  cursor: pointer;
+  transition:
+    color 0.12s,
+    background 0.12s;
+}
+
+.sidebar-tools-icon-btn:hover {
+  color: var(--color-orange);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-tools-icon-btn:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 1px;
+}
+
+.sidebar-tools-confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 14px 8px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: var(--color-text-inv-2);
+}
+
+.sidebar-tools-confirm button {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--color-rule-dark);
+  background: transparent;
+  color: var(--color-text-inv-2);
+  cursor: pointer;
+  transition:
+    color 0.12s,
+    border-color 0.12s,
+    background 0.12s;
+}
+
+.sidebar-tools-confirm button:hover {
+  color: var(--color-text-inv);
+  border-color: var(--color-text-inv-2);
+}
+
+.sidebar-tools-confirm-yes {
+  border-color: rgba(225, 29, 72, 0.5) !important;
+  color: #fb7185 !important;
+}
+
+.sidebar-tools-confirm-yes:hover {
+  background: rgba(225, 29, 72, 0.12) !important;
+}
+
+.sidebar-skeleton-bar {
+  height: 32px;
+  margin: 0 8px 6px;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.06);
+  animation: sidebar-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes sidebar-skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
 }
 
 .sidebar-footer {
@@ -446,14 +702,6 @@ body {
   isolation: isolate;
 }
 
-.page-content::-webkit-scrollbar {
-  width: 3px;
-}
-
-.page-content::-webkit-scrollbar-thumb {
-  background: var(--color-text-inv-2);
-}
-
 .stats-bar {
   display: flex;
   gap: 0;
@@ -633,6 +881,11 @@ select.field-input {
   border-right: none;
 }
 
+/* Avoid global :focus-visible ring (outline + offset) spilling onto the attached button */
+.input-row .field-input:focus-visible {
+  outline: none;
+}
+
 .input-row-btn {
   background: var(--color-orange);
   color: #fff;
@@ -679,6 +932,96 @@ select.field-input {
   background: var(--color-orange);
 }
 
+/* Open Brain admin: nodes aside, chat + editor row, full-width graph below */
+.ob-page-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px 24px;
+  align-items: start;
+}
+
+.ob-page-aside {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.ob-page-top {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+  min-width: 0;
+}
+
+.ob-page-graph {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.ob-node-editor textarea.field-input {
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.5;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* Open Brain — React Flow matches interior surfaces + orange accent */
+.brain-graph-shell.content-panel {
+  padding: 0;
+}
+
+.brain-graph-shell__title.panel-title {
+  padding: 20px 20px 0;
+  margin-bottom: 12px;
+}
+
+.brain-graph-shell__canvas {
+  width: 100%;
+  min-height: 280px;
+  height: 480px;
+}
+
+.brain-graph-shell .react-flow__attribution {
+  display: none;
+}
+
+.brain-graph-shell .react-flow__node {
+  font-family: var(--font-display), sans-serif;
+}
+
+.brain-graph-shell .react-flow.dark.brain-graph-flow {
+  --xy-background-color-default: var(--color-ink);
+  --xy-background-pattern-dots-color-default: rgba(255, 255, 255, 0.06);
+  --xy-edge-stroke-default: rgba(168, 163, 154, 0.4);
+  --xy-edge-stroke-selected-default: var(--color-orange);
+  --xy-connectionline-stroke-default: var(--color-orange);
+  --xy-minimap-background-color-default: var(--color-ink);
+  --xy-minimap-mask-background-color-default: rgba(10, 10, 8, 0.55);
+  --xy-minimap-node-background-color-default: var(--color-orange);
+  --xy-minimap-node-stroke-color-default: var(--color-rule-dark);
+  --xy-controls-button-background-color-default: var(--color-surface);
+  --xy-controls-button-background-color-hover-default: var(--color-raised);
+  --xy-controls-button-color-default: var(--color-text-inv);
+  --xy-controls-button-color-hover-default: var(--color-text-inv);
+  --xy-controls-button-border-color-default: var(--color-rule-dark);
+  --xy-controls-box-shadow-default: none;
+  --xy-node-boxshadow-hover-default: none;
+  --xy-node-boxshadow-selected-default: 0 0 0 1px var(--color-orange);
+  --xy-handle-background-color-default: var(--color-orange);
+  --xy-handle-border-color-default: var(--color-surface);
+  --xy-selection-border-default: 1px dotted var(--color-orange);
+  --xy-selection-background-color-default: rgba(224, 92, 26, 0.1);
+}
+
+.brain-graph-shell--light .brain-graph-shell__canvas {
+  border-top: 1px solid var(--color-rule);
+}
+
 /* Edit Note modal (1r0nf1st-edit-note-brief) */
 .note-modal-overlay {
   position: fixed;
@@ -689,6 +1032,10 @@ select.field-input {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  --scrollbar-thumb: #3a3530;
+  --scrollbar-thumb-hover: var(--color-orange);
+  --scrollbar-track: rgba(26, 23, 20, 0.45);
+  --scrollbar-corner: #201d1a;
 }
 
 .note-modal {
@@ -760,21 +1107,6 @@ select.field-input {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #3a3530 transparent;
-}
-
-.note-modal-body::-webkit-scrollbar {
-  width: 3px;
-}
-
-.note-modal-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.note-modal-body::-webkit-scrollbar-thumb {
-  background: #3a3530;
-  border-radius: 0;
 }
 
 /* Mobile note modal: overlay does NOT scroll (header+close must stay visible); only modal-body scrolls */
@@ -1374,18 +1706,6 @@ button {
   flex: 1;
   min-height: 0;
   scrollbar-gutter: stable;
-  /* Hide scrollbar visuals while keeping layout stable */
-  scrollbar-width: thin;
-}
-
-.page-content--public::-webkit-scrollbar {
-  width: 6px;
-}
-.page-content--public::-webkit-scrollbar-thumb {
-  background: transparent;
-}
-.page-content--public::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 /* Contact */
@@ -2106,9 +2426,25 @@ button {
   /* Open Brain mobile */
   .content,
   [class*='ob-grid'],
-  .open-brain-grid {
+  .open-brain-grid,
+  .ob-page-grid {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
+  }
+
+  .ob-page-aside,
+  .ob-page-top,
+  .ob-page-graph {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+
+  .ob-page-top {
+    grid-template-columns: 1fr !important;
+  }
+
+  .brain-graph-shell__canvas {
+    height: 340px !important;
   }
 
   .node-card {

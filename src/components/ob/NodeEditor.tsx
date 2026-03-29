@@ -1,11 +1,16 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useState, useCallback, useEffect } from 'react';
+import type { ClipboardEvent } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { ConfirmModal } from '../ConfirmModal';
 import remarkGfm from 'remark-gfm';
 import type { ObNode, ObNodeCreate, ObNodeUpdate } from '../../lib/obApi';
+import { useAlert } from '../../contexts/AlertContext';
+import { markdownObAttachImage, uploadOpenBrainNodeImage } from '../../lib/brainPasteImage';
+import { getClipboardImageFiles } from '../../utils/clipboardImageFiles';
+import { brainMarkdownUrlTransform, obBrainMarkdownComponents } from './brainMarkdownPreview';
 
 const NODE_TYPES: Array<ObNode['node_type']> = ['note', 'concept', 'question', 'source', 'project'];
 const VISIBILITIES: Array<ObNode['visibility']> = ['private', 'public', 'shared'];
@@ -26,6 +31,8 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const bodyTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const { showAlert } = useAlert();
 
   useEffect(() => {
     setTitle(node?.title ?? '');
@@ -68,13 +75,47 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
     }
   }, [node?.id, onDelete]);
 
+  const handleBodyPaste = useCallback(
+    async (e: ClipboardEvent<HTMLTextAreaElement>) => {
+      if (showPreview) return;
+      if (!node?.id) {
+        showAlert('Save the node first, then paste images into the body.', 'Info');
+        return;
+      }
+      const files = getClipboardImageFiles(e);
+      if (files.length === 0) return;
+      e.preventDefault();
+      const ta = bodyTextareaRef.current;
+      const insertMarkdown = (md: string): void => {
+        if (ta) {
+          const start = ta.selectionStart;
+          const end = ta.selectionEnd;
+          setBody((v) => v.slice(0, start) + md + v.slice(end));
+          requestAnimationFrame(() => {
+            ta.focus();
+            const pos = start + md.length;
+            ta.setSelectionRange(pos, pos);
+          });
+        } else {
+          setBody((v) => (v ? `${v}\n${md}` : md));
+        }
+      };
+      for (const file of files) {
+        try {
+          const { id } = await uploadOpenBrainNodeImage(node.id, file);
+          insertMarkdown(`${markdownObAttachImage(id)}\n`);
+        } catch (err) {
+          showAlert(err instanceof Error ? err.message : 'Image upload failed', 'Error');
+        }
+      }
+    },
+    [node?.id, showPreview, showAlert],
+  );
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="ob-node-editor flex flex-col gap-4">
       <div>
-        <label
-          htmlFor="ob-node-title"
-          className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-3)]"
-        >
+        <label htmlFor="ob-node-title" className="field-label">
           Title
         </label>
         <input
@@ -83,42 +124,58 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Node title"
-          className="w-full border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-1)] placeholder:text-[color:var(--color-text-3)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-orange)] focus-visible:outline-offset-2 rounded-none"
+          className="field-input"
           data-testid="node-title"
         />
       </div>
 
       <div>
-        <div className="mb-1 flex items-center justify-between">
-          <label
-            htmlFor="ob-node-body"
-            className="block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-3)]"
-          >
+        <div className="mb-[7px] flex items-center justify-between gap-2">
+          <span id="ob-node-body-label" className="field-label mb-0">
             Body (Markdown)
-          </label>
+          </span>
           <button
             type="button"
             onClick={() => setShowPreview((p) => !p)}
-            className="font-mono text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-steel)] hover:text-[color:var(--color-text-1)]"
+            className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-[color:var(--color-text-inv-2)] underline-offset-2 transition-colors hover:text-[color:var(--color-text-inv)] hover:underline"
           >
             {showPreview ? 'Edit' : 'Preview'}
           </button>
         </div>
+        {!showPreview && (
+          <p className="mt-1 font-display text-[11px] text-[color:var(--color-text-inv-2)]">
+            {node?.id
+              ? 'Tip: Paste images from the clipboard to embed them (stored securely; preview loads via signed URL).'
+              : 'Save the node once, then you can paste images into the body.'}
+          </p>
+        )}
         {showPreview ? (
           <div
-            className="w-full min-h-[120px] border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-1)] [&_h1]:text-[1.1rem] [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-2 first:[&_h1]:mt-0 [&_h2]:text-[1rem] [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-2 [&_h3]:text-[0.95rem] [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-2 [&_li]:mb-0.5 [&_code]:bg-[color:var(--color-steel-bg)] [&_code]:px-1 [&_code]:font-mono [&_pre]:bg-[color:var(--color-steel-bg)] [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:my-2 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_blockquote]:border-l-4 [&_blockquote]:border-[color:var(--color-orange)] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-2 [&_blockquote]:text-[color:var(--color-text-2)] [&_a]:text-[color:var(--color-orange)] [&_a]:underline"
+            id="ob-node-body-preview"
+            role="region"
+            aria-labelledby="ob-node-body-label"
+            className="ob-node-preview w-full min-h-[120px] border border-[color:var(--color-rule-md)] bg-[color:var(--color-ink)] px-[14px] py-[10px] font-display text-[13px] leading-relaxed text-[color:var(--color-text-inv)] [&_h1]:text-[1.1rem] [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-2 [&_h1]:text-[color:var(--color-text-inv)] first:[&_h1]:mt-0 [&_h2]:text-[1rem] [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-2 [&_h2]:text-[color:var(--color-text-inv)] [&_h3]:text-[0.95rem] [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_h3]:text-[color:var(--color-text-inv)] [&_p]:mb-2 [&_p]:text-[color:var(--color-text-inv)] [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-2 [&_li]:mb-0.5 [&_code]:rounded-none [&_code]:bg-[color:var(--color-surface)] [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.9em] [&_code]:text-[color:var(--color-text-inv)] [&_pre]:border [&_pre]:border-[color:var(--color-rule-dark)] [&_pre]:bg-[color:var(--color-surface)] [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:my-2 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_blockquote]:border-l-[3px] [&_blockquote]:border-[color:var(--color-orange)] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-2 [&_blockquote]:text-[color:var(--color-text-inv-2)] [&_a]:text-[color:var(--color-orange)] [&_a]:underline"
             data-testid="node-body-preview"
           >
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{body || '(empty)'}</ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              urlTransform={brainMarkdownUrlTransform}
+              components={obBrainMarkdownComponents}
+            >
+              {body || '(empty)'}
+            </ReactMarkdown>
           </div>
         ) : (
           <textarea
+            ref={bodyTextareaRef}
             id="ob-node-body"
             value={body}
             onChange={(e) => setBody(e.target.value)}
+            onPaste={handleBodyPaste}
             placeholder="Write in Markdown..."
             rows={8}
-            className="w-full border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-mono text-[13px] text-[color:var(--color-text-1)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-orange)] focus-visible:outline-offset-2 rounded-none"
+            className="field-input"
+            aria-labelledby="ob-node-body-label"
             data-testid="node-body"
           />
         )}
@@ -126,13 +183,14 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
 
       <div className="flex flex-wrap gap-4">
         <div>
-          <label className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-3)]">
+          <label htmlFor="ob-node-type" className="field-label">
             Type
           </label>
           <select
+            id="ob-node-type"
             value={nodeType}
             onChange={(e) => setNodeType(e.target.value as ObNode['node_type'])}
-            className="border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-1)] rounded-none"
+            className="field-input min-w-[140px] py-[9px]"
             data-testid="node-type"
           >
             {NODE_TYPES.map((t) => (
@@ -143,13 +201,14 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
           </select>
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-[color:var(--color-text-3)]">
+          <label htmlFor="ob-node-visibility" className="field-label">
             Visibility
           </label>
           <select
+            id="ob-node-visibility"
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as ObNode['visibility'])}
-            className="border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-1)] rounded-none"
+            className="field-input min-w-[140px] py-[9px]"
             data-testid="node-visibility"
           >
             {VISIBILITIES.map((v) => (
@@ -163,10 +222,10 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
 
       {node?.ai_summary && (
         <div
-          className="border border-[color:var(--color-steel-border)] bg-[color:var(--color-steel-bg)] p-3 font-display text-[12px] text-[color:var(--color-steel)]"
+          className="border border-[color:var(--color-rule-dark)] bg-[color:var(--color-surface)] p-3 font-display text-[12px] text-[color:var(--color-text-inv-2)]"
           data-testid="ai-summary"
         >
-          <span className="font-semibold">AI summary: </span>
+          <span className="font-semibold text-[color:var(--color-text-inv)]">AI summary: </span>
           <span>{node.ai_summary}</span>
         </div>
       )}
@@ -176,7 +235,7 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
           {node.ai_tags.map((tag) => (
             <span
               key={tag}
-              className="font-mono text-[9px] uppercase tracking-[0.12em] px-2 py-0.5 border border-[color:var(--color-steel-border)] bg-[color:var(--color-steel-bg)] text-[color:var(--color-steel)]"
+              className="border border-[color:var(--color-rule-dark)] bg-[color:var(--color-ink)] px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-[color:var(--color-text-inv-2)]"
               data-testid="ai-tag"
             >
               {tag}
@@ -190,17 +249,13 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
           type="button"
           onClick={handleSave}
           disabled={saving || !title.trim()}
-          className="bg-[color:var(--color-orange)] px-4 py-[9px] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-white disabled:opacity-70"
+          className="act-btn primary disabled:cursor-not-allowed disabled:opacity-50"
           data-testid="save-node-btn"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-4 py-[9px] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-[color:var(--color-text-1)] hover:border-[color:var(--color-text-3)]"
-          >
+          <button type="button" onClick={onCancel} className="act-btn">
             Cancel
           </button>
         )}
@@ -209,7 +264,7 @@ export function NodeEditor({ node, onSave, onDelete, onCancel }: NodeEditorProps
             type="button"
             onClick={handleDeleteClick}
             disabled={deleting}
-            className="bg-[#E11D48] px-4 py-[9px] font-display text-[11px] font-bold uppercase tracking-[0.12em] text-white disabled:opacity-70"
+            className="act-btn border-[color:rgba(225,29,72,0.65)] text-[color:#FB7185] hover:border-[color:#E11D48] hover:text-[color:#FECDD3] disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="delete-node-btn"
           >
             {deleting ? 'Deleting…' : 'Delete'}

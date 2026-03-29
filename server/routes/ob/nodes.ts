@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { supabase } from '../../db/supabase.js';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { authenticateToken } from '../../middleware/auth.js';
@@ -14,7 +15,15 @@ import {
   type ObVisibility,
   type ObNodeUpdate,
 } from '../../services/obNodeService.js';
-import { sanitizeFreeText, sanitizeFreeTextPreserveNewlines } from '../../utils/sanitize.js';
+import { insertObNodeAttachment } from '../../services/obNodeAttachmentService.js';
+import {
+  sanitizeFreeText,
+  sanitizeFreeTextPreserveNewlines,
+  sanitizeFileName,
+  isSafeStoragePath,
+  isAllowedBrainPasteImageMime,
+  hasDangerousExtension,
+} from '../../utils/sanitize.js';
 import { logger } from '../../utils/logger.js';
 
 const obNodesRouter = Router();
@@ -30,6 +39,88 @@ function parseIdParam(id: string | string[] | undefined): string | null {
   if (id == null) return null;
   return Array.isArray(id) ? id[0] : id;
 }
+
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+/** POST .../nodes/:nodeId/attachments/upload — image paste for Markdown (admin + node owner). */
+obNodesRouter.post(
+  '/:nodeId/attachments/upload',
+  imageUpload.single('file'),
+  async (req: AuthRequest, res) => {
+    try {
+      if (!req.userId || !req.supabase) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      const nodeId = parseIdParam(req.params.nodeId);
+      const file = req.file;
+      if (!nodeId) {
+        res.status(400).json({ error: 'Node id required' });
+        return;
+      }
+      if (!file) {
+        res.status(400).json({ error: 'No file provided' });
+        return;
+      }
+      if (!isAllowedBrainPasteImageMime(file.mimetype || '')) {
+        res.status(400).json({ error: 'Only JPEG, PNG, GIF, or WebP images are allowed.' });
+        return;
+      }
+
+      const sanitizedFileName = sanitizeFileName(file.originalname);
+      if (hasDangerousExtension(sanitizedFileName)) {
+        res.status(400).json({ error: 'File type not allowed for security reasons.' });
+        return;
+      }
+
+      const node = await getObNode(req.supabase, nodeId);
+      if (!node || node.user_id !== req.userId) {
+        res.status(404).json({ error: 'Node not found or access denied' });
+        return;
+      }
+
+      const timestamp = Date.now();
+      const filePath = `ob-nodes/${req.userId}/${nodeId}/${timestamp}-${sanitizedFileName}`;
+      const expectedPrefix = `ob-nodes/${req.userId}/${nodeId}/`;
+      if (!isSafeStoragePath(filePath, expectedPrefix)) {
+        res.status(400).json({ error: 'Invalid file path' });
+        return;
+      }
+
+      const { error: uploadError } = await req.supabase.storage
+        .from('note-attachments')
+        .upload(filePath, file.buffer, {
+          contentType: file.mimetype || 'application/octet-stream',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        logger.error({ err: uploadError.message, filePath }, 'OB image upload failed');
+        res.status(500).json({ error: `Upload failed: ${uploadError.message}` });
+        return;
+      }
+
+      const row = await insertObNodeAttachment(req.supabase, {
+        nodeId,
+        userId: req.userId,
+        file_path: filePath,
+        file_name: sanitizedFileName,
+        file_type: file.mimetype || 'application/octet-stream',
+        file_size: file.size,
+        mime_type: file.mimetype ?? null,
+      });
+
+      res.status(201).json({ id: row.id });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Upload failed';
+      res.status(500).json({ error: message });
+    }
+  },
+);
 
 // List nodes for the authenticated user
 obNodesRouter.get('/', async (req: AuthRequest, res) => {

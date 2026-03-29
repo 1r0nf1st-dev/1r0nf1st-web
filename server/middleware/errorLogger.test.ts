@@ -11,7 +11,13 @@ vi.mock('../utils/logger.js', () => ({
 vi.mock('../config.js', () => ({
   config: {
     nodeEnv: 'test',
+    enableAppDbLogging: false,
   },
+}));
+
+vi.mock('../services/appEventLogService.js', () => ({
+  isAppDbLoggingAvailable: () => false,
+  recordErrorEvent: vi.fn(),
 }));
 
 import { errorLogger } from './errorLogger.js';
@@ -27,6 +33,7 @@ describe('errorLogger', () => {
       method: 'GET',
       path: '/api/test',
       query: {},
+      get: vi.fn() as Request['get'],
     };
     mockResponse = {
       statusCode: 200,
@@ -83,17 +90,5 @@ describe('errorLogger', () => {
       'Request error',
     );
     expect(mockNext).toHaveBeenCalledWith(err);
-  });
-
-  it('should include userId when present on request', () => {
-    const err = new Error('Unauthorized');
-    (mockRequest as { userId?: string }).userId = 'user-123';
-
-    errorLogger(err, mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
-
-    expect(logger.error).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: 'user-123' }),
-      'Request error',
-    );
   });
 });

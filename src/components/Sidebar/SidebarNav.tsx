@@ -5,82 +5,107 @@ import type { ReactNode } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useNotesActions } from '../../contexts/NotesActionsContext';
+import { useSidebar } from '../../contexts/SidebarContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { SavedSearchesSection } from './SavedSearchesSection';
-import { WebClipperSection } from './WebClipperSection';
-import { TemplatesAccordion } from './TemplatesAccordion';
 import { SidebarWidgets } from './SidebarWidgets';
+
+function navHrefActive(pathname: string | null, href: string): boolean {
+  if (!pathname) return false;
+  if (href === '/brain') return pathname.startsWith('/brain');
+  if (href === '/notes') return pathname.startsWith('/notes');
+  return pathname === href;
+}
+
+interface SidebarNavRowProps {
+  pathname: string | null;
+  href?: string;
+  icon: string;
+  label: string;
+  chevron?: boolean;
+  badge?: ReactNode;
+  onClick?: () => void;
+  ariaLabel?: string;
+}
+
+function SidebarNavRow({
+  pathname,
+  href,
+  icon,
+  label,
+  chevron,
+  badge,
+  onClick,
+  ariaLabel,
+}: SidebarNavRowProps): JSX.Element {
+  const { setCollapsed } = useSidebar();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+
+  const closeOnSelect = (): void => {
+    if (isMobile) setCollapsed(true);
+  };
+
+  const active = href ? navHrefActive(pathname, href) : false;
+  const className = `nav-item${active ? ' active' : ''}`;
+
+  const contents = (
+    <>
+      <span className="nav-item-icon" aria-hidden>
+        {icon}
+      </span>
+      <span className="nav-item-label">{label}</span>
+      {badge ? <span className="nav-item-badge">{badge}</span> : null}
+      {chevron ? (
+        <span className="nav-item-chevron" aria-hidden>
+          ›
+        </span>
+      ) : null}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={className}
+        aria-current={active ? 'page' : undefined}
+        onClick={closeOnSelect}
+      >
+        {contents}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className={className}
+      onClick={() => {
+        onClick?.();
+        closeOnSelect();
+      }}
+      aria-label={ariaLabel ?? label}
+    >
+      {contents}
+    </button>
+  );
+}
 
 export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }): JSX.Element => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { createNote, openSearch, openWebClipper, toggleWidget } = useNotesActions();
+  const { createNote, openSearch, openWebClipper } = useNotesActions();
 
   const sharedAriaLabel =
     typeof sharedUnreadCount === 'number' && sharedUnreadCount > 0
       ? `Shared notes, ${sharedUnreadCount} unread`
       : 'Shared notes';
 
-  const isActive = (href: string): boolean => {
-    if (!pathname) return false;
-    if (href === '/brain') return pathname.startsWith('/brain');
-    if (href === '/notes') return pathname.startsWith('/notes');
-    return pathname === href;
-  };
-
-  const Item = ({
-    href,
-    icon,
-    label,
-    chevron,
-    badge,
-    onClick,
-    ariaLabel,
-  }: {
-    href?: string;
-    icon: string;
-    label: string;
-    chevron?: boolean;
-    badge?: ReactNode;
-    onClick?: () => void;
-    ariaLabel?: string;
-  }): JSX.Element => {
-    const active = href ? isActive(href) : false;
-    const className = `nav-item${active ? ' active' : ''}`;
-
-    const contents = (
-      <>
-        <span className="nav-item-icon" aria-hidden>
-          {icon}
-        </span>
-        <span className="nav-item-label">{label}</span>
-        {badge ? <span className="nav-item-badge">{badge}</span> : null}
-        {chevron ? (
-          <span className="nav-item-chevron" aria-hidden>
-            ›
-          </span>
-        ) : null}
-      </>
-    );
-
-    if (href) {
-      return (
-        <Link href={href} className={className} aria-current={active ? 'page' : undefined}>
-          {contents}
-        </Link>
-      );
-    }
-
-    return (
-      <button type="button" className={className} onClick={onClick} aria-label={ariaLabel ?? label}>
-        {contents}
-      </button>
-    );
-  };
-
   return (
     <div>
-      <Item
+      <SidebarNavRow
+        pathname={pathname}
         icon="+"
         label="New Note"
         onClick={() => {
@@ -92,25 +117,28 @@ export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }
         }}
       />
 
-      <Item
+      <SidebarNavRow
+        pathname={pathname}
         icon="⊞"
         label="From Template"
         chevron
         onClick={() => router.push('/notes/templates')}
       />
-      <Item icon="◫" label="Templates" href="/notes/templates" />
+      <SidebarNavRow pathname={pathname} icon="◫" label="Templates" href="/notes/templates" />
 
       <div className="sidebar-section-label">Library</div>
-      <Item
+      <SidebarNavRow
+        pathname={pathname}
         icon="≡"
         label="All Notes"
         href="/notes"
         badge={searchParams.get('count') ?? undefined}
       />
-      <Item icon="⊟" label="Notebooks" chevron href="/notes" />
-      <Item icon="◇" label="Tags" chevron href="/notes" />
-      <Item icon="⊡" label="Archives" href="/archive" />
-      <Item
+      <SidebarNavRow pathname={pathname} icon="⊟" label="Notebooks" chevron href="/notes" />
+      <SidebarNavRow pathname={pathname} icon="◇" label="Tags" chevron href="/notes" />
+      <SidebarNavRow pathname={pathname} icon="⊡" label="Archives" href="/archive" />
+      <SidebarNavRow
+        pathname={pathname}
         icon="○"
         label="Shared"
         href="/notes/shared"
@@ -122,29 +150,27 @@ export const SidebarNav = ({ sharedUnreadCount }: { sharedUnreadCount?: number }
         ariaLabel={sharedAriaLabel}
       />
 
+      <div className="sidebar-section-label">Saved searches</div>
+      <SavedSearchesSection />
+
       <div className="sidebar-section-label">Intelligence</div>
-      <Item icon="◉" label="Second Brain" href="/projects/second-brain" />
-      <Item icon="⚙" label="Open Brain" href="/brain" />
-      <Item icon="◈" label="Explore" href="/explore" />
-      <Item icon="⊙" label="Search" chevron onClick={openSearch} />
+      <SidebarNavRow
+        pathname={pathname}
+        icon="◉"
+        label="Second Brain"
+        href="/projects/second-brain"
+      />
+      <SidebarNavRow pathname={pathname} icon="⚙" label="Open Brain" href="/brain" />
+      <SidebarNavRow pathname={pathname} icon="◈" label="Explore" href="/explore" />
+      <SidebarNavRow pathname={pathname} icon="⊙" label="Search" chevron onClick={openSearch} />
 
       <div className="sidebar-section-label">Tools</div>
-      <Item
-        icon="▣"
-        label="Widgets"
-        chevron
-        onClick={() => {
-          toggleWidget('tasks');
-        }}
-      />
-      <Item icon="⊕" label="Web Clipper" onClick={openWebClipper} />
-      <Item icon="◎" label="Settings" href="/settings" />
+      <SidebarNavRow pathname={pathname} icon="⊕" label="Web Clipper" onClick={openWebClipper} />
+      <SidebarNavRow pathname={pathname} icon="◎" label="Settings" href="/settings" />
 
-      <div className="mt-3">
-        <SavedSearchesSection />
+      <div className="sidebar-tools-extras">
+        <div className="sidebar-section-label">Widgets</div>
         <SidebarWidgets />
-        <WebClipperSection />
-        <TemplatesAccordion />
       </div>
     </div>
   );

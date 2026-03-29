@@ -53,7 +53,7 @@ export function ChatPanel({ brainOwnerId }: ChatPanelProps): JSX.Element {
   }, [chatQuery, brainOwnerId]);
 
   const inputClass =
-    'flex-1 border border-[color:var(--color-rule-dark)] bg-[color:var(--color-ink)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-inv)] placeholder:text-[color:var(--color-text-inv-2)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-orange)] focus-visible:outline-offset-2';
+    'flex-1 min-w-0 border border-[color:var(--color-rule-dark)] bg-[color:var(--color-ink)] px-3 py-2 font-display text-[13px] text-[color:var(--color-text-inv)] placeholder:text-[color:var(--color-text-inv-2)] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[color:var(--color-orange)]';
 
   return (
     <div className="space-y-6">

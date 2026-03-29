@@ -24,21 +24,19 @@ vi.mock('../../contexts/AuthContext', () => ({
   }),
 }));
 
-vi.mock('./TemplatesAccordion', () => ({ TemplatesAccordion: () => null }));
 vi.mock('./SavedSearchesSection', () => ({ SavedSearchesSection: () => null }));
 vi.mock('./SidebarWidgets', () => ({ SidebarWidgets: () => null }));
-vi.mock('./WebClipperSection', () => ({ WebClipperSection: () => null }));
 
 describe('SidebarNav', () => {
   it('renders the interior brief nav items in order', () => {
-    render(
+    const { container } = render(
       <SidebarProvider>
         <SidebarNav />
       </SidebarProvider>,
     );
 
     const labels = screen.getAllByText(
-      /New Note|From Template|Templates|All Notes|Notebooks|Tags|Archives|Shared|Second Brain|Open Brain|Explore|Search|Widgets|Web Clipper|Settings/,
+      /New Note|From Template|Templates|All Notes|Notebooks|Tags|Archives|Shared|Second Brain|Open Brain|Explore|Search|Web Clipper|Settings|Widgets/,
     );
     const rendered = labels.map((n) => n.textContent);
 
@@ -46,5 +44,12 @@ describe('SidebarNav', () => {
     expect(rendered.indexOf('New Note')).toBeLessThan(rendered.indexOf('From Template'));
     expect(rendered.indexOf('From Template')).toBeLessThan(rendered.indexOf('Templates'));
     expect(rendered.indexOf('Templates')).toBeLessThan(rendered.indexOf('All Notes'));
+
+    // Saved searches sits with notes (after Shared, before Intelligence)
+    const text = container.textContent ?? '';
+    expect(text.indexOf('Shared')).toBeLessThan(text.indexOf('Saved searches'));
+    expect(text.indexOf('Saved searches')).toBeLessThan(text.indexOf('Second Brain'));
+
+    expect(screen.queryByText('Quick templates')).toBeNull();
   });
 });

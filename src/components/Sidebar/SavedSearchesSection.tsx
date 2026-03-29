@@ -46,28 +46,27 @@ export const SavedSearchesSection = (): JSX.Element => {
   };
 
   return (
-    <div className="space-y-2">
+    <div>
       {hasActiveFilters ? (
         <button
           type="button"
           onClick={() => {
             handleSave().catch(() => {});
           }}
-          className="w-full rounded-xl border border-primary/20 px-2 py-1 text-left text-xs hover:bg-primary/5"
+          className="sidebar-tools-text-btn"
         >
           Save current search
         </button>
       ) : null}
 
       {isLoading ? (
-        <div className="space-y-1">
-          <div className="h-8 animate-pulse rounded-xl bg-primary/10" />
-          <div className="h-8 animate-pulse rounded-xl bg-primary/10" />
+        <div>
+          <div className="sidebar-skeleton-bar" />
+          <div className="sidebar-skeleton-bar" />
         </div>
       ) : savedSearches && savedSearches.length > 0 ? (
-        <ul className="space-y-1">
+        <ul className="m-0 list-none p-0">
           {savedSearches.map((saved) => {
-            // Extract search query details for better display
             const queryParams = new URLSearchParams(saved.query);
             const searchText = queryParams.get('q') || queryParams.get('search') || '';
             const hasEmailInQuery = /@/.test(searchText);
@@ -75,50 +74,50 @@ export const SavedSearchesSection = (): JSX.Element => {
               saved.name === 'Saved search' && searchText ? searchText : saved.name;
 
             return (
-              <li key={saved.id} className="rounded-xl p-1 hover:bg-primary/5">
-                <div className="flex items-center gap-1">
+              <li key={saved.id}>
+                <div className="flex min-w-0 items-stretch">
                   <button
                     type="button"
-                    className="flex flex-1 flex-col gap-0.5 truncate px-1 py-1 text-left text-sm min-w-0"
+                    className="nav-item min-w-0 flex-1 border-0 bg-transparent text-left"
                     onClick={() => handleApply(saved.query)}
                     title={saved.query}
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Search className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
-                      <span className="truncate font-medium">{displayName}</span>
-                    </div>
-                    {hasEmailInQuery && searchText !== displayName && (
-                      <span className="truncate text-xs text-muted pl-5">{searchText}</span>
-                    )}
+                    <span className="nav-item-icon nav-item-icon--svg" aria-hidden>
+                      <Search />
+                    </span>
+                    <span className="nav-item-label nav-item-label--multiline">
+                      <span className="max-w-full truncate">{displayName}</span>
+                      {hasEmailInQuery && searchText !== displayName ? (
+                        <span className="max-w-full truncate text-[10px] font-normal text-[color:var(--color-text-inv-2)]">
+                          {searchText}
+                        </span>
+                      ) : null}
+                    </span>
                   </button>
                   <button
                     type="button"
                     aria-label={`Delete saved search ${saved.name}`}
                     onClick={() => setConfirmDeleteId(saved.id)}
-                    className="rounded-xl p-1 text-muted hover:bg-red-500/10 hover:text-red-500 shrink-0"
+                    className="sidebar-tools-icon-btn"
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden />
                   </button>
                 </div>
                 {confirmDeleteId === saved.id ? (
-                  <div aria-live="polite" className="mt-1 flex items-center gap-2 px-1 text-xs">
+                  <div aria-live="polite" className="sidebar-tools-confirm">
                     <span>Delete?</span>
                     <button
                       type="button"
+                      className="sidebar-tools-confirm-yes"
                       onClick={() => {
                         deleteSavedSearch(saved.id)
                           .then(() => refetch())
                           .finally(() => setConfirmDeleteId(null));
                       }}
-                      className="rounded-xl bg-red-500/10 px-2 py-1 text-red-600"
                     >
                       Yes
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDeleteId(null)}
-                      className="rounded-xl px-2 py-1 hover:bg-primary/10"
-                    >
+                    <button type="button" onClick={() => setConfirmDeleteId(null)}>
                       Cancel
                     </button>
                   </div>
@@ -128,7 +127,7 @@ export const SavedSearchesSection = (): JSX.Element => {
           })}
         </ul>
       ) : (
-        <p className="text-xs text-muted">Your saved searches will appear here.</p>
+        <p className="sidebar-tools-hint">Your saved searches will appear here.</p>
       )}
     </div>
   );

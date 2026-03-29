@@ -1,9 +1,11 @@
 'use client';
 
-import type { JSX } from 'react';
+import type { ClipboardEvent, JSX } from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Pencil, RotateCcw, Trash2, Check, Wrench } from 'lucide-react';
+import { Pencil, RotateCcw, Trash2, Wrench } from 'lucide-react';
 import { getJson } from '../../apiClient';
+import { markdownSbAttachImage, uploadSecondBrainThoughtImage } from '../../lib/brainPasteImage';
+import { getClipboardImageFiles } from '../../utils/clipboardImageFiles';
 import { btnBase, btnGhost, btnPrimary } from '../../styles/buttons';
 
 type TableName = 'projects' | 'people' | 'ideas' | 'admin' | 'resources' | 'thoughts';
@@ -36,6 +38,7 @@ export const BrowsePanel = (): JSX.Element => {
   const [actionLoading, setActionLoading] = useState(false);
   const menuButtonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const menuDropdownRef = useRef<HTMLDivElement | null>(null);
+  const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const fetchData = useCallback(() => {
     setLoading(true);
@@ -100,6 +103,40 @@ export const BrowsePanel = (): JSX.Element => {
       setActionLoading(false);
     }
   };
+
+  const handleEditThoughtPaste = useCallback(
+    async (e: ClipboardEvent<HTMLTextAreaElement>) => {
+      const thoughtId = editRow?.id as string | undefined;
+      if (!thoughtId) return;
+      const files = getClipboardImageFiles(e);
+      if (files.length === 0) return;
+      e.preventDefault();
+      const ta = editTextareaRef.current;
+      const insertMarkdown = (md: string): void => {
+        if (ta) {
+          const start = ta.selectionStart;
+          const end = ta.selectionEnd;
+          setEditRawText((v) => v.slice(0, start) + md + v.slice(end));
+          requestAnimationFrame(() => {
+            ta.focus();
+            const pos = start + md.length;
+            ta.setSelectionRange(pos, pos);
+          });
+        } else {
+          setEditRawText((v) => (v ? `${v}\n${md}` : md));
+        }
+      };
+      for (const file of files) {
+        try {
+          const { id } = await uploadSecondBrainThoughtImage(thoughtId, file);
+          insertMarkdown(`${markdownSbAttachImage(id)}\n`);
+        } catch (err) {
+          setActionError(err instanceof Error ? err.message : 'Image upload failed');
+        }
+      }
+    },
+    [editRow?.id],
+  );
 
   const handleDeleteClick = (row: Record<string, unknown>): void => {
     setDeleteRow(row);
@@ -438,15 +475,18 @@ export const BrowsePanel = (): JSX.Element => {
               Edit thought
             </h3>
             <textarea
+              ref={editTextareaRef}
               value={editRawText}
               onChange={(e) => setEditRawText(e.target.value)}
+              onPaste={handleEditThoughtPaste}
               rows={8}
               className="mb-4 w-full border border-[color:var(--color-rule)] bg-[color:var(--color-white)] px-3 py-2 font-mono text-[13px] text-[color:var(--color-text-1)] focus:outline-none focus-visible:outline-2 focus-visible:outline-[color:var(--color-orange)] focus-visible:outline-offset-2 rounded-none"
               placeholder="Edit raw text…"
               aria-label="Raw text"
             />
             <p className="mb-4 text-xs text-muted">
-              Tip: Add a prefix (projects:, people:, ideas:, admin:, resources:) to force category.
+              Tip: Paste images to embed <code className="font-mono">sb-attach:…</code> references (stored
+              securely). Add a prefix (projects:, people:, ideas:, admin:, resources:) to force category.
             </p>
             <div className="flex flex-wrap gap-2">
               <button

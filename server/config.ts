@@ -58,6 +58,25 @@ export const config = {
   enableAnalytics: process.env.ENABLE_ANALYTICS
     ? process.env.ENABLE_ANALYTICS.trim().toLowerCase() === 'true'
     : false,
+  /** Persist structured interactions/errors to Postgres (requires Supabase). */
+  enableAppDbLogging: process.env.ENABLE_APP_DB_LOGGING
+    ? process.env.ENABLE_APP_DB_LOGGING.trim().toLowerCase() === 'true'
+    : true,
+  /**
+   * Shared secret for POST /api/logs/platform (Vercel log drain, Supabase webhooks, CI).
+   * If unset, platform ingest returns 503 in production.
+   */
+  appLogIngestSecret: process.env.APP_LOG_INGEST_SECRET?.trim() ?? '',
+  /**
+   * Vercel Log Drain “signature secret” (Dashboard → Drains → Edit). Used to verify
+   * `x-vercel-signature` (HMAC-SHA1 of raw body). Optional if you only use X-App-Log-Secret.
+   */
+  vercelDrainSignatureSecret: process.env.VERCEL_DRAIN_SIGNATURE_SECRET?.trim() ?? '',
+  /** Release label stored on log rows (Vercel git SHA, else package version). */
+  appRelease:
+    process.env.VERCEL_GIT_COMMIT_SHA?.trim() ||
+    process.env.npm_package_version?.trim() ||
+    'unknown',
   /** Brevo (Sendinblue) API key for sending transactional emails. Get from https://app.brevo.com/settings/keys/api */
   brevoApiKey: process.env.BREVO_API_KEY?.trim() ?? '',
   /** Sender email for Brevo (from .env). Not validated except that it must be set when sending. */
