@@ -1,6 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ApiError, getJson, postFormData } from './apiClient';
 
+vi.mock('./utils/sessionAnonId', () => ({
+  getSessionAnonId: (): undefined => undefined,
+}));
+
 describe('ApiError', () => {
   it('should create an ApiError with correct properties', () => {
     const error = new ApiError('Not found', 404, '/api/test');
@@ -31,8 +35,12 @@ describe('getJson', () => {
     text: options.text ?? (async () => ''),
     headers: {
       get: (name: string) => {
-        if (name.toLowerCase() === 'content-type') {
+        const n = name.toLowerCase();
+        if (n === 'content-type') {
           return options.contentType ?? 'application/json';
+        }
+        if (n === 'x-request-id') {
+          return 'resp-req-id';
         }
         return null;
       },

@@ -1,7 +1,7 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { CogPair } from './CogPair';
@@ -15,6 +15,10 @@ export const Nav = (): JSX.Element => {
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const showLogin = !user;
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   const linkClasses = (href: string): string => {
     const isActive = pathname === href;
@@ -119,6 +123,7 @@ export const Nav = (): JSX.Element => {
             onClick={(e) => {
               e.preventDefault();
               router.push('/login', { scroll: false });
+              setMenuOpen(false);
             }}
           >
             Login
@@ -137,8 +142,14 @@ export const Nav = (): JSX.Element => {
         </button>
       </nav>
       {menuOpen && (
-        <div
-          className="nav-mobile-drawer absolute top-14 left-0 right-0 bg-[color:var(--color-ink)] border-b-2 border-[color:var(--color-orange)] z-[100] py-2"
+        <>
+          <div
+            className="fixed inset-0 top-14 z-[99] bg-black/40 md:hidden"
+            onClick={() => setMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <div
+            className="nav-mobile-drawer absolute top-14 left-0 right-0 bg-[color:var(--color-ink)] border-b-2 border-[color:var(--color-orange)] z-[100] py-2"
           role="dialog"
           aria-label="Mobile menu"
         >
@@ -173,6 +184,7 @@ export const Nav = (): JSX.Element => {
             </Link>
           ) : null}
         </div>
+        </>
       )}
     </header>
   );

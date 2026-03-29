@@ -110,6 +110,20 @@ export function isAllowedMimeType(mime: string): boolean {
   return false;
 }
 
+/** Strict image whitelist for Open Brain / Second Brain paste uploads (no SVG). */
+const BRAIN_PASTE_IMAGE_MIMES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+]);
+
+export function isAllowedBrainPasteImageMime(mime: string): boolean {
+  if (!mime || typeof mime !== 'string') return false;
+  const normalized = mime.trim().toLowerCase().split(';')[0].trim();
+  return BRAIN_PASTE_IMAGE_MIMES.has(normalized);
+}
+
 /** Dangerous file extensions that should never be accepted. */
 const DANGEROUS_EXTENSIONS = new Set([
   'exe',

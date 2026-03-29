@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger.js';
 import { config } from '../config.js';
+import { isAppDbLoggingAvailable, recordErrorEvent } from '../services/appEventLogService.js';
 
 interface RequestWithMetadata extends Request {
   requestId?: string;
@@ -13,7 +14,6 @@ export function errorLogger(
   next: NextFunction,
 ): void {
   const requestId = req.requestId || 'unknown';
-  const userId = (req as { userId?: string }).userId;
 
   // Determine log level based on status code (error.status, or res if already set, else 500)
   const errStatus = (err as Error & { status?: number }).status;
@@ -21,7 +21,7 @@ export function errorLogger(
   const isClientError = statusCode >= 400 && statusCode < 500;
   const logLevel = isClientError ? 'warn' : 'error';
 
-  // Build error log object
+  // Build error log object (no user-identifying fields)
   const errorLog: Record<string, unknown> = {
     requestId,
     method: req.method,
@@ -30,11 +30,6 @@ export function errorLogger(
     errorName: err.name,
     errorMessage: err.message,
   };
-
-  // Add user context if available
-  if (userId) {
-    errorLog.userId = userId;
-  }
 
   // Add stack trace in development or for server errors
   if (config.nodeEnv === 'development' || !isClientError) {
@@ -48,6 +43,24 @@ export function errorLogger(
 
   // Log the error
   logger[logLevel](errorLog, 'Request error');
+
+  if (config.enableAppDbLogging && isAppDbLoggingAvailable()) {
+    recordErrorEvent({
+      source: 'server',
+      severity: isClientError ? 'warn' : 'error',
+      errorType: err.name,
+      message: err.message,
+      stack: err.stack,
+      httpMethod: req.method,
+      path: req.path,
+      statusCode,
+      requestId: req.requestId,
+      sessionAnonId: req.get('x-session-anon-id') ?? undefined,
+      payload: {
+        queryKeys: Object.keys(req.query ?? {}),
+      },
+    });
+  }
 
   next(err);
 }

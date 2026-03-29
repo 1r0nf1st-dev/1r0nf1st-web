@@ -8,6 +8,7 @@ import {
   sanitizeFileName,
   isSafeStoragePath,
   isAllowedMimeType,
+  isAllowedBrainPasteImageMime,
   hasDangerousExtension,
 } from './sanitize.js';
 
@@ -117,6 +118,17 @@ describe('sanitize', () => {
 
     it('rejects executables', () => {
       expect(isAllowedMimeType('application/x-msdownload')).toBe(false);
+    });
+  });
+
+  describe('isAllowedBrainPasteImageMime', () => {
+    it('allows jpeg png gif webp only', () => {
+      expect(isAllowedBrainPasteImageMime('image/jpeg')).toBe(true);
+      expect(isAllowedBrainPasteImageMime('image/png')).toBe(true);
+      expect(isAllowedBrainPasteImageMime('image/gif')).toBe(true);
+      expect(isAllowedBrainPasteImageMime('image/webp')).toBe(true);
+      expect(isAllowedBrainPasteImageMime('image/svg+xml')).toBe(false);
+      expect(isAllowedBrainPasteImageMime('application/pdf')).toBe(false);
     });
   });
 

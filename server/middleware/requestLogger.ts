@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger.js';
 import { config } from '../config.js';
 import { generateRequestId } from '../utils/logger.js';
+import { isAppDbLoggingAvailable, recordInteractionEvent } from '../services/appEventLogService.js';
 
 interface RequestWithMetadata extends Request {
   requestId?: string;
@@ -56,62 +57,74 @@ function sanitizeObject(obj: unknown, depth = 0): unknown {
 export function requestLogger(req: RequestWithMetadata, res: Response, next: NextFunction): void {
   // Skip logging for health check endpoints
   if (req.path === '/health' || req.path === '/api/health') {
-    return next();
+    next();
+    return;
   }
 
-  // Skip if request logging is disabled
-  if (!config.enableRequestLogging) {
-    return next();
-  }
-
-  // Generate request ID and attach to request
   const requestId = generateRequestId();
   const startTime = Date.now();
   (req as { requestId?: string }).requestId = requestId;
   (req as { startTime?: number }).startTime = startTime;
+  res.setHeader('X-Request-Id', requestId);
 
-  // Log incoming request
-  const requestLog: Record<string, unknown> = {
-    requestId,
-    method: req.method,
-    path: req.path,
-    query: req.query,
-    ip: req.ip || req.socket.remoteAddress,
-    userAgent: req.get('user-agent'),
-  };
-
-  // Log request body if present (sanitized)
-  if (req.body && Object.keys(req.body).length > 0) {
-    requestLog.body = sanitizeObject(req.body);
-  }
-
-  logger.info(requestLog, 'Incoming request');
-
-  // Log response when finished
-  const originalSend = res.send;
-  res.send = function (body) {
-    const duration = req.startTime ? Date.now() - req.startTime : 0;
-    const responseSize = typeof body === 'string' ? body.length : JSON.stringify(body).length;
-
-    const responseLog: Record<string, unknown> = {
+  if (config.enableRequestLogging) {
+    const requestLog: Record<string, unknown> = {
       requestId,
       method: req.method,
       path: req.path,
-      statusCode: res.statusCode,
-      duration: `${duration}ms`,
-      responseSize: `${responseSize} bytes`,
+      query: req.query,
+      ip: req.ip || req.socket.remoteAddress,
+      userAgent: req.get('user-agent'),
     };
 
-    // Log user ID if available
-    if ((req as { userId?: string }).userId) {
-      responseLog.userId = (req as { userId?: string }).userId;
+    if (req.body && Object.keys(req.body).length > 0) {
+      requestLog.body = sanitizeObject(req.body);
     }
 
-    const logLevel = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
-    logger[logLevel](responseLog, 'Request completed');
+    logger.info(requestLog, 'Incoming request');
+  }
 
-    return originalSend.call(this, body);
-  };
+  res.once('finish', () => {
+    const duration = req.startTime ? Date.now() - req.startTime : 0;
+    const contentLength = res.getHeader('content-length');
+    const responseSize =
+      typeof contentLength === 'number'
+        ? contentLength
+        : typeof contentLength === 'string'
+          ? Number.parseInt(contentLength, 10)
+          : undefined;
+
+    if (config.enableRequestLogging) {
+      const responseLog: Record<string, unknown> = {
+        requestId,
+        method: req.method,
+        path: req.path,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`,
+        ...(responseSize !== undefined && !Number.isNaN(responseSize)
+          ? { responseSize: `${responseSize} bytes` }
+          : {}),
+      };
+
+      const logLevel = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+      logger[logLevel](responseLog, 'Request completed');
+    }
+
+    if (config.enableAppDbLogging && isAppDbLoggingAvailable()) {
+      const queryKeys = Object.keys(req.query ?? {});
+      recordInteractionEvent({
+        kind: 'api_request',
+        name: `${req.method} ${req.path}`,
+        requestId,
+        sessionAnonId: req.get('x-session-anon-id') ?? undefined,
+        durationMs: duration,
+        path: req.path,
+        httpMethod: req.method,
+        statusCode: res.statusCode,
+        metadata: { queryParamKeys: queryKeys },
+      });
+    }
+  });
 
   next();
 }

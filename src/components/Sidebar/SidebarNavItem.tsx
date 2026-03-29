@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import Link from 'next/link';
 import { useId } from 'react';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import type { SidebarNavItemProps } from './types';
 
 export const SidebarNavItem = ({
@@ -16,44 +17,45 @@ export const SidebarNavItem = ({
   ariaLabel,
   forceShowLabel = false,
 }: SidebarNavItemProps): JSX.Element => {
-  const { isCollapsed } = useSidebar();
+  const { isCollapsed, setCollapsed } = useSidebar();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const tooltipId = useId();
+
+  const closeOnSelect = (): void => {
+    if (isMobile) setCollapsed(true);
+  };
   const displayBadge =
     typeof badge === 'number' && badge > 0 ? (badge > 99 ? '99+' : String(badge)) : null;
 
-  // Show label if not collapsed OR if forceShowLabel is true (for mobile popovers)
   const shouldShowLabel = !isCollapsed || forceShowLabel;
+  const iconOnly = isCollapsed && !forceShowLabel;
 
   const content = (
     <>
-      <span className="relative inline-flex">
-        <Icon className="h-4 w-4 shrink-0" aria-hidden />
-        {displayBadge ? (
-          <span className="absolute -right-2 -top-2 rounded-full bg-primary px-1 text-[10px] font-semibold leading-4 text-white">
-            {displayBadge}
-          </span>
-        ) : null}
+      <span className="nav-item-icon nav-item-icon--svg" aria-hidden>
+        <Icon />
       </span>
-      {shouldShowLabel ? <span className="truncate">{label}</span> : null}
-      {isCollapsed && !forceShowLabel ? (
-        <span
-          id={tooltipId}
-          role="tooltip"
-          className="pointer-events-none absolute left-full top-1/2 z-20 ml-2 hidden -translate-y-1/2 rounded-xl bg-surface px-2 py-1 text-xs text-foreground shadow group-hover:block group-focus-visible:block"
-        >
+      {shouldShowLabel ? <span className="nav-item-label">{label}</span> : null}
+      {displayBadge && shouldShowLabel ? (
+        <span className="nav-item-badge shrink-0">{displayBadge}</span>
+      ) : null}
+      {iconOnly ? (
+        <span id={tooltipId} role="tooltip" className="sidebar-flyout-tooltip">
           {label}
         </span>
       ) : null}
     </>
   );
 
-  const className = `group relative flex w-full items-center gap-2 rounded-xl px-2 py-2 min-h-[44px] text-sm transition-colors touch-manipulation ${
-    isCollapsed && !forceShowLabel ? 'justify-center' : ''
-  } ${
-    isActive
-      ? 'bg-primary/10 text-primary font-semibold'
-      : 'text-foreground hover:bg-primary/5 dark:hover:bg-primary/10'
-  }`;
+  const className = [
+    'nav-item',
+    'group',
+    'relative',
+    iconOnly ? 'sidebar-nav-item--icon-only' : '',
+    isActive ? 'active' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   if (href) {
     return (
@@ -62,7 +64,8 @@ export const SidebarNavItem = ({
         className={className}
         aria-current={isActive ? 'page' : undefined}
         aria-label={ariaLabel ?? label}
-        aria-describedby={isCollapsed && !forceShowLabel ? tooltipId : undefined}
+        aria-describedby={iconOnly ? tooltipId : undefined}
+        onClick={closeOnSelect}
       >
         {content}
       </Link>
@@ -72,10 +75,13 @@ export const SidebarNavItem = ({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => {
+        onClick?.();
+        closeOnSelect();
+      }}
       className={className}
       aria-label={ariaLabel ?? label}
-      aria-describedby={isCollapsed && !forceShowLabel ? tooltipId : undefined}
+      aria-describedby={iconOnly ? tooltipId : undefined}
     >
       {content}
     </button>

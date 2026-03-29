@@ -1,7 +1,7 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
 import { useObNodes, createObNode, updateObNode, deleteObNode } from '../hooks/useObNodes';
@@ -13,7 +13,7 @@ import { NodeEditor } from '../components/ob/NodeEditor';
 import { BrainGraph } from '../components/ob/BrainGraph';
 import { ChatPanel } from '../components/ob/ChatPanel';
 import { AdminOnlyPlaceholderCard } from '../components/AdminOnlyPlaceholderCard';
-import { Plus, Sparkles, ExternalLink, List, Network } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { StatsBar } from '../components/StatsBar';
 
@@ -28,7 +28,7 @@ export function BrainPage(): JSX.Element {
   const [creating, setCreating] = useState(false);
   const [publicBrainSlug, setPublicBrainSlug] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'graph'>('list');
-  const [edges, setEdges] = useState<ObPublicEdge[]>([]);
+  const [fetchedEdges, setFetchedEdges] = useState<ObPublicEdge[] | null>(null);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -39,21 +39,27 @@ export function BrainPage(): JSX.Element {
   }, [isAdmin]);
 
   useEffect(() => {
-    if (!isAdmin || !nodes?.length) {
-      setEdges([]);
-      return;
-    }
+    if (!isAdmin || !nodes?.length) return;
+    let cancelled = false;
     obApi.edges
       .list()
       .then((allEdges) => {
-        const nodeIds = new Set(nodes.map((n) => n.id));
-        const between = allEdges.filter(
-          (e) => nodeIds.has(e.from_node_id) && nodeIds.has(e.to_node_id),
-        );
-        setEdges(between);
+        if (cancelled) return;
+        setFetchedEdges(allEdges);
       })
-      .catch(() => setEdges([]));
+      .catch(() => {
+        if (!cancelled) setFetchedEdges([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [isAdmin, nodes]);
+
+  const edges = useMemo(() => {
+    if (!isAdmin || !nodes?.length || fetchedEdges === null) return [];
+    const nodeIds = new Set(nodes.map((n) => n.id));
+    return fetchedEdges.filter((e) => nodeIds.has(e.from_node_id) && nodeIds.has(e.to_node_id));
+  }, [isAdmin, nodes, fetchedEdges]);
 
   const handleSave = useCallback(
     async (data: ObNodeCreate | ObNodeUpdate) => {
@@ -160,15 +166,8 @@ export function BrainPage(): JSX.Element {
           ]}
         />
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1.4fr',
-            gap: 16,
-            alignItems: 'start',
-          }}
-        >
-          <aside className="min-w-0">
+        <div className="ob-page-grid">
+          <aside className="ob-page-aside min-w-0">
             {publicBrainSlug ? (
               <div className="content-panel">
                 <h2 className="panel-title">Public Brain</h2>
@@ -227,18 +226,7 @@ export function BrainPage(): JSX.Element {
             </div>
           </aside>
 
-          <section className="min-w-0">
-            {viewMode === 'graph' && nodes && nodes.length > 0 ? (
-              <BrainGraph
-                nodes={nodes}
-                edges={edges}
-                onNodeClick={(node) => {
-                  setSelectedNode(node);
-                  setCreating(false);
-                }}
-              />
-            ) : null}
-
+          <div className="ob-page-top min-w-0">
             <div className="content-panel">
               <h2 className="panel-title">Ask Your Brain</h2>
               {user?.id ? <ChatPanel brainOwnerId={user.id} /> : null}
@@ -257,11 +245,25 @@ export function BrainPage(): JSX.Element {
                 <p className="font-display text-[13px] text-[color:var(--color-text-inv-2)]">
                   {viewMode === 'graph'
                     ? 'Click a node in the graph to edit it.'
-                    : 'Select a node from the list or click \"New Node\" to create one.'}
+                    : 'Select a node from the list or click "New Node" to create one.'}
                 </p>
               )}
             </div>
-          </section>
+          </div>
+
+          {viewMode === 'graph' && nodes && nodes.length > 0 ? (
+            <div className="ob-page-graph">
+              <BrainGraph
+                wide
+                nodes={nodes}
+                edges={edges}
+                onNodeClick={(node) => {
+                  setSelectedNode(node);
+                  setCreating(false);
+                }}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

@@ -1,5 +1,7 @@
 import type { JSX } from 'react';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import type { ChangeEvent } from 'react';
+import type { Editor as TipTapEditor } from '@tiptap/react';
+import { useCallback, useEffect, useLayoutEffect, useState, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import {
   Bold,
@@ -9,7 +11,6 @@ import {
   MicOff,
   FileText,
   FileAudio,
-  List,
   ListOrdered,
   Link as LinkIcon,
   CheckSquare,
@@ -29,6 +30,7 @@ import { Tooltip } from './Tooltip';
 import { MobileToolbar } from './MobileToolbar';
 import { MobileTableControls } from './MobileTableControls';
 import { useMediaQuery } from '../hooks/useMediaQuery';
+import { getDownloadUrl, uploadAttachment } from '../useAttachments';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -42,7 +44,36 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { Placeholder } from '@tiptap/extension-placeholder';
 import { Typography } from '@tiptap/extension-typography';
 import { Focus } from '@tiptap/extension-focus';
-import { btnToolbar, btnToolbarActive, btnToolbarInactive, btnToolbarSm } from '../styles/buttons';
+import { btnToolbar, btnToolbarActive, btnToolbarInactive } from '../styles/buttons';
+import { stripEphemeralImagesFromTipTapDoc, type TipTapJSON } from '../utils/sanitizeTipTapDoc';
+
+type QueuedPastedImage = { file: File; blobUrl: string };
+
+function replaceImageSrcInDocument(
+  editor: TipTapEditor,
+  oldSrc: string,
+  newSrc: string,
+  alt?: string,
+): boolean {
+  const { state } = editor;
+  const { tr } = state;
+  let modified = false;
+  state.doc.descendants((node, pos) => {
+    if (node.type.name !== 'image') return;
+    const src = node.attrs.src as string | undefined;
+    if (src !== oldSrc) return;
+    tr.setNodeMarkup(pos, undefined, {
+      ...node.attrs,
+      src: newSrc,
+      alt: alt ?? (node.attrs.alt as string) ?? '',
+    });
+    modified = true;
+  });
+  if (modified) {
+    editor.view.dispatch(tr);
+  }
+  return modified;
+}
 
 function NoteLinkDropdown({
   notes,
@@ -96,7 +127,6 @@ function NoteLinkDropdown({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search notes..."
             className="w-full px-2 py-1 mb-2 text-sm border border-[rgba(255,255,255,0.11)] rounded-none bg-[#1a1714] text-[#f4f2ee] placeholder:text-[#5c574f] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#e05c1a]"
-            autoFocus
           />
           <div className="flex flex-col gap-0.5">
             {filtered.length === 0 ? (
@@ -124,6 +154,9 @@ function NoteLinkDropdown({
 }
 
 export interface NoteEditorProps {
+  noteId?: string;
+  /** Increment after a successful save to retry any failed queued paste uploads (same noteId). */
+  pasteFlushKey?: number;
   content: Record<string, unknown>;
   onChange: (content: Record<string, unknown>) => void;
   placeholder?: string;
@@ -133,6 +166,8 @@ export interface NoteEditorProps {
 }
 
 export const NoteEditor = ({
+  noteId,
+  pasteFlushKey = 0,
   content,
   onChange,
   placeholder = 'Start writing...',
@@ -156,7 +191,84 @@ export const NoteEditor = ({
   const [audioTranscribeLoading, setAudioTranscribeLoading] = useState(false);
   const ocrInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<TipTapEditor | null>(null);
+  const noteIdRef = useRef(noteId);
+  noteIdRef.current = noteId;
+  const pasteQueueRef = useRef<QueuedPastedImage[]>([]);
+  const flushInFlightRef = useRef(false);
+  const prevNoteIdForPasteQueueRef = useRef<string | undefined>(undefined);
+  const handlePastedImageFilesRef = useRef<(files: File[]) => Promise<void>>(async () => {});
   const isMobile = useMediaQuery('(max-width: 768px)');
+
+  useEffect(() => {
+    const prev = prevNoteIdForPasteQueueRef.current;
+    const next = noteId;
+    if (prev !== undefined && next !== prev) {
+      for (const item of pasteQueueRef.current) {
+        URL.revokeObjectURL(item.blobUrl);
+      }
+      pasteQueueRef.current = [];
+    }
+    prevNoteIdForPasteQueueRef.current = next;
+  }, [noteId]);
+
+  const flushPasteQueue = useCallback(
+    async (targetNoteId: string) => {
+      const ed = editorRef.current;
+      if (!ed || flushInFlightRef.current || pasteQueueRef.current.length === 0) return;
+      flushInFlightRef.current = true;
+      try {
+        while (pasteQueueRef.current.length > 0) {
+          const item = pasteQueueRef.current[0];
+          try {
+            const attachment = await uploadAttachment(targetNoteId, item.file);
+            const { downloadUrl } = await getDownloadUrl(attachment.id);
+            replaceImageSrcInDocument(ed, item.blobUrl, downloadUrl, item.file.name);
+            URL.revokeObjectURL(item.blobUrl);
+            pasteQueueRef.current.shift();
+          } catch (err) {
+            showAlert(
+              err instanceof Error ? err.message : 'Failed to upload pasted image from queue.',
+            );
+            break;
+          }
+        }
+      } finally {
+        flushInFlightRef.current = false;
+      }
+    },
+    [showAlert],
+  );
+
+  const handlePastedImageFiles = useCallback(
+    async (files: File[]) => {
+      const ed = editorRef.current;
+      if (!ed) return;
+      const currentNoteId = noteIdRef.current;
+      if (currentNoteId) {
+        for (const file of files) {
+          try {
+            const attachment = await uploadAttachment(currentNoteId, file);
+            const { downloadUrl } = await getDownloadUrl(attachment.id);
+            ed.chain().focus().setImage({ src: downloadUrl, alt: file.name }).run();
+          } catch (err) {
+            showAlert(err instanceof Error ? err.message : 'Failed to upload pasted image.');
+          }
+        }
+      } else {
+        for (const file of files) {
+          const blobUrl = URL.createObjectURL(file);
+          pasteQueueRef.current.push({ file, blobUrl });
+          ed.chain().focus().setImage({ src: blobUrl, alt: file.name }).run();
+        }
+      }
+    },
+    [showAlert],
+  );
+
+  useLayoutEffect(() => {
+    handlePastedImageFilesRef.current = handlePastedImageFiles;
+  }, [handlePastedImageFiles]);
 
   useEffect(() => {
     if (error) {
@@ -209,24 +321,45 @@ export const NoteEditor = ({
     ],
     content: content && Object.keys(content).length > 0 ? content : { type: 'doc', content: [] },
     editable,
+    onCreate: ({ editor }) => {
+      editorRef.current = editor;
+    },
+    onDestroy: () => {
+      editorRef.current = null;
+    },
     onUpdate: ({ editor }) => {
       try {
         const json = editor.getJSON();
-        // Ensure document always has valid structure
+        const preserveEphemeralSrcs = new Set(
+          pasteQueueRef.current.map((q) => q.blobUrl),
+        );
         if (json && json.type === 'doc') {
-          onChange(json);
+          onChange(
+            stripEphemeralImagesFromTipTapDoc(
+              json as TipTapJSON,
+              preserveEphemeralSrcs,
+            ) as Record<string, unknown>,
+          );
         } else {
           onChange({ type: 'doc', content: [] });
         }
       } catch (error) {
         console.error('Error updating editor content:', error);
-        // Fallback to empty document
         onChange({ type: 'doc', content: [] });
       }
     },
     editorProps: {
       attributes: {
         class: 'focus:outline-none min-h-[200px] p-4 text-foreground',
+      },
+      handlePaste: (_view, event) => {
+        const imageFiles = Array.from(event.clipboardData?.files ?? []).filter((file) =>
+          file.type.startsWith('image/'),
+        );
+        if (imageFiles.length === 0) return false;
+        event.preventDefault();
+        void handlePastedImageFilesRef.current(imageFiles);
+        return true;
       },
     },
     onTransaction: ({ editor, transaction }) => {
@@ -247,6 +380,11 @@ export const NoteEditor = ({
     },
   });
 
+  useEffect(() => {
+    if (!noteId || !editor) return;
+    void flushPasteQueue(noteId);
+  }, [noteId, editor, flushPasteQueue, pasteFlushKey]);
+
   // Update editor content when prop changes
   useEffect(() => {
     if (!editor) return;
@@ -258,7 +396,13 @@ export const NoteEditor = ({
     } else {
       // Ensure it has the proper TipTap document structure
       if (content.type === 'doc' && Array.isArray(content.content)) {
-        normalizedContent = content;
+        const preserveBlobSrcs = new Set(
+          pasteQueueRef.current.map((q) => q.blobUrl),
+        );
+        normalizedContent = stripEphemeralImagesFromTipTapDoc(
+          content as TipTapJSON,
+          preserveBlobSrcs,
+        ) as Record<string, unknown>;
       } else {
         // If content exists but isn't in TipTap format, wrap it
         normalizedContent = { type: 'doc', content: [] };
@@ -274,7 +418,7 @@ export const NoteEditor = ({
   }, [editor, content]);
 
   const handleOcrFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       e.target.value = '';
       if (!file || !editor) return;
@@ -302,7 +446,7 @@ export const NoteEditor = ({
   );
 
   const handleAudioFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       e.target.value = '';
       if (!file || !editor) return;
@@ -355,10 +499,7 @@ export const NoteEditor = ({
 
   if (!editor) {
     return (
-      <div
-        className="editor-wrapper rounded-xl overflow-hidden p-6"
-        aria-busy
-      >
+      <div className="editor-wrapper rounded-xl overflow-hidden p-6" aria-busy>
         <div
           className="h-4 w-full mb-4 animate-pulse rounded-xl bg-muted/40 dark:bg-muted/30"
           role="status"

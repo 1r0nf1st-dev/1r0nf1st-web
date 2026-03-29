@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ObNode } from '../../lib/obApi';
+import { brainMarkdownUrlTransform, obBrainMarkdownComponents } from './brainMarkdownPreview';
 import { NodeReactions } from './NodeReactions';
 import { cardClasses, cardTitle, cardBody } from '../../styles/cards';
 
@@ -36,7 +37,13 @@ export function NodeDetailReadOnly({ node, currentUserId }: NodeDetailReadOnlyPr
           className="text-sm text-foreground [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mt-3 [&_h1]:mb-2 first:[&_h1]:mt-0 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-3 [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-2 [&_li]:mb-0.5 [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_code]:font-mono [&_pre]:bg-muted [&_pre]:p-3 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:my-2 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-2 [&_blockquote]:text-muted-foreground [&_a]:text-primary [&_a]:underline"
           data-testid="node-detail-panel"
         >
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{node.body}</ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            urlTransform={brainMarkdownUrlTransform}
+            components={obBrainMarkdownComponents}
+          >
+            {node.body}
+          </ReactMarkdown>
         </div>
       )}
       {node.ai_summary && (

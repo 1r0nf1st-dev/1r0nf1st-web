@@ -1,5 +1,5 @@
 import './loadEnv.js';
-import express from 'express';
+import express, { type Request } from 'express';
 import cors from 'cors';
 import { githubRouter } from './routes/github.js';
 import { mediumRouter } from './routes/medium.js';
@@ -14,6 +14,7 @@ import { authRouter } from './routes/auth.js';
 import { goalsRouter } from './routes/goals.js';
 import { notesRouter } from './routes/notes.js';
 import { logsRouter } from './routes/logs.js';
+import { adminAppLogsRouter } from './routes/adminAppLogs.js';
 import { emailRouter } from './routes/email.js';
 import { contactRouter } from './routes/contact.js';
 import { secondBrainRouter } from './routes/secondBrain.js';
@@ -21,6 +22,7 @@ import { obPublicRouter } from './routes/ob/public.js';
 import { obProfileRouter } from './routes/ob/profile.js';
 import { obExploreRouter } from './routes/ob/explore.js';
 import { obNodesRouter } from './routes/ob/nodes.js';
+import { obNodeAttachmentsDownloadRouter } from './routes/ob/nodeAttachmentsDownload.js';
 import { obAiRouter } from './routes/ob/ai.js';
 import { obEdgesRouter } from './routes/ob/edges.js';
 import { obCollectionsRouter } from './routes/ob/collections.js';
@@ -76,8 +78,19 @@ const corsOptions: cors.CorsOptions = {
 };
 
 app.use(cors(corsOptions));
-// Allow larger payloads for Web Clipper (full-page HTML can exceed 100kb default)
-app.use(express.json({ limit: '1mb' }));
+// Allow larger payloads for Web Clipper (full-page HTML can exceed 100kb default).
+// Capture raw body for POST /api/logs/platform so Vercel `x-vercel-signature` can be verified.
+app.use(
+  express.json({
+    limit: '1mb',
+    verify: (req: Request, _res, buf: Buffer) => {
+      const path = (req.originalUrl ?? req.url ?? '').split('?')[0];
+      if (path === '/api/logs/platform') {
+        req.rawBody = Buffer.from(buf);
+      }
+    },
+  }),
+);
 
 // Security headers middleware (must be early in the chain)
 app.use(securityHeaders);
@@ -150,6 +163,7 @@ app.use('/api/goals', goalsRouter);
 app.use('/api/notes', notesRouter);
 app.use('/api/v1/notes', notesRouter);
 app.use('/api/logs', logsRouter);
+app.use('/api/admin/app-logs', adminAppLogsRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/second-brain', secondBrainRouter);
@@ -157,6 +171,7 @@ app.use('/api/ob/public', obPublicRouter);
 app.use('/api/ob/profile', obProfileRouter);
 app.use('/api/ob/explore', obExploreRouter);
 app.use('/api/ob/nodes', obNodesRouter);
+app.use('/api/ob', obNodeAttachmentsDownloadRouter);
 app.use('/api/ob/ai', obAiRouter);
 app.use('/api/ob/edges', obEdgesRouter);
 app.use('/api/ob/collections', obCollectionsRouter);

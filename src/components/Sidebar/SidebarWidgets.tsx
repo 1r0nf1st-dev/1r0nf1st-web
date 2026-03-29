@@ -1,12 +1,11 @@
 'use client';
 
 import type { JSX } from 'react';
-import { useState, useEffect, useMemo } from 'react';
-import { Target, CheckSquare, Activity } from 'lucide-react';
+import { useMemo, useCallback } from 'react';
 import { useNotesActions } from '../../contexts/NotesActionsContext';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useId } from 'react';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 
@@ -15,20 +14,21 @@ export type WidgetType = 'goals' | 'tasks' | 'strava';
 interface WidgetItem {
   id: WidgetType;
   label: string;
-  icon: typeof Target;
+  /** Same glyph style as SidebarNavRow (nav-item-icon, not SVG). */
+  icon: string;
 }
 
 const ALL_WIDGETS: WidgetItem[] = [
-  { id: 'goals', label: 'Goals', icon: Target },
-  { id: 'tasks', label: 'Tasks', icon: CheckSquare },
-  { id: 'strava', label: 'Strava', icon: Activity },
+  { id: 'goals', label: 'Goals', icon: '⌖' },
+  { id: 'tasks', label: 'Tasks', icon: '▣' },
+  { id: 'strava', label: 'Strava', icon: '⌁' },
 ];
 
 export const SidebarWidgets = (): JSX.Element => {
   const { user } = useAuth();
   const { toggleWidget } = useNotesActions();
-  const { isCollapsed } = useSidebar();
-  const [isMobile, setIsMobile] = useState(false);
+  const { setCollapsed } = useSidebar();
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   const isAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
   const widgets = useMemo(
@@ -36,49 +36,29 @@ export const SidebarWidgets = (): JSX.Element => {
     [isAdmin],
   );
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(typeof window !== 'undefined' && window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Show labels if not collapsed OR if on mobile (for popovers)
-  const shouldShowLabel = !isCollapsed || isMobile;
-  const baseId = useId();
+  const closeOnSelect = useCallback(() => {
+    if (isMobile) setCollapsed(true);
+  }, [isMobile, setCollapsed]);
 
   return (
-    <div className="space-y-1">
-      {widgets.map((widget) => {
-        const tooltipId = `${baseId}-${widget.id}`;
-        return (
-          <button
-            key={widget.id}
-            type="button"
-            onClick={() => toggleWidget(widget.id)}
-            className={`group relative flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm transition-colors ${
-              isCollapsed && !isMobile ? 'justify-center' : ''
-            } text-foreground hover:bg-primary/5 dark:hover:bg-primary/10`}
-            aria-label={`Toggle ${widget.label} widget`}
-            aria-describedby={isCollapsed && !isMobile ? tooltipId : undefined}
-          >
-            <widget.icon className="h-4 w-4 shrink-0" aria-hidden />
-            {shouldShowLabel ? (
-              <span className="truncate">{widget.label}</span>
-            ) : (
-              <span
-                id={tooltipId}
-                role="tooltip"
-                className="pointer-events-none absolute left-full top-1/2 z-20 ml-2 hidden -translate-y-1/2 rounded-xl bg-surface px-2 py-1 text-xs text-foreground shadow group-hover:block group-focus-visible:block"
-              >
-                {widget.label}
-              </span>
-            )}
-          </button>
-        );
-      })}
+    <div className="flex flex-col">
+      {widgets.map((widget) => (
+        <button
+          key={widget.id}
+          type="button"
+          onClick={() => {
+            toggleWidget(widget.id);
+            closeOnSelect();
+          }}
+          className="nav-item group relative"
+          aria-label={`Toggle ${widget.label} widget`}
+        >
+          <span className="nav-item-icon" aria-hidden>
+            {widget.icon}
+          </span>
+          <span className="nav-item-label">{widget.label}</span>
+        </button>
+      ))}
     </div>
   );
 };

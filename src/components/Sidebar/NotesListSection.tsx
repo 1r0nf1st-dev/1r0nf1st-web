@@ -4,6 +4,8 @@ import type { JSX } from 'react';
 import { useMemo, useEffect, useState } from 'react';
 import { useNotes, deleteNote } from '../../useNotes';
 import { useNotesActions } from '../../contexts/NotesActionsContext';
+import { useSidebar } from '../../contexts/SidebarContext';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useSidebarAccordionClose } from './SidebarAccordion';
 import { useAlert } from '../../contexts/AlertContext';
 import { useLiveRegion } from '../../contexts/LiveRegionContext';
@@ -13,6 +15,8 @@ import { FileText, Trash2 } from 'lucide-react';
 export const NotesListSection = (): JSX.Element => {
   const { notes, isLoading, error, refetch } = useNotes({});
   const { selectNote, registerRefetch, refetchAllNotes } = useNotesActions();
+  const { setCollapsed } = useSidebar();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const closePopover = useSidebarAccordionClose();
   const { showAlert } = useAlert();
   const { announce } = useLiveRegion();
@@ -97,6 +101,7 @@ export const NotesListSection = (): JSX.Element => {
                 selectNote(note);
                 announce(`Opened note: ${note.title || 'Untitled'}`);
                 closePopover?.();
+                if (isMobile) setCollapsed(true);
               }}
               className="group relative flex w-full items-center gap-2 rounded-xl px-2 py-2 min-h-[44px] text-sm text-foreground transition-colors hover:bg-primary/5 dark:hover:bg-primary/10 touch-manipulation"
               aria-label={`Open note: ${note.title || 'Untitled'}`}

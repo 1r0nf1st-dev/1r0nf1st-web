@@ -4,7 +4,8 @@ import { getEmbedding } from './obEnrichmentService.js';
 import { logger } from '../utils/logger.js';
 
 const OB_AI_SESSIONS = 'ob_ai_sessions';
-const DEFAULT_MATCH_THRESHOLD = 0.65;
+/** Cosine similarity floor for ob_* vector search (aligned with Second Brain default). */
+const DEFAULT_MATCH_THRESHOLD = 0.55;
 const DEFAULT_SEARCH_LIMIT = 15;
 const DEFAULT_CHAT_CONTEXT_LIMIT = 15;
 
@@ -212,6 +213,7 @@ export async function chatWithBrain(
     owner_id: brainOwnerId,
     match_threshold: DEFAULT_MATCH_THRESHOLD,
     match_count: DEFAULT_CHAT_CONTEXT_LIMIT,
+    viewer_id: viewerUserId,
   });
 
   if (rpcError) throw new Error(`Brain search failed: ${rpcError.message}`);

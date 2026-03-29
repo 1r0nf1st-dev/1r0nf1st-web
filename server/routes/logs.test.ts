@@ -9,6 +9,13 @@ vi.mock('../utils/logger.js', () => ({
   },
 }));
 
+vi.mock('../services/appEventLogService.js', () => ({
+  isAppDbLoggingAvailable: () => false,
+  recordErrorEvent: vi.fn(),
+  recordInteractionEvent: vi.fn(),
+  recordPlatformEvent: vi.fn(),
+}));
+
 // Build a minimal app and invoke it with mock req/res (no listen)
 function createApp(): express.Application {
   const app = express();
@@ -107,6 +114,60 @@ describe('POST /api/logs/error', () => {
 
     expect(statusCode).toBe(200);
     expect(body).toEqual({ message: 'Error reported successfully' });
+  });
+});
+
+describe('POST /api/logs/interaction', () => {
+  const app = createApp();
+
+  it('should return 400 when kind or name missing', async () => {
+    const { statusCode, body } = await request(app, 'POST', '/api/logs/interaction', {});
+
+    expect(statusCode).toBe(400);
+    expect(body).toMatchObject({ error: expect.stringContaining('kind') });
+  });
+
+  it('should accept valid interaction', async () => {
+    const { statusCode, body } = await request(app, 'POST', '/api/logs/interaction', {
+      kind: 'navigation',
+      name: 'open_brain',
+    });
+
+    expect(statusCode).toBe(200);
+    expect(body).toEqual({ message: 'Interaction logged' });
+  });
+});
+
+describe('POST /api/logs/platform', () => {
+  const app = createApp();
+
+  it('accepts a platform event when ingest is open (test env, no secret)', async () => {
+    const { statusCode, body } = await request(app, 'POST', '/api/logs/platform', {
+      provider: 'vercel',
+      category: 'deployment',
+      message: 'build ok',
+    });
+
+    expect(statusCode).toBe(200);
+    expect(body).toMatchObject({ accepted: 1 });
+  });
+
+  it('accepts native Vercel-shaped log batch', async () => {
+    const { statusCode, body } = await request(app, 'POST', '/api/logs/platform', [
+      {
+        id: 'v1',
+        deploymentId: 'dep_x',
+        projectId: 'prj_y',
+        source: 'lambda',
+        level: 'error',
+        timestamp: 1_710_000_000_000,
+        message: 'Runtime error',
+        host: 'app.example.com',
+      },
+    ]);
+
+    expect(statusCode).toBe(200);
+    expect(body).toMatchObject({ accepted: 1 });
   });
 });
 

@@ -63,6 +63,56 @@ export async function getThought(id: string): Promise<{ id: string; raw_text: st
   return data as { id: string; raw_text: string };
 }
 
+export interface SbThoughtAttachmentRow {
+  id: string;
+  thought_id: string;
+  uploaded_by: string;
+  file_path: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  mime_type: string | null;
+}
+
+export async function insertThoughtAttachment(
+  thoughtId: string,
+  uploadedBy: string,
+  meta: {
+    file_path: string;
+    file_name: string;
+    file_type: string;
+    file_size: number;
+    mime_type: string | null;
+  },
+): Promise<{ id: string }> {
+  const db = requireDb();
+  const { data, error } = await db
+    .from('sb_thought_attachments')
+    .insert({
+      thought_id: thoughtId,
+      uploaded_by: uploadedBy,
+      file_path: meta.file_path,
+      file_name: meta.file_name,
+      file_type: meta.file_type,
+      file_size: meta.file_size,
+      mime_type: meta.mime_type,
+    })
+    .select('id')
+    .single();
+  if (error) throw new Error(`Failed to save thought attachment: ${error.message}`);
+  return { id: (data as { id: string }).id };
+}
+
+export async function getThoughtAttachmentById(
+  id: string,
+): Promise<SbThoughtAttachmentRow | null> {
+  const db = requireDb();
+  const { data, error } = await db.from('sb_thought_attachments').select('*').eq('id', id).single();
+  if (error?.code === 'PGRST116') return null;
+  if (error) throw new Error(`Failed to fetch attachment: ${error.message}`);
+  return data as SbThoughtAttachmentRow;
+}
+
 export interface InsertProjectData {
   name: string;
   goal?: string | null;

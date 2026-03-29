@@ -5,9 +5,6 @@ import type { FormEvent } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
-import { ChromeLayout } from '../components/ChromeLayout';
-import { cardClasses, cardTitle } from '../styles/cards';
-import { btnBase, btnPrimary } from '../styles/buttons';
 import { logger } from '../utils/logger';
 import { supabaseClient } from '../lib/supabaseClient';
 
@@ -128,35 +125,44 @@ export const ChangePasswordPage = (): JSX.Element => {
   if (!recoveryToken && !authLoading && !user) {
     router.replace('/login?returnTo=/notes/change-password');
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="opacity-70">Redirecting to login…</div>
-      </div>
+      <section className="flex h-full min-h-0 flex-1 items-center justify-center">
+        <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]" role="status">
+          Redirecting to login…
+        </p>
+      </section>
     );
   }
 
   return (
-    <ChromeLayout>
-      <section className="w-full max-w-[500px] mx-auto space-y-8">
-        <article className={cardClasses}>
-          <h2 className={`${cardTitle} mb-6`}>
-            {recoveryToken ? 'Set new password' : 'Change Password'}
-          </h2>
-          <form onSubmit={handleSubmit} className="relative z-10">
-            {error && (
-              <div className="p-3 mb-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-500 text-sm">
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="p-3 mb-4 bg-green-500/10 border border-green-500/30 rounded-xl text-green-500 text-sm">
-                {success}
-              </div>
-            )}
-            <div className="mb-4">
-              <label
-                htmlFor="newPassword"
-                className="block mb-2 text-sm font-medium text-foreground"
+    <section
+      aria-label={recoveryToken ? 'Set New Password' : 'Change Password'}
+      className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+    >
+      <div className="page-content min-h-0">
+        <div className="content-panel" style={{ maxWidth: 520, marginInline: 'auto' }}>
+          <h2 className="panel-title">{recoveryToken ? 'Set new password' : 'Change Password'}</h2>
+
+          <form onSubmit={handleSubmit}>
+            {error ? (
+              <p
+                className="font-display text-[12px] text-[color:var(--color-orange)] mb-4"
+                role="alert"
               >
+                {error}
+              </p>
+            ) : null}
+
+            {success ? (
+              <p
+                className="font-display text-[12px] text-[color:var(--color-text-inv-2)] mb-4"
+                role="status"
+              >
+                {success}
+              </p>
+            ) : null}
+
+            <div className="field-group">
+              <label htmlFor="newPassword" className="field-label">
                 New Password
               </label>
               <input
@@ -166,15 +172,16 @@ export const ChangePasswordPage = (): JSX.Element => {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+                className="field-input"
+                aria-label="New password"
               />
-              <p className="mt-2 text-[0.85rem] opacity-70">Must be at least 6 characters</p>
+              <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)] mt-2">
+                Must be at least 6 characters
+              </p>
             </div>
-            <div className="mb-6">
-              <label
-                htmlFor="confirmPassword"
-                className="block mb-2 text-sm font-medium text-foreground"
-              >
+
+            <div className="field-group">
+              <label htmlFor="confirmPassword" className="field-label">
                 Confirm New Password
               </label>
               <input
@@ -184,14 +191,12 @@ export const ChangePasswordPage = (): JSX.Element => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full p-3 rounded-xl border-2 border-primary/35 dark:border-border bg-surface-soft/50 text-foreground text-base focus:ring-2 focus:ring-primary focus:border-primary/55 dark:focus:border-transparent"
+                className="field-input"
+                aria-label="Confirm new password"
               />
             </div>
-            <button
-              type="submit"
-              className={`${btnBase} ${btnPrimary} w-full mb-4`}
-              disabled={isLoading}
-            >
+
+            <button type="submit" className="act-btn primary w-full" disabled={isLoading}>
               {isLoading
                 ? 'Changing password...'
                 : recoveryToken
@@ -199,8 +204,8 @@ export const ChangePasswordPage = (): JSX.Element => {
                   : 'Change Password'}
             </button>
           </form>
-        </article>
-      </section>
-    </ChromeLayout>
+        </div>
+      </div>
+    </section>
   );
 };

@@ -1,5 +1,7 @@
 import { logger } from './logger';
 import { env } from '../config';
+import { getSessionAnonId } from './sessionAnonId';
+import { getLastRequestId } from './requestContext';
 
 interface ErrorReport {
   message: string;
@@ -8,48 +10,42 @@ interface ErrorReport {
   url: string;
   userAgent: string;
   timestamp: string;
-  userId?: string;
   errorName?: string;
   errorData?: Record<string, unknown>;
+  sessionAnonId?: string;
+  requestId?: string;
 }
 
 /**
- * Report client-side errors to the backend logging endpoint
+ * Report client-side errors to the backend logging endpoint (no user-identifying fields).
  */
 export async function reportError(
   error: Error,
   context?: {
     componentStack?: string;
-    userId?: string;
     errorData?: Record<string, unknown>;
   },
 ): Promise<void> {
-  // Log locally first
   logger.error('Client-side error occurred', {
     message: error.message,
     stack: error.stack,
     ...context?.errorData,
   });
 
-  // Don't report errors in development (too noisy)
-  if (process.env.NODE_ENV === 'development') {
-    return;
-  }
-
   try {
     const errorReport: ErrorReport = {
       message: error.message,
       stack: error.stack,
       componentStack: context?.componentStack,
-      url: window.location.href,
-      userAgent: navigator.userAgent,
+      url: typeof window !== 'undefined' ? window.location.href : '',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
       timestamp: new Date().toISOString(),
-      userId: context?.userId,
       errorName: error.name,
       errorData: context?.errorData,
+      sessionAnonId: getSessionAnonId(),
+      requestId: getLastRequestId(),
     };
 
-    // Get API base URL
     let apiBase = '/api';
     if (env.apiBaseUrl && env.apiBaseUrl.trim()) {
       const trimmed = env.apiBaseUrl.trim();
@@ -61,39 +57,40 @@ export async function reportError(
       }
     }
 
-    // Send error report to backend
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    const sid = getSessionAnonId();
+    if (sid) {
+      headers['X-Session-Anon-Id'] = sid;
+    }
+
     await fetch(`${apiBase}/logs/error`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(errorReport),
     });
   } catch (err) {
-    // Silently fail - don't create error loops
     logger.debug('Failed to report error to backend', { err });
   }
 }
 
 /**
- * Report unhandled promise rejections
+ * Report unhandled promise rejections and window errors.
  */
 export function setupGlobalErrorHandlers(): void {
-  // Handle unhandled promise rejections
   window.addEventListener('unhandledrejection', (event) => {
     const error = event.reason instanceof Error ? event.reason : new Error(String(event.reason));
-    reportError(error, {
+    void reportError(error, {
       errorData: {
         type: 'unhandledrejection',
-        reason: event.reason,
       },
     });
   });
 
-  // Handle general errors
   window.addEventListener('error', (event) => {
     const error = event.error instanceof Error ? event.error : new Error(event.message);
-    reportError(error, {
+    void reportError(error, {
       errorData: {
         type: 'window.error',
         filename: event.filename,

@@ -13,7 +13,13 @@ vi.mock('../utils/logger.js', () => ({
 vi.mock('../config.js', () => ({
   config: {
     enableRequestLogging: true,
+    enableAppDbLogging: false,
   },
+}));
+
+vi.mock('../services/appEventLogService.js', () => ({
+  isAppDbLoggingAvailable: () => false,
+  recordInteractionEvent: vi.fn(),
 }));
 
 import { requestLogger } from './requestLogger.js';
@@ -21,10 +27,15 @@ import { logger } from '../utils/logger.js';
 
 describe('requestLogger', () => {
   let mockRequest: Partial<Request> & { requestId?: string; startTime?: number };
-  let mockResponse: Partial<Response>;
+  let mockResponse: Partial<Response> & {
+    send: Response['send'];
+    once: Response['once'];
+  };
   let mockNext: NextFunction;
+  let finishCallbacks: Array<() => void>;
 
   beforeEach(() => {
+    finishCallbacks = [];
     mockRequest = {
       method: 'GET',
       path: '/api/test',
@@ -39,7 +50,18 @@ describe('requestLogger', () => {
       statusCode: 200,
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
+      setHeader: vi.fn(),
+      getHeader: vi.fn(() => undefined),
+      once: vi.fn((event: string, cb: () => void) => {
+        if (event === 'finish') {
+          finishCallbacks.push(cb);
+        }
+        return mockResponse as Response;
+      }) as Response['once'],
       send: vi.fn(function (this: Response, body: unknown) {
+        finishCallbacks.forEach((cb) => {
+          cb();
+        });
         return body;
       }) as unknown as Response['send'],
     };
@@ -56,11 +78,12 @@ describe('requestLogger', () => {
     expect(mockNext).toHaveBeenCalledWith();
   });
 
-  it('should attach requestId and startTime, log request, and call next()', () => {
+  it('should attach requestId, set X-Request-Id, log request, and call next()', () => {
     requestLogger(mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     expect(mockRequest.requestId).toBe('test-request-id');
     expect(mockRequest.startTime).toBeDefined();
+    expect(mockResponse.setHeader).toHaveBeenCalledWith('X-Request-Id', 'test-request-id');
     expect(logger.info).toHaveBeenCalledWith(
       expect.objectContaining({
         requestId: 'test-request-id',
@@ -73,11 +96,11 @@ describe('requestLogger', () => {
     expect(mockNext).toHaveBeenCalledWith();
   });
 
-  it('should log response when res.send is called', () => {
+  it('should log response on finish after res.send', () => {
     requestLogger(mockRequest as Request, mockResponse as Response, mockNext as NextFunction);
 
     const sentBody = { data: 'ok' };
-    mockResponse.send!.call(mockResponse, sentBody);
+    mockResponse.send!.call(mockResponse as Response, sentBody);
 
     expect(logger.info).toHaveBeenCalledTimes(2);
     expect(logger.info).toHaveBeenLastCalledWith(
@@ -87,7 +110,6 @@ describe('requestLogger', () => {
         path: '/api/test',
         statusCode: 200,
         duration: expect.stringMatching(/\d+ms/),
-        responseSize: expect.stringMatching(/\d+ bytes/),
       }),
       'Request completed',
     );

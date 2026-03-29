@@ -1,7 +1,14 @@
 import { Router } from 'express';
+import multer from 'multer';
 import type { Response, NextFunction } from 'express';
 import type { AuthRequest } from '../middleware/auth.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { supabase } from '../db/supabase.js';
+import {
+  getThought,
+  insertThoughtAttachment,
+  getThoughtAttachmentById,
+} from '../db/secondBrainDb.js';
 import {
   captureThought,
   semanticSearch,
@@ -23,10 +30,17 @@ import {
   generateMorningDigest,
   generateWeeklyReview,
   backfillSecondBrainEmbeddings,
+  SECOND_BRAIN_SEMANTIC_MATCH_THRESHOLD_DEFAULT,
 } from '../services/secondBrainService.js';
 import { config } from '../config.js';
 import { logger } from '../utils/logger.js';
-import { sanitizeFreeText } from '../utils/sanitize.js';
+import {
+  sanitizeFreeText,
+  sanitizeFileName,
+  isSafeStoragePath,
+  isAllowedBrainPasteImageMime,
+  hasDangerousExtension,
+} from '../utils/sanitize.js';
 
 const secondBrainRouter = Router();
 const ADMIN_EMAIL = 'admin@1r0nf1st.com';
@@ -56,6 +70,142 @@ function requireGemini(_req: AuthRequest, res: Response, next: NextFunction): vo
 
 secondBrainRouter.use(authenticateToken);
 secondBrainRouter.use(requireAdmin);
+
+function parseSbIdParam(req: AuthRequest): string | null {
+  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  return typeof id === 'string' && id ? id : null;
+}
+
+const sbImageUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
+/** GET /api/second-brain/attachments/:id/download — signed URL (uploader only). */
+secondBrainRouter.get('/attachments/:id/download', async (req: AuthRequest, res): Promise<void> => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+    if (!supabase) {
+      res.status(503).json({ error: 'Database not configured' });
+      return;
+    }
+
+    const attachmentId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    if (!attachmentId) {
+      res.status(400).json({ error: 'Attachment id required' });
+      return;
+    }
+
+    const attachment = await getThoughtAttachmentById(attachmentId);
+    if (!attachment || attachment.uploaded_by !== req.userId) {
+      res.status(404).json({ error: 'Attachment not found' });
+      return;
+    }
+
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('note-attachments')
+      .createSignedUrl(attachment.file_path, 3600);
+
+    if (signedUrlError || !signedUrlData) {
+      logger.warn({ err: signedUrlError?.message }, 'SB thought attachment signed URL failed');
+      res.status(500).json({
+        error: `Failed to create download URL: ${signedUrlError?.message || 'Unknown error'}`,
+      });
+      return;
+    }
+
+    res.json({
+      downloadUrl: signedUrlData.signedUrl,
+      file_name: attachment.file_name,
+      mime_type: attachment.mime_type,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Download failed';
+    res.status(500).json({ error: message });
+  }
+});
+
+/** POST /api/second-brain/thoughts/:id/attachments/upload — image paste for inbox thought (admin). */
+secondBrainRouter.post(
+  '/thoughts/:id/attachments/upload',
+  sbImageUpload.single('file'),
+  async (req: AuthRequest, res): Promise<void> => {
+    try {
+      if (!req.userId) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+      if (!supabase) {
+        res.status(503).json({ error: 'Database not configured' });
+        return;
+      }
+
+      const thoughtId = parseThoughtId(req);
+      const file = req.file;
+      if (!thoughtId) {
+        res.status(400).json({ error: 'Invalid thought ID' });
+        return;
+      }
+      if (!file) {
+        res.status(400).json({ error: 'No file provided' });
+        return;
+      }
+      if (!isAllowedBrainPasteImageMime(file.mimetype || '')) {
+        res.status(400).json({ error: 'Only JPEG, PNG, GIF, or WebP images are allowed.' });
+        return;
+      }
+
+      const sanitizedFileName = sanitizeFileName(file.originalname);
+      if (hasDangerousExtension(sanitizedFileName)) {
+        res.status(400).json({ error: 'File type not allowed for security reasons.' });
+        return;
+      }
+
+      const thought = await getThought(thoughtId);
+      if (!thought) {
+        res.status(404).json({ error: 'Thought not found' });
+        return;
+      }
+
+      const timestamp = Date.now();
+      const filePath = `sb-thoughts/${req.userId}/${thoughtId}/${timestamp}-${sanitizedFileName}`;
+      const expectedPrefix = `sb-thoughts/${req.userId}/${thoughtId}/`;
+      if (!isSafeStoragePath(filePath, expectedPrefix)) {
+        res.status(400).json({ error: 'Invalid file path' });
+        return;
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from('note-attachments')
+        .upload(filePath, file.buffer, {
+          contentType: file.mimetype || 'application/octet-stream',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        logger.error({ err: uploadError.message, filePath }, 'SB thought image upload failed');
+        res.status(500).json({ error: `Upload failed: ${uploadError.message}` });
+        return;
+      }
+
+      const row = await insertThoughtAttachment(thoughtId, req.userId, {
+        file_path: filePath,
+        file_name: sanitizedFileName,
+        file_type: file.mimetype || 'application/octet-stream',
+        file_size: file.size,
+        mime_type: file.mimetype ?? null,
+      });
+
+      res.status(201).json({ id: row.id });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      res.status(500).json({ error: message });
+    }
+  },
+);
 
 /** POST /api/second-brain/capture — in-app capture */
 secondBrainRouter.post('/capture', requireGemini, async (req: AuthRequest, res): Promise<void> => {
@@ -119,7 +269,10 @@ secondBrainRouter.post('/capture', requireGemini, async (req: AuthRequest, res):
 secondBrainRouter.post('/search', requireGemini, async (req: AuthRequest, res): Promise<void> => {
   try {
     const query = typeof req.body?.query === 'string' ? req.body.query : '';
-    const threshold = typeof req.body?.matchThreshold === 'number' ? req.body.matchThreshold : 0.7;
+    const threshold =
+      typeof req.body?.matchThreshold === 'number'
+        ? req.body.matchThreshold
+        : SECOND_BRAIN_SEMANTIC_MATCH_THRESHOLD_DEFAULT;
     const limit = typeof req.body?.matchCount === 'number' ? Math.min(req.body.matchCount, 20) : 10;
     if (!query.trim()) {
       res.status(400).json({ error: 'query is required' });
@@ -230,8 +383,7 @@ secondBrainRouter.get('/thoughts', async (req, res) => {
 });
 
 function parseId(req: AuthRequest): string | null {
-  const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  return typeof id === 'string' && id ? id : null;
+  return parseSbIdParam(req);
 }
 
 const parseThoughtId = parseId;
