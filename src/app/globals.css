@@ -2247,9 +2247,11 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.11);
   padding: 6px 12px;
   cursor: pointer;
-  margin: 12px 16px;
+  /* Vertical only — horizontal inset is applied on mobile to match .page-hero (avoids extra margin-left offset). */
+  margin: 12px 0;
   border-radius: 0;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .sidebar-overlay {
@@ -2331,6 +2333,14 @@ button {
     display: inline-flex !important;
     align-items: center;
     gap: 8px;
+    max-width: 100%;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    /* Match .page-hero horizontal inset using padding (not margin-left) so the block isn’t shifted off-centre. */
+    padding: 10px 14px 10px 16px;
+    justify-content: flex-start;
   }
 
   .sidebar-toggle:focus-visible {
