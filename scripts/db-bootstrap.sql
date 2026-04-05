@@ -5,19 +5,37 @@
 --              Requires Supabase auth.users. From repo root: pnpm db:reset-bootstrap
 -- Note: Do not maintain parallel migration files — extend this script and keep db-reset.sql in sync.
 
-CREATE EXTENSION IF NOT EXISTS vector;
+-- pgvector: keep extension out of public (Supabase linter). Supabase often pre-installs vector in public — move if needed.
+-- Existing DBs: scripts/db-supabase-linter-rollout.sql
+CREATE SCHEMA IF NOT EXISTS extensions;
+GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_extension e
+    JOIN pg_namespace n ON n.oid = e.extnamespace
+    WHERE e.extname = 'vector' AND n.nspname = 'public'
+  ) THEN
+    ALTER EXTENSION vector SET SCHEMA extensions;
+  ELSIF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector') THEN
+    CREATE EXTENSION vector WITH SCHEMA extensions;
+  END IF;
+END $$;
 
 -- PostgREST schema cache: use only public (sb_* tables live here; second_brain schema is dropped by reset)
 ALTER ROLE authenticator SET pgrst.db_schemas = 'public';
 
 -- Helper function for updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- Goals
 CREATE TABLE IF NOT EXISTS goals (
@@ -153,11 +171,15 @@ BEGIN
   END IF;
   RETURN TRIM(result);
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
-CREATE OR REPLACE FUNCTION update_note_content_text() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION update_note_content_text()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
 BEGIN NEW.content_text = extract_text_from_content(NEW.content); RETURN NEW; END;
-$$ LANGUAGE plpgsql;
+$$;
 
 CREATE TRIGGER update_notebooks_updated_at BEFORE UPDATE ON notebooks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_notes_updated_at BEFORE UPDATE ON notes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -257,7 +279,11 @@ CREATE POLICY "Owners can delete their shares" ON shared_notes FOR DELETE USING 
 CREATE POLICY "Recipients can view shares with them" ON shared_notes FOR SELECT USING (auth.uid() = shared_with_user_id);
 
 -- Versioning triggers
-CREATE OR REPLACE FUNCTION create_note_version() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION create_note_version()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
 DECLARE next_version INTEGER;
 BEGIN
   IF OLD.content IS DISTINCT FROM NEW.content THEN
@@ -267,9 +293,13 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
-CREATE OR REPLACE FUNCTION cleanup_old_versions() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION cleanup_old_versions()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
 DECLARE max_version INTEGER; cutoff_version INTEGER;
 BEGIN
   SELECT MAX(version_number) INTO max_version FROM note_versions WHERE note_id = NEW.note_id;
@@ -279,7 +309,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 CREATE TRIGGER create_note_version_trigger AFTER UPDATE ON notes FOR EACH ROW
   WHEN (OLD.content IS DISTINCT FROM NEW.content) EXECUTE FUNCTION create_note_version();
@@ -376,6 +406,9 @@ CREATE TABLE IF NOT EXISTS public.sb_thought_attachments (
 CREATE INDEX IF NOT EXISTS idx_sb_thought_attachments_thought ON public.sb_thought_attachments(thought_id);
 CREATE INDEX IF NOT EXISTS idx_sb_thought_attachments_uploaded_by ON public.sb_thought_attachments(uploaded_by);
 ALTER TABLE public.sb_thought_attachments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "block_anon_authenticated_sb_thought_attachments"
+  ON public.sb_thought_attachments FOR ALL TO anon, authenticated
+  USING (false) WITH CHECK (false);
 
 CREATE TABLE IF NOT EXISTS public.sb_projects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -408,7 +441,9 @@ CREATE OR REPLACE FUNCTION public.sb_search_all(
   query_embedding vector(768), match_threshold float DEFAULT 0.70, match_count int DEFAULT 5
 )
 RETURNS TABLE (table_name text, record_id uuid, label text, detail text, similarity float, created_at timestamptz)
-LANGUAGE sql STABLE AS $$
+LANGUAGE sql STABLE
+SET search_path = public, extensions
+AS $$
   SELECT 'projects'::text, id, name, notes, (1 - (embedding <=> query_embedding))::float AS similarity, created_at FROM public.sb_projects WHERE embedding IS NOT NULL AND 1 - (embedding <=> query_embedding) > match_threshold
   UNION ALL SELECT 'people'::text, id, name, notes, (1 - (embedding <=> query_embedding))::float AS similarity, created_at FROM public.sb_people WHERE embedding IS NOT NULL AND 1 - (embedding <=> query_embedding) > match_threshold
   UNION ALL SELECT 'ideas'::text, id, title, body, (1 - (embedding <=> query_embedding))::float AS similarity, created_at FROM public.sb_ideas WHERE embedding IS NOT NULL AND 1 - (embedding <=> query_embedding) > match_threshold
@@ -441,6 +476,19 @@ ALTER TABLE public.sb_people ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sb_ideas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sb_admin ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sb_resources ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "block_anon_authenticated_sb_thoughts"
+  ON public.sb_thoughts FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+CREATE POLICY "block_anon_authenticated_sb_projects"
+  ON public.sb_projects FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+CREATE POLICY "block_anon_authenticated_sb_people"
+  ON public.sb_people FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+CREATE POLICY "block_anon_authenticated_sb_ideas"
+  ON public.sb_ideas FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+CREATE POLICY "block_anon_authenticated_sb_admin"
+  ON public.sb_admin FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+CREATE POLICY "block_anon_authenticated_sb_resources"
+  ON public.sb_resources FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
 
 -- ---------------------------------------------------------------------------
 -- OpenBrain: public knowledge graph (ob_*)
@@ -588,8 +636,9 @@ ALTER TABLE public.ob_ai_sessions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users see own ob_ai_sessions"
   ON public.ob_ai_sessions FOR SELECT
   USING (auth.uid() = user_id OR auth.uid() = brain_owner_id);
-CREATE POLICY "Anyone can create an ob_ai_session"
-  ON public.ob_ai_sessions FOR INSERT WITH CHECK (true);
+CREATE POLICY "authenticated_insert_own_ob_ai_sessions"
+  ON public.ob_ai_sessions FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
 
 CREATE TABLE IF NOT EXISTS public.ob_profiles (
   id           UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -601,7 +650,11 @@ CREATE TABLE IF NOT EXISTS public.ob_profiles (
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE OR REPLACE FUNCTION public.handle_new_ob_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   INSERT INTO public.ob_profiles (id, username, brain_slug)
   VALUES (
@@ -612,7 +665,7 @@ BEGIN
   ON CONFLICT DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created_ob ON auth.users;
 CREATE TRIGGER on_auth_user_created_ob
@@ -665,7 +718,9 @@ RETURNS TABLE (
   user_id      UUID,
   similarity   FLOAT
 )
-LANGUAGE sql STABLE AS $$
+LANGUAGE sql STABLE
+SET search_path = public, extensions
+AS $$
   SELECT
     n.id, n.title, n.body, n.node_type,
     n.ai_summary, n.ai_tags, n.user_tags, n.user_id,
@@ -701,7 +756,9 @@ RETURNS TABLE (
   similarity    FLOAT,
   created_at    TIMESTAMPTZ
 )
-LANGUAGE sql STABLE SECURITY DEFINER AS $$
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
   SELECT * FROM (
     SELECT 'ob_nodes'::text AS source_table, id AS record_id, title AS label, COALESCE(ai_summary, body, '') AS detail,
       (1 - (embedding <=> query_embedding))::float AS similarity, created_at
@@ -737,10 +794,23 @@ LANGUAGE sql STABLE SECURITY DEFINER AS $$
   LIMIT match_count;
 $$;
 
+-- Vector search RPCs: fixed search_path + service_role-only execute (SECURITY DEFINER on ob_search_all_brain).
+REVOKE EXECUTE ON FUNCTION public.sb_search_all(vector, double precision, integer)
+  FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.ob_search_nodes(vector, double precision, integer, uuid, ob_node_type)
+  FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.ob_search_all_brain(vector, uuid, double precision, integer, uuid)
+  FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.sb_search_all(vector, double precision, integer) TO service_role;
+GRANT EXECUTE ON FUNCTION public.ob_search_nodes(vector, double precision, integer, uuid, ob_node_type) TO service_role;
+GRANT EXECUTE ON FUNCTION public.ob_search_all_brain(vector, uuid, double precision, integer, uuid) TO service_role;
+
 -- ---------------------------------------------------------------------------
 -- Application logging (server + client errors, API interactions, platform)
--- Written only via service_role / Express. RLS disabled; no PII (no user ids).
--- Intended for admin dashboards: time series, path breakdowns, platform feed.
+-- RLS + explicit deny policies for anon/authenticated (Supabase linter). Access
+-- only through service_role / Express (service role bypasses RLS). No PII
+-- (no user ids). Admin dashboards: time series, path breakdowns, platform feed.
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS public.app_interaction_events (
@@ -809,9 +879,16 @@ CREATE TABLE IF NOT EXISTS public.app_platform_events (
 CREATE INDEX IF NOT EXISTS idx_app_platform_created ON public.app_platform_events (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_app_platform_provider ON public.app_platform_events (provider, created_at DESC);
 
-ALTER TABLE public.app_interaction_events DISABLE ROW LEVEL SECURITY;
-ALTER TABLE public.app_error_events DISABLE ROW LEVEL SECURITY;
-ALTER TABLE public.app_platform_events DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_interaction_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_error_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_platform_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "block_anon_authenticated_app_interaction_events"
+  ON public.app_interaction_events FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+CREATE POLICY "block_anon_authenticated_app_error_events"
+  ON public.app_error_events FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
+CREATE POLICY "block_anon_authenticated_app_platform_events"
+  ON public.app_platform_events FOR ALL TO anon, authenticated USING (false) WITH CHECK (false);
 
 -- Reporting RPCs for admin UI (time-series charts, breakdowns). Called from server only.
 CREATE OR REPLACE FUNCTION public.app_log_error_bucket_counts(
@@ -910,3 +987,25 @@ AS $$
   ORDER BY event_count DESC
   LIMIT GREATEST(1, LEAST(p_limit, 100));
 $$;
+
+-- app_log_* RPCs are SECURITY DEFINER; restrict EXECUTE to service_role so
+-- anon/authenticated cannot aggregate-read log data via PostgREST.
+REVOKE EXECUTE ON FUNCTION public.app_log_error_bucket_counts(TIMESTAMPTZ, TIMESTAMPTZ, TEXT)
+  FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.app_log_interaction_bucket_counts(TIMESTAMPTZ, TIMESTAMPTZ, TEXT)
+  FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.app_log_platform_bucket_counts(TIMESTAMPTZ, TIMESTAMPTZ, TEXT)
+  FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.app_log_errors_by_path(TIMESTAMPTZ, TIMESTAMPTZ, INTEGER)
+  FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.app_log_errors_by_source(TIMESTAMPTZ, TIMESTAMPTZ)
+  FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.app_log_interactions_by_path(TIMESTAMPTZ, TIMESTAMPTZ, INTEGER)
+  FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.app_log_error_bucket_counts(TIMESTAMPTZ, TIMESTAMPTZ, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.app_log_interaction_bucket_counts(TIMESTAMPTZ, TIMESTAMPTZ, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.app_log_platform_bucket_counts(TIMESTAMPTZ, TIMESTAMPTZ, TEXT) TO service_role;
+GRANT EXECUTE ON FUNCTION public.app_log_errors_by_path(TIMESTAMPTZ, TIMESTAMPTZ, INTEGER) TO service_role;
+GRANT EXECUTE ON FUNCTION public.app_log_errors_by_source(TIMESTAMPTZ, TIMESTAMPTZ) TO service_role;
+GRANT EXECUTE ON FUNCTION public.app_log_interactions_by_path(TIMESTAMPTZ, TIMESTAMPTZ, INTEGER) TO service_role;
