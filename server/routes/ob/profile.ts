@@ -2,7 +2,7 @@ import { Router } from 'express';
 import type { AuthRequest } from '../../middleware/auth.js';
 import { authenticateToken } from '../../middleware/auth.js';
 import { requireAdmin } from '../../middleware/requireAdmin.js';
-import { getObProfileByUserId } from '../../services/obNodeService.js';
+import { ensureObProfileRowForUser, getObProfileByUserId } from '../../services/obNodeService.js';
 
 const obProfileRouter = Router();
 obProfileRouter.use(authenticateToken);
@@ -19,7 +19,11 @@ obProfileRouter.get('/me', async (req: AuthRequest, res) => {
       return;
     }
 
-    const profile = await getObProfileByUserId(req.supabase, req.userId);
+    let profile = await getObProfileByUserId(req.supabase, req.userId);
+    if (!profile) {
+      await ensureObProfileRowForUser(req.userId, req.email);
+      profile = await getObProfileByUserId(req.supabase, req.userId);
+    }
     if (!profile) {
       res.status(404).json({ error: 'Profile not found' });
       return;

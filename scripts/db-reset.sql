@@ -87,3 +87,6 @@ DROP FUNCTION IF EXISTS extract_text_from_content(JSONB);
 DROP FUNCTION IF EXISTS update_note_content_text();
 DROP FUNCTION IF EXISTS create_note_version();
 DROP FUNCTION IF EXISTS cleanup_old_versions();
+
+-- pgvector (after all tables/functions using vector columns are dropped)
+DROP EXTENSION IF EXISTS vector CASCADE;

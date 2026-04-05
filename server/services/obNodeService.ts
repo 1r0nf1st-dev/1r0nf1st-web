@@ -1,4 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { supabase as serviceSupabase } from '../db/supabase.js';
+import { logger } from '../utils/logger.js';
 
 /** OpenBrain node type (matches ob_node_type enum). */
 export type ObNodeType = 'note' | 'concept' | 'question' | 'source' | 'project';
@@ -204,4 +206,58 @@ export async function deleteObNode(
 ): Promise<void> {
   const { error } = await db.from(OB_NODES).delete().eq('id', nodeId).eq('user_id', userId);
   if (error) throw error;
+}
+
+/** Base username/brain_slug from email (matches handle_new_ob_user split_part). */
+export function obProfileSlugFromEmail(email: string | undefined): string {
+  const local = email?.split('@')[0]?.trim();
+  if (local && local.length > 0) {
+    return local.slice(0, 200);
+  }
+  return 'user';
+}
+
+/**
+ * Insert ob_profiles row via service role when missing (e.g. user signed up before OpenBrain trigger).
+ * Retries with suffixed slugs on unique violations. No-op if row already exists.
+ */
+export async function ensureObProfileRowForUser(
+  userId: string,
+  email: string | undefined,
+): Promise<void> {
+  if (!serviceSupabase) {
+    logger.warn('ensureObProfileRowForUser skipped: service Supabase client not configured');
+    return;
+  }
+
+  const { data: existing, error: selectError } = await serviceSupabase
+    .from(OB_PROFILES)
+    .select('id')
+    .eq('id', userId)
+    .maybeSingle();
+  if (selectError) {
+    throw new Error(selectError.message);
+  }
+  if (existing) {
+    return;
+  }
+
+  const base = obProfileSlugFromEmail(email);
+  const shortId = userId.replace(/-/g, '').slice(0, 8);
+  const candidates = [base, `${base}-${shortId}`, `user-${shortId}`];
+
+  for (const slug of candidates) {
+    const { error } = await serviceSupabase.from(OB_PROFILES).insert({
+      id: userId,
+      username: slug,
+      brain_slug: slug,
+    });
+    if (!error) {
+      return;
+    }
+    if (error.code === '23505') {
+      continue;
+    }
+    throw new Error(error.message);
+  }
 }

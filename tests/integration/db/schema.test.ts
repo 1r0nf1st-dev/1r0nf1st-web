@@ -49,4 +49,15 @@ describe.skipIf(!url)('DB schema integration', () => {
     `);
     expect(res.rows.length).toBeGreaterThan(0);
   });
+
+  it('has vector extension outside public schema (Supabase linter)', async () => {
+    const res = await client.query(`
+      SELECT n.nspname AS schema_name
+      FROM pg_extension e
+      JOIN pg_namespace n ON n.oid = e.extnamespace
+      WHERE e.extname = 'vector'
+    `);
+    expect(res.rows.length).toBe(1);
+    expect(res.rows[0]?.schema_name).not.toBe('public');
+  });
 });
