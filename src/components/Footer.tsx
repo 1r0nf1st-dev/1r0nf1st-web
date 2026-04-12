@@ -22,16 +22,13 @@ export const Footer = (): JSX.Element => (
           sa={2.5}
           sd={2}
           speed={0.15}
-          width={44}
-          height={44}
+          width={32}
+          height={32}
           viewBox="0 0 44 44"
           variant="footer"
         />
       </div>
-      <BrandName
-        markTint="orange"
-        className="font-display text-[13px] font-black uppercase tracking-[0.10em] text-[color:var(--color-text-inv)] leading-none"
-      />
+      <BrandName className="font-display text-[13px] font-black uppercase tracking-[0.10em] text-[color:var(--color-text-inv)] leading-none" />
     </div>
     <div className="footer-links flex items-center gap-[22px] font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[color:var(--color-text-inv-2)]">
       <Link href="/about" className="hover:text-[color:var(--color-text-inv)]">

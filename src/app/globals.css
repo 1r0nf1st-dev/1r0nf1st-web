@@ -12,6 +12,106 @@
   }
 }
 
+/* Animated raster logo — four PNG layers, mix-blend-mode: screen on #1a1714 */
+@keyframes logo-spin-cw {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes logo-spin-ccw {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/**
+ * Logo slot: use a sized parent (e.g. `grid h-8 w-8` or `relative` box with w/h).
+ * Host fills the slot; inner square uses min(max, width) and min(max, height) via
+ * aspect-ratio + max-height so wide short slots (mobile hero) still fit.
+ */
+.logo-animated-host {
+  container-type: size;
+  container-name: logo-animated;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.logo-animated {
+  --logo-animated-max: 280px;
+  position: relative;
+  box-sizing: border-box;
+  flex: 0 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: min(var(--logo-animated-max, 280px), 100%);
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  background-color: var(--color-ink); /* #1a1714 — screen blend target */
+  overflow: hidden;
+}
+
+/*
+ * Nav mark (markTint="orange"): layers are white-on-transparent — an orange *background* only fills
+ * the square behind transparency. Instead, flatten to black then recolor to brand orange (same
+ * technique as tinting monochrome icons). Transparent bg lets the nav ink show through.
+ */
+.logo-animated-host--brand-orange .logo-animated {
+  background-color: transparent;
+}
+
+/* Tuned to approximate --color-orange (#e05c1a); order matters */
+.logo-animated-host--brand-orange .logo-animated__layer {
+  filter: brightness(0) saturate(100%) invert(47%) sepia(93%) saturate(1800%) hue-rotate(353deg)
+    brightness(0.98) contrast(96%);
+}
+
+/* When supported, side = min(cap, slot width, slot height) — fixes full-width × short hero strip */
+@supports (width: 1cqmin) {
+  .logo-animated-host .logo-animated {
+    width: min(var(--logo-animated-max, 280px), 100cqmin);
+    max-width: none;
+    max-height: none;
+    height: auto;
+  }
+}
+
+.logo-animated__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.logo-animated__outer-cog {
+  animation: logo-spin-cw 12s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+.logo-animated__inner-cog {
+  animation: logo-spin-ccw 8s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-animated__outer-cog,
+  .logo-animated__inner-cog {
+    animation-play-state: paused;
+  }
+}
+
 /* 1r0nf1st brand tokens – Section 2 */
 :root {
   /* ── BACKGROUNDS ── */
@@ -106,6 +206,7 @@ body {
   max-width: 100%;
 }
 
+/* Keep `data-scroll-behavior="smooth"` on `<html>` in app/layout.tsx for Next.js route transitions */
 html {
   scroll-behavior: smooth;
   background-color: var(--color-bg);
@@ -2155,11 +2256,6 @@ button {
     display: none !important;
   }
 
-  #hero-svg svg {
-    width: 100% !important;
-    height: 160px !important;
-    max-width: 200px !important;
-  }
 
   .hero-bg-text {
     display: none !important;

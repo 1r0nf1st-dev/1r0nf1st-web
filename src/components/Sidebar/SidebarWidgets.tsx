@@ -6,6 +6,7 @@ import { useNotesActions } from '../../contexts/NotesActionsContext';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { useClientReady } from '../../hooks/useClientReady';
 
 const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 
@@ -29,12 +30,13 @@ export const SidebarWidgets = (): JSX.Element => {
   const { toggleWidget } = useNotesActions();
   const { setCollapsed } = useSidebar();
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const clientReady = useClientReady();
 
   const isAdmin = !!user?.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-  const widgets = useMemo(
-    () => (isAdmin ? ALL_WIDGETS : ALL_WIDGETS.filter((w) => w.id !== 'strava')),
-    [isAdmin],
-  );
+  const widgets = useMemo(() => {
+    const showStrava = clientReady && isAdmin;
+    return showStrava ? ALL_WIDGETS : ALL_WIDGETS.filter((w) => w.id !== 'strava');
+  }, [clientReady, isAdmin]);
 
   const closeOnSelect = useCallback(() => {
     if (isMobile) setCollapsed(true);
