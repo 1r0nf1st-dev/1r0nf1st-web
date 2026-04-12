@@ -22,6 +22,8 @@ export default [
       },
       globals: {
         ...globals.browser,
+        /** Next.js inlines `process.env.NEXT_PUBLIC_*` in the client bundle */
+        process: 'readonly',
         __BUILD_VERSION__: 'readonly',
         __VERSION__: 'readonly',
         __BUILD_NUMBER__: 'readonly',

@@ -4,7 +4,6 @@ import type { JSX } from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { CogPair } from './CogPair';
 import { BRAND_NAME } from '../config';
 import { BrandName } from './BrandName';
 import { useAuth } from '../contexts/AuthContext';
@@ -53,28 +52,6 @@ export const Nav = (): JSX.Element => {
     <header className="nav bg-[color:var(--color-ink)] h-14 md:h-14 flex items-center px-7 fixed top-0 left-0 right-0 z-50">
       <nav className="flex w-full items-center justify-between" aria-label="Main navigation">
         <div className="nav-left flex items-center gap-2.5">
-          <div className="flex-shrink-0">
-            <CogPair
-              // Nav variant params from Section 4c
-              lx={46}
-              ly={30}
-              lr={20}
-              lt={9}
-              la={5}
-              ld={3.5}
-              sx={22}
-              sy={52}
-              sr={11}
-              st={6}
-              sa={3}
-              sd={2}
-              speed={0.2}
-              width={32}
-              height={32}
-              viewBox="0 0 80 80"
-              variant="nav"
-            />
-          </div>
           <Link
             href="/"
             aria-label={BRAND_NAME}
@@ -84,10 +61,7 @@ export const Nav = (): JSX.Element => {
               router.push('/', { scroll: false });
             }}
           >
-            <BrandName
-              markTint="orange"
-              className="font-display text-[17px] font-black tracking-[0.08em] uppercase text-[color:var(--color-text-inv)] leading-none"
-            />
+            <BrandName className="font-display text-[17px] font-black tracking-[0.08em] uppercase text-[color:var(--color-text-inv)] leading-none" />
           </Link>
         </div>
         <div className="nav-links hidden md:flex items-center gap-6">
@@ -150,40 +124,40 @@ export const Nav = (): JSX.Element => {
           />
           <div
             className="nav-mobile-drawer absolute top-14 left-0 right-0 bg-[color:var(--color-ink)] border-b-2 border-[color:var(--color-orange)] z-[100] py-2"
-          role="dialog"
-          aria-label="Mobile menu"
-        >
-          <Link
-            href="/about"
-            className="block font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-[color:var(--color-text-inv-2)] py-3.5 px-5 border-b border-[color:var(--color-rule-dark)] no-underline hover:text-[color:var(--color-text-inv)]"
-            onClick={() => setMenuOpen(false)}
+            role="dialog"
+            aria-label="Mobile menu"
           >
-            About
-          </Link>
-          <Link
-            href="/projects"
-            className="block font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-[color:var(--color-text-inv-2)] py-3.5 px-5 border-b border-[color:var(--color-rule-dark)] no-underline hover:text-[color:var(--color-text-inv)]"
-            onClick={() => setMenuOpen(false)}
-          >
-            Projects
-          </Link>
-          <Link
-            href="/contact"
-            className="block font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-[color:var(--color-text-inv-2)] py-3.5 px-5 border-b border-[color:var(--color-rule-dark)] no-underline hover:text-[color:var(--color-text-inv)]"
-            onClick={() => setMenuOpen(false)}
-          >
-            Contact
-          </Link>
-          {showLogin ? (
             <Link
-              href="/login"
-              className="block font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-[color:var(--color-text-inv-2)] py-3.5 px-5 no-underline hover:text-[color:var(--color-text-inv)]"
+              href="/about"
+              className="block font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-[color:var(--color-text-inv-2)] py-3.5 px-5 border-b border-[color:var(--color-rule-dark)] no-underline hover:text-[color:var(--color-text-inv)]"
               onClick={() => setMenuOpen(false)}
             >
-              Login
+              About
             </Link>
-          ) : null}
-        </div>
+            <Link
+              href="/projects"
+              className="block font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-[color:var(--color-text-inv-2)] py-3.5 px-5 border-b border-[color:var(--color-rule-dark)] no-underline hover:text-[color:var(--color-text-inv)]"
+              onClick={() => setMenuOpen(false)}
+            >
+              Projects
+            </Link>
+            <Link
+              href="/contact"
+              className="block font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-[color:var(--color-text-inv-2)] py-3.5 px-5 border-b border-[color:var(--color-rule-dark)] no-underline hover:text-[color:var(--color-text-inv)]"
+              onClick={() => setMenuOpen(false)}
+            >
+              Contact
+            </Link>
+            {showLogin ? (
+              <Link
+                href="/login"
+                className="block font-mono text-[11px] font-semibold tracking-[0.12em] uppercase text-[color:var(--color-text-inv-2)] py-3.5 px-5 no-underline hover:text-[color:var(--color-text-inv)]"
+                onClick={() => setMenuOpen(false)}
+              >
+                Login
+              </Link>
+            ) : null}
+          </div>
         </>
       )}
     </header>

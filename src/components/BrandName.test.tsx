@@ -20,13 +20,17 @@ describe('BrandName', () => {
     expect(span).toHaveClass('font-bold');
   });
 
-  it('supports orange mark tint', () => {
-    render(<BrandName markTint="orange" />);
-    const span = screen.getByLabelText(BRAND_NAME);
-    expect(span).toBeInTheDocument();
-    const mark = screen.getByTestId('brand-mark');
-    expect(mark).toBeInTheDocument();
-    // Use inline style assertion (CSS variables are not resolved in JSDOM computed styles)
-    expect((mark as HTMLElement).style.backgroundColor).toBe('var(--color-orange)');
+  it('uses brand-orange logo variant by default', () => {
+    render(<BrandName />);
+    const host = screen.getByTestId('brand-mark').querySelector('.logo-animated-host');
+    expect(host).toBeInTheDocument();
+    expect(host).toHaveClass('logo-animated-host--brand-orange');
+  });
+
+  it('uses neutral logo variant when markTint is auto', () => {
+    render(<BrandName markTint="auto" />);
+    const host = screen.getByTestId('brand-mark').querySelector('.logo-animated-host');
+    expect(host).toBeInTheDocument();
+    expect(host).not.toHaveClass('logo-animated-host--brand-orange');
   });
 });

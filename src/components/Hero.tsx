@@ -2,7 +2,7 @@
 
 import type { JSX } from 'react';
 import Link from 'next/link';
-import { CogPair } from './CogPair';
+import { LogoAnimated } from './LogoAnimated';
 import { BrandName } from './BrandName';
 
 export const Hero = (): JSX.Element => (
@@ -16,7 +16,10 @@ export const Hero = (): JSX.Element => (
       <h1 className="mb-4 font-display text-[clamp(2.4rem,5vw,3.6rem)] font-black italic uppercase leading-[1] tracking-[-0.02em] text-[color:var(--color-text-inv)]">
         Built with
         <br />
-        <BrandName className="not-italic text-[color:var(--color-orange)]" />
+        <BrandName
+          markTint="auto"
+          className="not-italic text-[color:var(--color-orange)]"
+        />
         <br />
         Precision.
       </h1>
@@ -40,28 +43,12 @@ export const Hero = (): JSX.Element => (
       </div>
     </div>
 
-    {/* Right column: cog panel */}
-    <div id="hero-svg" className="cog-panel relative flex h-[320px] w-[280px] items-center justify-center overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-[rgba(255,255,255,0.06)]">
-      <CogPair
-        // Hero variant params from Section 4c
-        lx={158}
-        ly={148}
-        lr={72}
-        lt={12}
-        la={14}
-        ld={10}
-        sx={74}
-        sy={226}
-        sr={42}
-        st={8}
-        sa={10}
-        sd={7}
-        speed={0.25}
-        width={280}
-        height={320}
-        viewBox="0 0 280 320"
-        variant="hero"
-      />
+    {/* Right column: animated raster logo (screen blend on ink) */}
+    <div
+      id="hero-svg"
+      className="cog-panel relative grid h-[320px] w-[280px] min-h-0 min-w-0 place-items-stretch overflow-hidden before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-[rgba(255,255,255,0.06)]"
+    >
+      <LogoAnimated size={280} aria-hidden />
     </div>
 
     {/* Background watermark text */}

@@ -45,7 +45,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>): JSX.Element {
   return (
-    <html lang="en" suppressHydrationWarning className={`${barlow.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${barlow.variable} ${mono.variable}`}
+      data-scroll-behavior="smooth"
+    >
       <head>
         <link rel="manifest" href="/site.webmanifest" />
         <script

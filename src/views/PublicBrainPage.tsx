@@ -9,9 +9,9 @@ import { NodeDetailReadOnly } from '../components/ob/NodeDetailReadOnly';
 import { BrainGraph } from '../components/ob/BrainGraph';
 import { ChatPanel } from '../components/ob/ChatPanel';
 import { AdminOnlyPlaceholderCard } from '../components/AdminOnlyPlaceholderCard';
-import { cardClasses } from '../styles/cards';
-import { btnBase, btnGhost } from '../styles/buttons';
-import { Sparkles, List, Network } from 'lucide-react';
+import { PageHero } from '../components/PageHero';
+import { StatsBar } from '../components/StatsBar';
+import { Sparkles } from 'lucide-react';
 
 const ADMIN_EMAIL = 'admin@1r0nf1st.com';
 
@@ -51,36 +51,58 @@ export function PublicBrainPage({ slug }: PublicBrainPageProps): JSX.Element {
 
   if (user && !isAdmin) {
     return (
-      <div className="p-4 md:p-6 max-w-6xl mx-auto">
-        <AdminOnlyPlaceholderCard
-          title="View brain"
-          description="View a public brain by slug. Only admin can access this page."
-          returnTo={`/brain/${encodeURIComponent(slug)}`}
-        />
-      </div>
+      <section
+        aria-label="Public brain"
+        className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <PageHero flagLabel="Intelligence" title="Public Brain" watermark="Public Brain" />
+        <div className="page-content min-h-0">
+          <AdminOnlyPlaceholderCard
+            title="View brain"
+            description="View a public brain by slug. Only admin can access this page."
+            icon={Sparkles}
+            returnTo={`/brain/${encodeURIComponent(slug)}`}
+          />
+        </div>
+      </section>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="p-4 md:p-6 max-w-6xl mx-auto">
-        <p className="text-sm text-muted">Loading brain…</p>
-      </div>
+      <section
+        aria-label="Public brain"
+        className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <PageHero flagLabel="Intelligence" title="Public Brain" watermark={slug} />
+        <div className="page-content min-h-0">
+          <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
+            Loading brain…
+          </p>
+        </div>
+      </section>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="p-4 md:p-6 max-w-6xl mx-auto">
-        <div className={cardClasses}>
-          <p className="text-destructive" role="alert">
-            {error ?? 'Brain not found'}
-          </p>
-          <p className="text-sm text-muted mt-2">
-            The brain &quot;{slug}&quot; may not exist or may have been removed.
-          </p>
+      <section
+        aria-label="Public brain"
+        className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <PageHero flagLabel="Intelligence" title="Public Brain" watermark={slug} />
+        <div className="page-content min-h-0">
+          <div className="content-panel">
+            <h2 className="panel-title">Could not load</h2>
+            <p className="font-display text-[12px] text-[color:var(--color-orange)]" role="alert">
+              {error ?? 'Brain not found'}
+            </p>
+            <p className="font-display mt-2 text-[13px] text-[color:var(--color-text-inv-2)]">
+              The brain &quot;{slug}&quot; may not exist or may have been removed.
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
@@ -89,93 +111,104 @@ export function PublicBrainPage({ slug }: PublicBrainPageProps): JSX.Element {
   const currentUserIdForReactions = isAdmin ? user?.id : undefined;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden touch-scroll">
-      <div className="mx-auto w-full min-h-0 max-w-6xl p-4 md:p-6">
-        <header className="mb-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <Sparkles className="w-6 h-6 text-primary" aria-hidden />
-            <h1 className="text-2xl font-semibold text-foreground">{displayName}&apos;s Brain</h1>
-            <div className="ml-2 flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`${btnBase} ${btnGhost} flex items-center gap-1.5 text-sm`}
-                aria-pressed={viewMode === 'list'}
-                data-testid="toggle-graph-view"
-                aria-label="List view"
-              >
-                <List className="h-4 w-4" aria-hidden />
-                List
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('graph')}
-                className={`${btnBase} ${btnGhost} flex items-center gap-1.5 text-sm`}
-                aria-pressed={viewMode === 'graph'}
-                aria-label="Graph view"
-                data-testid="toggle-graph-view"
-              >
-                <Network className="h-4 w-4" aria-hidden />
-                Graph
-              </button>
-            </div>
-          </div>
-          {profile.bio ? (
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{profile.bio}</p>
-          ) : null}
-        </header>
+    <section
+      aria-label="Public brain"
+      className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+    >
+      <PageHero
+        flagLabel="Intelligence"
+        title={`${displayName}'s Brain`}
+        watermark={displayName}
+        actions={
+          <>
+            <button
+              type="button"
+              className="act-btn"
+              onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
+              aria-label="List view"
+            >
+              <span aria-hidden>List</span>
+            </button>
+            <button
+              type="button"
+              className="act-btn"
+              onClick={() => setViewMode('graph')}
+              aria-pressed={viewMode === 'graph'}
+              aria-label="Graph view"
+              data-testid="toggle-graph-view"
+            >
+              <span aria-hidden>Graph</span>
+            </button>
+          </>
+        }
+      />
 
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <aside className="space-y-4 lg:w-80 lg:flex-shrink-0">
-            <h2 className="text-sm font-medium text-muted-foreground">
-              Public nodes ({nodes.length})
-            </h2>
-            {nodes.length === 0 ? (
-              <p className="text-sm text-muted">No public nodes yet.</p>
-            ) : viewMode === 'list' ? (
-              <ul className="space-y-2">
-                {nodes.map((node) => (
-                  <li key={node.id}>
-                    <NodeCard
-                      node={node}
-                      isSelected={selectedNode?.id === node.id}
-                      onSelect={() => setSelectedNode(node)}
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted">
-                Switch to List to browse, or use the graph on the right.
-              </p>
-            )}
+      <div className="page-content min-h-0">
+        <StatsBar
+          items={[
+            { label: 'Nodes', value: nodes.length },
+            { label: 'Edges', value: edges.length },
+            { label: 'View', value: viewMode.toUpperCase(), accent: true },
+            { label: 'Slug', value: slug },
+          ]}
+        />
+
+        <div className="ob-page-grid">
+          <aside className="ob-page-aside min-w-0">
+            <div className="content-panel">
+              <h2 className="panel-title">Public nodes</h2>
+              {nodes.length === 0 ? (
+                <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
+                  No public nodes yet.
+                </p>
+              ) : viewMode === 'list' ? (
+                <ul className="space-y-2">
+                  {nodes.map((node) => (
+                    <li key={node.id}>
+                      <NodeCard
+                        node={node}
+                        isSelected={selectedNode?.id === node.id}
+                        onSelect={() => setSelectedNode(node)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="font-display text-[12px] text-[color:var(--color-text-inv-2)]">
+                  Graph view enabled. The graph is shown below.
+                </p>
+              )}
+            </div>
           </aside>
 
-          <section className="min-w-0 flex-1 space-y-4">
-            {viewMode === 'graph' && nodes.length > 0 ? (
-              <BrainGraph
-                nodes={nodes}
-                edges={edges}
-                onNodeClick={setSelectedNode}
-                variant="light"
-              />
-            ) : null}
-            {selectedNode ? (
-              <NodeDetailReadOnly node={selectedNode} currentUserId={currentUserIdForReactions} />
-            ) : (
-              <div className={cardClasses}>
-                <p className="text-muted">
+          <div className="ob-page-top min-w-0">
+            <div className="content-panel">
+              <h2 className="panel-title">Ask this brain</h2>
+              {user?.id ? <ChatPanel brainOwnerId={profile.id} /> : null}
+            </div>
+
+            <div className="content-panel">
+              <h2 className="panel-title">Read</h2>
+              {selectedNode ? (
+                <NodeDetailReadOnly node={selectedNode} currentUserId={currentUserIdForReactions} />
+              ) : (
+                <p className="font-display text-[13px] text-[color:var(--color-text-inv-2)]">
                   {viewMode === 'graph'
                     ? 'Click a node in the graph to read it.'
                     : 'Select a node from the list to read it.'}
                 </p>
-              </div>
-            )}
+              )}
+            </div>
+          </div>
 
-            {user?.id ? <ChatPanel brainOwnerId={profile.id} /> : null}
-          </section>
+          {viewMode === 'graph' && nodes.length > 0 ? (
+            <div className="ob-page-graph">
+              <BrainGraph wide nodes={nodes} edges={edges} onNodeClick={setSelectedNode} />
+            </div>
+          ) : null}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
